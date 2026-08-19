@@ -1,0 +1,48 @@
+{
+  "name": "ROS 2 Humble + Gazebo",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "USERNAME": "vscode"
+    }
+  },
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind",
+  "runArgs": [
+    "--network=host",
+    "--ipc=host",
+    "--gpus=all",
+    "--env=DISPLAY=${localEnv:DISPLAY}",
+    "--env=WAYLAND_DISPLAY=${localEnv:WAYLAND_DISPLAY}",
+    "--env=XDG_RUNTIME_DIR=/tmp/wayland-runtime",
+    "--env=QT_X11_NO_MITSHM=1"
+  ],
+  "mounts": [
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind",
+    "source=${localEnv:XDG_RUNTIME_DIR}/${localEnv:WAYLAND_DISPLAY},target=/tmp/wayland-runtime/${localEnv:WAYLAND_DISPLAY},type=bind"
+  ],
+  "containerEnv": {
+    "NVIDIA_VISIBLE_DEVICES": "all",
+    "NVIDIA_DRIVER_CAPABILITIES": "all"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-iot.vscode-ros",
+        "ms-vscode.cpptools",
+        "ms-python.python",
+        "twxs.cmake"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "files.associations": {
+          "*.xacro": "xml",
+          "*.world": "xml"
+        }
+      }
+    }
+  },
+  "postCreateCommand": "sudo rosdep update && rosdep install --from-paths src --ignore-src -r -y || true"
+}
