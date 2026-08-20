@@ -1,0 +1,55 @@
+# ROS 2 Build Artifacts
+build/
+install/
+log/
+COLCON_IGNORE
+*.orig
+
+# Python Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+
+# C / C++ / CMake
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+CMakeCache.txt
+CMakeFiles/
+Makefile
+compile_commands.json
+
+# IDE & Editor Files
+.vscode/ipch/
+.vscode/*.log
+*.swp
+*.swo
+*~
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS & System Files
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+core
+core.*
+
+# Gazebo & CAD Temporary Files
+~*
+~$*
+*.sw2urdf.log
