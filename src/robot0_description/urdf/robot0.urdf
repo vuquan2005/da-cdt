@@ -15,9 +15,11 @@
   <link name="base_link">
     <inertial>
       <origin xyz="0.0082536 -0.0003708 0.0149603" rpy="0 0 0" />
-      <mass value="1.352268" />
-      <inertia ixx="0.0024925" ixy="7.65e-09" ixz="8.6e-11" iyy="0.0076029" iyz="1.758e-05" izz="0.0100024" />
+      <mass value="1.85" />
+      <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.010" iyz="0" izz="0.012" />
     </inertial>
+
+    <!-- Main Chassis Base -->
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
@@ -33,13 +35,150 @@
         <mesh filename="package://robot0_description/meshes/base_link.stl" />
       </geometry>
     </collision>
+
+    <!-- Front-Right Motor Bracket -->
+    <visual>
+      <origin xyz="0.131271576273728 0.129279512977854 -0.00376593806610101" rpy="-1.5707963267949 0 3.14159265358979" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_bracket_fr.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Front-Left Motor Bracket -->
+    <visual>
+      <origin xyz="-0.114728423726273 0.089279512977854 -0.00376593806610101" rpy="-1.5707963267949 0 0" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_bracket_fl.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Rear-Right Motor Bracket -->
+    <visual>
+      <origin xyz="0.131271576273728 -0.070720487022142 -0.003765938066101" rpy="-1.5707963267949 0 3.14159265358979" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_bracket_rr.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Rear-Left Motor Bracket -->
+    <visual>
+      <origin xyz="-0.114728423726274 -0.115720487022144 -0.00376593806610199" rpy="-1.57079632679489 0 0" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_bracket_rl.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Front-Right Motor -->
+    <visual>
+      <origin xyz="0.128271576273727 0.109279512977855 -0.0307659380661" rpy="1.5707963267949 0 1.5707963267949" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Front-Left Motor -->
+    <visual>
+      <origin xyz="-0.111728423726273 0.109279512977855 -0.0307659380661" rpy="-1.5707963267949 0 -1.5707963267949" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_left.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Rear-Right Motor -->
+    <visual>
+      <origin xyz="0.128271576273727 -0.090720487022144 -0.0307659380661" rpy="1.5707963267949 0 1.5707963267949" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Rear-Left Motor -->
+    <visual>
+      <origin xyz="-0.111728423726273 -0.090720487022144 -0.0307659380661" rpy="-1.5707963267949 0 -1.5707963267949" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_left.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Base Column -->
+    <visual>
+      <origin xyz="0.008271576273727 0.137279512977854 0.00223406193389999" rpy="1.5707963267949 0 0" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_base.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Motor -->
+    <visual>
+      <origin xyz="0.008271576273727 0.119779512977854 0.0292340619339" rpy="-1.5707963267949 0 0" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Guide Pipe 1 -->
+    <visual>
+      <origin xyz="0.065771576273727 0.137279512977855 0.00823406193389999" rpy="1.5707963267949 0 -1.72157870312163" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_pipe_1.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Guide Pipe 2 -->
+    <visual>
+      <origin xyz="0.008271576273727 0.137279512977855 0.046010455529876" rpy="1.5707963267949 0 -1.42001395046816" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_pipe_2.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Top Cap -->
+    <visual>
+      <origin xyz="0.008271576273728 0.137279512977854 0.2682340619339" rpy="1.5707963267949 0 0" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_top_cap.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Timing Belt -->
+    <visual>
+      <origin xyz="0.008271576273728 0.128279512977855 0.2782340619339" rpy="1.5707963267949 1.5707963267949 0" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_belt.stl" />
+      </geometry>
+      <material name="dark_grey">
+        <color rgba="0.2 0.2 0.2 1.0" />
+      </material>
+    </visual>
+
+    <!-- Lift Top Pulley -->
+    <visual>
+      <origin xyz="0.008271576273728 0.128279512977855 0.2797340619339" rpy="-1.5707963267949 -0.897413987985829 3.14159265358979" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_pulley_20t.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
   </link>
 
   <!-- ========================================== -->
   <!-- Mecanum Wheels (Continuous Joints)         -->
   <!-- ========================================== -->
 
-  <!-- Front-Right Wheel -->
+  <!-- Front-Right Wheel (Red X UP, Green Y OUTWARD Right) -->
   <link name="wheel_fr_link">
     <inertial>
       <origin xyz="1.85e-08 0.000719 3.74e-07" rpy="0 0 0" />
@@ -47,7 +186,7 @@
       <inertia ixx="2.275e-05" ixy="7.45e-11" ixz="8.32e-11" iyy="2.864e-05" iyz="-3.97e-11" izz="2.275e-05" />
     </inertial>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="3.14159265358979 0 0" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/wheel_right.stl" />
       </geometry>
@@ -56,7 +195,7 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="3.14159265358979 0 0" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/wheel_right.stl" />
       </geometry>
@@ -64,15 +203,15 @@
   </link>
 
   <joint name="wheel_fr_joint" type="continuous">
-    <origin xyz="0.162171576273727 0.109279512977855 -0.023933876070515" rpy="1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="0.162171576273727 0.109279512977855 -0.023933876070515" rpy="-1.5707963267949 -1.5707963267949 0" />
     <parent link="base_link" />
     <child link="wheel_fr_link" />
-    <axis xyz="0 1 0" />
+    <axis xyz="0 -1 0" />
     <limit effort="10.0" velocity="20.0" />
     <dynamics damping="0.05" friction="0.05" />
   </joint>
 
-  <!-- Front-Left Wheel -->
+  <!-- Front-Left Wheel (Red X UP, Green Y OUTWARD Left) -->
   <link name="wheel_fl_link">
     <inertial>
       <origin xyz="1.85e-08 0.000719 3.74e-07" rpy="0 0 0" />
@@ -105,7 +244,7 @@
     <dynamics damping="0.05" friction="0.05" />
   </joint>
 
-  <!-- Rear-Right Wheel -->
+  <!-- Rear-Right Wheel (Red X UP, Green Y OUTWARD Right) -->
   <link name="wheel_rr_link">
     <inertial>
       <origin xyz="1.85e-08 0.000719 3.74e-07" rpy="0 0 0" />
@@ -113,7 +252,7 @@
       <inertia ixx="2.275e-05" ixy="7.45e-11" ixz="8.32e-11" iyy="2.864e-05" iyz="-3.97e-11" izz="2.275e-05" />
     </inertial>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="3.14159265358979 0 3.14159265358979" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/wheel_left.stl" />
       </geometry>
@@ -122,7 +261,7 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="3.14159265358979 0 3.14159265358979" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/wheel_left.stl" />
       </geometry>
@@ -130,7 +269,7 @@
   </link>
 
   <joint name="wheel_rr_joint" type="continuous">
-    <origin xyz="0.162171576273727 -0.090720487022145 -0.023765938066099" rpy="1.5707963267949 1.5707963267949 0" />
+    <origin xyz="0.162171576273727 -0.090720487022145 -0.023765938066099" rpy="-1.5707963267949 -1.5707963267949 0" />
     <parent link="base_link" />
     <child link="wheel_rr_link" />
     <axis xyz="0 -1 0" />
@@ -138,7 +277,7 @@
     <dynamics damping="0.05" friction="0.05" />
   </joint>
 
-  <!-- Rear-Left Wheel -->
+  <!-- Rear-Left Wheel (Red X UP, Green Y OUTWARD Left) -->
   <link name="wheel_rl_link">
     <inertial>
       <origin xyz="1.85e-08 0.000719 3.74e-07" rpy="0 0 0" />
@@ -146,7 +285,7 @@
       <inertia ixx="2.275e-05" ixy="7.45e-11" ixz="8.33e-11" iyy="2.864e-05" iyz="-3.97e-11" izz="2.275e-05" />
     </inertial>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 3.14159265358979" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/wheel_right.stl" />
       </geometry>
@@ -155,7 +294,7 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 3.14159265358979" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/wheel_right.stl" />
       </geometry>
@@ -163,10 +302,10 @@
   </link>
 
   <joint name="wheel_rl_joint" type="continuous">
-    <origin xyz="-0.145628423726273 -0.090720487022145 -0.023933876070516" rpy="1.5707963267949 1.5707963267949 0" />
+    <origin xyz="-0.145628423726273 -0.090720487022145 -0.023933876070516" rpy="1.5707963267949 -1.5707963267949 0" />
     <parent link="base_link" />
     <child link="wheel_rl_link" />
-    <axis xyz="0 -1 0" />
+    <axis xyz="0 1 0" />
     <limit effort="10.0" velocity="20.0" />
     <dynamics damping="0.05" friction="0.05" />
   </joint>
@@ -175,15 +314,15 @@
   <!-- Lift Mechanism (Prismatic Movable Arm)     -->
   <!-- ========================================== -->
 
-  <!-- Lift Main Arm (Movable Prismatic Joint) -->
+  <!-- Lift Main Arm (Clean Frame: Blue Z axis points straight UP) -->
   <link name="lift_arm_link">
     <inertial>
-      <origin xyz="3.0454656503736E-05 -0.0180613677899576 -0.0256536372783613" rpy="0 0 0" />
+      <origin xyz="3.0454656503736E-05 -0.0180613677899576 -0.0256536372783613" rpy="1.5707963267949 0 0" />
       <mass value="0.161814335334686" />
       <inertia ixx="0.00045993" ixy="-1.38e-07" ixz="-1.26e-07" iyy="0.00038242" iyz="-0.00018047" izz="0.00040656" />
     </inertial>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/lift_arm.stl" />
       </geometry>
@@ -192,696 +331,22 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/lift_arm.stl" />
       </geometry>
     </collision>
   </link>
 
-  <!-- Prismatic Joint: Moves along local Y axis (Green axis = Global UP) -->
+  <!-- Prismatic Joint: Moves cleanly along Blue Z axis (Global UP) -->
   <joint name="lift_arm_joint" type="prismatic">
-    <origin xyz="0.008271576273727 0.137279512977855 0.036010455529876" rpy="1.5707963267949 0 0" />
+    <origin xyz="0.008271576273727 0.137279512977855 0.036010455529876" rpy="0 0 0" />
     <parent link="base_link" />
     <child link="lift_arm_link" />
-    <axis xyz="0 1 0" />
+    <axis xyz="0 0 1" />
     <limit lower="0.0" upper="0.18" effort="100.0" velocity="0.2" />
     <dynamics damping="0.5" friction="0.1" />
   </joint>
-
-  <!-- Lift Motor (DC12JGB37-520) -->
-  <link name="lift_motor_link">
-    <inertial>
-      <origin xyz="5.7539643631508E-06 0.000323912184972137 -0.0245866001331969" rpy="0 0 0" />
-      <mass value="0.0162866417907391" />
-      <inertia ixx="1.898e-06" ixy="5.79e-10" ixz="-1.56e-11" iyy="1.925e-06" iyz="1.33e-08" izz="2.784e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="lift_motor_joint" type="fixed">
-    <origin xyz="0.008271576273727 0.119779512977854 0.0292340619339" rpy="-1.5707963267949 0 0" />
-    <parent link="base_link" />
-    <child link="lift_motor_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Lift Base Column (Part2_RBC_BacNinh) -->
-  <link name="lift_base_link">
-    <inertial>
-      <origin xyz="-1.08841659722352E-06 0.0071734396814015 0.00710047028020452" rpy="0 0 0" />
-      <mass value="0.08253622186955" />
-      <inertia ixx="2.65e-05" ixy="1.04e-09" ixz="-1.80e-09" iyy="0.0001935" iyz="3.64e-07" izz="0.0001773" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_base.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_base.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="lift_base_joint" type="fixed">
-    <origin xyz="0.008271576273727 0.137279512977854 0.00223406193389999" rpy="1.5707963267949 0 0" />
-    <parent link="base_link" />
-    <child link="lift_base_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Lift Guide Pipe 1 (Part3_RBC_BacNinh.STEP-2) -->
-  <link name="lift_pipe_1_link">
-    <inertial>
-      <origin xyz="-2.77555756156289E-17 0.14 -1.38777878078145E-17" rpy="0 0 0" />
-      <mass value="0.0969809652163169" />
-      <inertia ixx="0.00063628" ixy="-1.05e-21" ixz="0" iyy="5.35e-06" iyz="-4.91e-23" izz="0.00063628" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_pipe_1.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_pipe_1.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="lift_pipe_1_joint" type="fixed">
-    <origin xyz="0.065771576273727 0.137279512977855 0.00823406193389999" rpy="1.5707963267949 0 -1.72157870312163" />
-    <parent link="base_link" />
-    <child link="lift_pipe_1_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Lift Guide Pipe 2 (Part3_RBC_BacNinh.STEP-1) -->
-  <link name="lift_pipe_2_link">
-    <inertial>
-      <origin xyz="-0.00863717147017234 0.102223606404024 0.0568475968620902" rpy="0 0 0" />
-      <mass value="0.0969809652163169" />
-      <inertia ixx="0.00063628" ixy="1.98e-21" ixz="0" iyy="5.35e-06" iyz="7.40e-22" izz="0.00063628" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_pipe_2.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_pipe_2.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="lift_pipe_2_joint" type="fixed">
-    <origin xyz="0.008271576273727 0.137279512977855 0.046010455529876" rpy="1.5707963267949 0 -1.42001395046816" />
-    <parent link="base_link" />
-    <child link="lift_pipe_2_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Lift Top Cap (Part4_RBC_BacNinh.STEP-1) -->
-  <link name="lift_top_cap_link">
-    <inertial>
-      <origin xyz="-5.20417042793042E-18 0.0117600787312839 0" rpy="0 0 0" />
-      <mass value="0.0876963777563386" />
-      <inertia ixx="1.40e-05" ixy="-9.72e-24" ixz="-2.40e-21" iyy="0.00015468" iyz="-1.61e-22" izz="0.00014867" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_top_cap.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_top_cap.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="lift_top_cap_joint" type="fixed">
-    <origin xyz="0.008271576273728 0.137279512977854 0.2682340619339" rpy="1.5707963267949 0 0" />
-    <parent link="base_link" />
-    <child link="lift_top_cap_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Lift Timing Belt (Aligned with Pulley Center) -->
-  <link name="lift_belt_link">
-    <inertial>
-      <origin xyz="0.12725 1.73472347597681E-18 -0.0015" rpy="0 0 0" />
-      <mass value="0.00663238934211694" />
-      <inertia ixx="2.53e-07" ixy="2.58e-22" ixz="1.53e-22" iyy="4.21e-05" iyz="-3.91e-39" izz="4.23e-05" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_belt.stl" />
-      </geometry>
-      <material name="dark_grey">
-        <color rgba="0.2 0.2 0.2 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_belt.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="lift_belt_joint" type="fixed">
-    <origin xyz="0.008271576273728 0.128279512977855 0.2782340619339" rpy="1.5707963267949 1.5707963267949 0" />
-    <parent link="base_link" />
-    <child link="lift_belt_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Lift Top Pulley (GT2_20T Timing Pulley.STEP-2) -->
-  <link name="lift_pulley_link">
-    <inertial>
-      <origin xyz="0.000162172140170586 -0.000162100440498969 -0.00354921591086435" rpy="0 0 0" />
-      <mass value="0.00161689436550568" />
-      <inertia ixx="6.82e-08" ixy="-4.58e-11" ixz="-9.30e-10" iyy="6.82e-08" iyz="9.28e-10" izz="5.82e-08" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_pulley_20t.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_pulley_20t.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="lift_pulley_joint" type="fixed">
-    <origin xyz="0.008271576273728 0.128279512977855 0.2797340619339" rpy="-1.5707963267949 -0.897413987985829 3.14159265358979" />
-    <parent link="base_link" />
-    <child link="lift_pulley_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- ========================================== -->
-  <!-- Wheel DC Motors & Mounting Brackets        -->
-  <!-- ========================================== -->
-
-  <!-- Front-Right Motor -->
-  <link name="wheel_motor_fr_link">
-    <inertial>
-      <origin xyz="5.75396436311437E-06 0.000323912184972141 -0.0245866001331969" rpy="0 0 0" />
-      <mass value="0.0162866417907391" />
-      <inertia ixx="1.898e-06" ixy="5.79e-10" ixz="-1.56e-11" iyy="1.925e-06" iyz="1.33e-08" izz="2.784e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="wheel_motor_fr_joint" type="fixed">
-    <origin xyz="0.128271576273727 0.109279512977855 -0.0307659380661" rpy="1.5707963267949 0 1.5707963267949" />
-    <parent link="base_link" />
-    <child link="wheel_motor_fr_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Front-Left Motor -->
-  <link name="wheel_motor_fl_link">
-    <inertial>
-      <origin xyz="5.75396436312825E-06 -0.000323912184972141 0.0245866001331969" rpy="0 0 0" />
-      <mass value="0.0162866417907391" />
-      <inertia ixx="1.898e-06" ixy="-5.79e-10" ixz="1.56e-11" iyy="1.925e-06" iyz="1.33e-08" izz="2.784e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_left.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_left.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="wheel_motor_fl_joint" type="fixed">
-    <origin xyz="-0.111728423726273 0.109279512977855 -0.0307659380661" rpy="-1.5707963267949 0 -1.5707963267949" />
-    <parent link="base_link" />
-    <child link="wheel_motor_fl_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Rear-Right Motor -->
-  <link name="wheel_motor_rr_link">
-    <inertial>
-      <origin xyz="5.75396436314213E-06 0.000323912184972134 -0.0245866001331968" rpy="0 0 0" />
-      <mass value="0.0162866417907391" />
-      <inertia ixx="1.898e-06" ixy="5.79e-10" ixz="-1.56e-11" iyy="1.925e-06" iyz="1.33e-08" izz="2.784e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="wheel_motor_rr_joint" type="fixed">
-    <origin xyz="0.128271576273727 -0.090720487022144 -0.0307659380661" rpy="1.5707963267949 0 1.5707963267949" />
-    <parent link="base_link" />
-    <child link="wheel_motor_rr_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Rear-Left Motor -->
-  <link name="wheel_motor_rl_link">
-    <inertial>
-      <origin xyz="5.75396436312825E-06 -0.000323912184972141 0.0245866001331969" rpy="0 0 0" />
-      <mass value="0.0162866417907391" />
-      <inertia ixx="1.898e-06" ixy="-5.79e-10" ixz="1.56e-11" iyy="1.925e-06" iyz="1.33e-08" izz="2.784e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_left.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_left.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="wheel_motor_rl_joint" type="fixed">
-    <origin xyz="-0.111728423726273 -0.090720487022144 -0.0307659380661" rpy="-1.5707963267949 0 -1.5707963267949" />
-    <parent link="base_link" />
-    <child link="wheel_motor_rl_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Front-Right Motor Bracket -->
-  <link name="wheel_bracket_fr_link">
-    <inertial>
-      <origin xyz="0.0106017474550367 0.0132953925773517 0.0200127765205409" rpy="0 0 0" />
-      <mass value="0.0210848931196573" />
-      <inertia ixx="1.017e-05" ixy="2.14e-06" ixz="-2.87e-09" iyy="9.20e-06" iyz="3.31e-09" izz="7.72e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_bracket_fr.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_bracket_fr.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="wheel_bracket_fr_joint" type="fixed">
-    <origin xyz="0.131271576273728 0.129279512977854 -0.00376593806610101" rpy="-1.5707963267949 0 3.14159265358979" />
-    <parent link="base_link" />
-    <child link="wheel_bracket_fr_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Front-Left Motor Bracket -->
-  <link name="wheel_bracket_fl_link">
-    <inertial>
-      <origin xyz="0.0106017474550364 0.0132953925773519 0.020012776520541" rpy="0 0 0" />
-      <mass value="0.0210848931196573" />
-      <inertia ixx="1.017e-05" ixy="2.14e-06" ixz="-2.87e-09" iyy="9.20e-06" iyz="3.31e-09" izz="7.72e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_bracket_fl.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_bracket_fl.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="wheel_bracket_fl_joint" type="fixed">
-    <origin xyz="-0.114728423726273 0.089279512977854 -0.00376593806610101" rpy="-1.5707963267949 0 0" />
-    <parent link="base_link" />
-    <child link="wheel_bracket_fl_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Rear-Right Motor Bracket -->
-  <link name="wheel_bracket_rr_link">
-    <inertial>
-      <origin xyz="0.0106017474550364 0.013295392577352 0.0200127765205409" rpy="0 0 0" />
-      <mass value="0.0210848931196573" />
-      <inertia ixx="1.017e-05" ixy="2.14e-06" ixz="-2.87e-09" iyy="9.20e-06" iyz="3.31e-09" izz="7.72e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_bracket_rr.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_bracket_rr.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="wheel_bracket_rr_joint" type="fixed">
-    <origin xyz="0.131271576273728 -0.070720487022142 -0.003765938066101" rpy="-1.5707963267949 0 3.14159265358979" />
-    <parent link="base_link" />
-    <child link="wheel_bracket_rr_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- Rear-Left Motor Bracket -->
-  <link name="wheel_bracket_rl_link">
-    <inertial>
-      <origin xyz="0.0106017474550367 0.0132953925773519 0.0200127765205408" rpy="0 0 0" />
-      <mass value="0.0210848931196573" />
-      <inertia ixx="1.017e-05" ixy="2.14e-06" ixz="-2.87e-09" iyy="9.20e-06" iyz="3.31e-09" izz="7.72e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_bracket_rl.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/motor_bracket_rl.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="wheel_bracket_rl_joint" type="fixed">
-    <origin xyz="-0.114728423726274 -0.115720487022144 -0.00376593806610199" rpy="-1.57079632679489 0 0" />
-    <parent link="base_link" />
-    <child link="wheel_bracket_rl_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <!-- ========================================================================= -->
-  <!-- Optional / Disabled Components (Uncomment when needed)                    -->
-  <!-- ========================================================================= -->
-
-  <!--
-  <link name="camera_mount_link">
-    <inertial>
-      <origin xyz="3.46944695195361E-17 2.89495113349469E-05 0.0292615498414014" rpy="0 0 0" />
-      <mass value="0.0165746492572345" />
-      <inertia ixx="5.92e-06" ixy="-1.4e-21" ixz="1.5e-20" iyy="8.96e-06" iyz="3.12e-08" izz="4.86e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_camera_bracket.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_camera_bracket.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="camera_mount_joint" type="fixed">
-    <origin xyz="0.008271576273727 0.173113089759183 0.338814309541528" rpy="2.57641039979753 0 0" />
-    <parent link="base_link" />
-    <child link="camera_mount_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <link name="tof_sensor_lens_link">
-    <inertial>
-      <origin xyz="0 -4.33680868994202E-19 0.000748101776760823" rpy="0 0 0" />
-      <mass value="0.000171844614099774" />
-      <inertia ixx="6.06e-10" ixy="0" ixz="0" iyy="4.47e-09" iyz="0" izz="5.01e-09" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_tof_sensor.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_tof_sensor.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="tof_sensor_lens_joint" type="fixed">
-    <origin xyz="0.00855214883354 0.171779512977855 -0.00156454447012401" rpy="-1.5707963267949 0 0" />
-    <parent link="base_link" />
-    <child link="tof_sensor_lens_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <link name="tof_sensor_pcb_link">
-    <inertial>
-      <origin xyz="0 -0.00167587576786396 -0.0005" rpy="0 0 0" />
-      <mass value="0.00018812434859003" />
-      <inertia ixx="1.77e-09" ixy="0" ixz="0" iyy="5.31e-09" iyz="0" izz="7.06e-09" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_tof_sensor.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_tof_sensor.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="tof_sensor_pcb_joint" type="fixed">
-    <origin xyz="0.00855214883354 0.171779512977855 -0.00156454447012401" rpy="-1.5707963267949 0 0" />
-    <parent link="base_link" />
-    <child link="tof_sensor_pcb_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <link name="screen_7inch_link">
-    <inertial>
-      <origin xyz="4.36283278406474E-06 0.0083278709819409 0.000533024904401765" rpy="0 0 0" />
-      <mass value="0.362215781430985" />
-      <inertia ixx="0.0010917" ixy="1.67e-08" ixz="-3.98e-07" iyy="0.0014800" iyz="-1.11e-07" izz="0.0004052" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_screen_7inch.stl" />
-      </geometry>
-      <material name="silver">
-        <color rgba="0.792 0.820 0.933 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_screen_7inch.stl" />
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="screen_7inch_joint" type="fixed">
-    <origin xyz="0.00827157627372832 -0.120913435880866 0.0837418326471182" rpy="1.57079632679489 -1.2752315704161 1.5707963267949" />
-    <parent link="base_link" />
-    <child link="screen_7inch_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <link name="screen_mount_1_link">
-    <inertial>
-      <origin xyz="-0.0524916601908047 -0.0978633253468293 -0.00786575500406955" rpy="0 0 0" />
-      <mass value="0.00921412586677656" />
-      <inertia ixx="1.20e-06" ixy="1.28e-07" ixz="-1.14e-07" iyy="1.06e-06" iyz="-2.74e-07" izz="1.36e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_screen_mount_3.stl" />
-      </geometry>
-    </visual>
-  </link>
-
-  <joint name="screen_mount_1_joint" type="fixed">
-    <origin xyz="0.00827157627372532 -0.137176278354369 0.0886935954324384" rpy="0 1.2752315704161 -1.57079632679489" />
-    <parent link="base_link" />
-    <child link="screen_mount_1_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <link name="screen_mount_2_link">
-    <inertial>
-      <origin xyz="-0.0524916601908038 -0.0978633253468314 -0.00816575500406927" rpy="0 0 0" />
-      <mass value="0.00921412586677656" />
-      <inertia ixx="1.20e-06" ixy="1.28e-07" ixz="-1.14e-07" iyy="1.06e-06" iyz="-2.74e-07" izz="1.36e-06" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_screen_mount_2.stl" />
-      </geometry>
-    </visual>
-  </link>
-
-  <joint name="screen_mount_2_joint" type="fixed">
-    <origin xyz="0.00827157627372532 -0.137176278354369 0.0886935954324384" rpy="0 -1.2752315704161 1.5707963267949" />
-    <parent link="base_link" />
-    <child link="screen_mount_2_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <link name="screen_mount_3_link">
-    <inertial>
-      <origin xyz="-1.75615100152429E-05 0.00735483790884719 -0.0169181706207054" rpy="0 0 0" />
-      <mass value="0.153103894125519" />
-      <inertia ixx="0.0003976" ixy="8.98e-08" ixz="-1.81e-07" iyy="0.0009500" iyz="6.75e-05" izz="0.0010848" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_screen_mount_1.stl" />
-      </geometry>
-    </visual>
-  </link>
-
-  <joint name="screen_mount_3_joint" type="fixed">
-    <origin xyz="0.00827157627372832 -0.120913435880866 0.0837418326471182" rpy="-1.2752315704161 0 3.14159265358979" />
-    <parent link="base_link" />
-    <child link="screen_mount_3_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-
-  <link name="screw_m3_link">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://robot0_description/meshes/disabled_screw_m3.stl" />
-      </geometry>
-    </visual>
-  </link>
-
-  <joint name="screw_m3_joint" type="fixed">
-    <origin xyz="0.008271576273727 0.148279512977855 0.0112340619339" rpy="1.5707963267949 1.5707963267949 0" />
-    <parent link="base_link" />
-    <child link="screw_m3_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-  -->
 
   <!-- ========================================== -->
   <!-- Gazebo Simulation Plugins & Properties    -->
