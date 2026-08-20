@@ -25,12 +25,14 @@ ros-cdt/
 │       ├── worlds/
 │       │   └── empty.sdf           # Thế giới mô phỏng Gazebo (Physics, Sun, Ground)
 │       ├── config/
+│       │   ├── joystick.yaml       # Cấu hình nút bấm & chế độ Mecanum Holonomic
 │       │   └── ros_gz_bridge.yaml  # Cầu nối dữ liệu ROS 2 <-> Gazebo
 │       ├── rviz/
 │       │   └── robot0.rviz         # Cấu hình hiển thị RViz2
 │       └── launch/
 │           ├── display.launch.py   # Mở hiển thị trên RViz2 với GUI chỉnh khớp
-│           └── gazebo.launch.py    # Khởi chạy toàn bộ mô phỏng Gazebo + Bridge + RViz2
+│           ├── gazebo.launch.py    # Khởi chạy toàn bộ mô phỏng Gazebo + Bridge + RViz2
+│           └── joystick.launch.py  # Khởi chạy điều khiển bằng tay cầm Joystick
 ├── .gitignore                      # Bỏ qua build/, install/, log/, python cache
 └── README.md
 ```
@@ -109,13 +111,38 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 
 #### 🕹️ Cách 2: Điều khiển bằng tay cầm (Joystick / Gamepad)
 
-```bash
-# Kiểm tra tay cầm
-jstest /dev/input/js0
+> **Lưu ý với `keyd` hoặc thiết bị ảo:** `joy_node` trên ROS 2 Humble dùng SDL2; index SDL không nhất thiết trùng `/dev/input/jsN`. Cấu hình mặc định chọn tay cầm theo `device_name`, nên không bị ảnh hưởng khi `keyd` làm thay đổi `js0`/`js1`.
 
-# Chạy node đọc tay cầm
-ros2 run teleop_twist_joy teleop_node
-```
+1. **Kiểm tra thiết bị tay cầm:**
+   ```bash
+   # Liệt kê các cổng joystick hiện có
+   ls -l /dev/input/js*
+
+   # Kiểm tra tín hiệu nút bấm (thử js1 hoặc js0)
+   jstest /dev/input/js1
+   ```
+
+2. **Cách 2.1 - Khởi chạy nhanh bằng Launch file (Khuyến nghị):**
+   ```bash
+   # Dùng tên tay cầm cấu hình trong config/joystick.yaml
+   ros2 launch robot0_description joystick.launch.py
+   ```
+
+3. **Cách 2.2 - Khởi chạy từng node thủ công:**
+   ```bash
+   # Terminal 1: Chạy joy_node; xem tên SDL bằng `ros2 run joy joy_enumerate_devices`
+   ros2 run joy joy_node --ros-args -p device_name:="PowerA Xbox Series X Controller"
+
+   # Terminal 2: Chạy teleop_node hỗ trợ di chuyển toàn hướng Mecanum (Holonomic)
+   ros2 run teleop_twist_joy teleop_node --ros-args --params-file src/robot0_description/config/joystick.yaml
+   ```
+
+   * **Cách điều khiển (Mapping mặc định):**
+     * **Giữ nút `LB / L1` (Enable button)** khi gạt cần để cho phép phát lệnh di chuyển an toàn.
+     * **Giữ thêm nút `RB / R1` (Turbo)** để di chuyển với tốc độ tối đa.
+     * **Cần gạt trái (Left Stick):** Tiến / Lùi / Đi ngang trái - phải (Mecanum Strafe).
+     * **Cần gạt phải (Right Stick):** Xoay góc trái / phải (Yaw).
+
 
 #### 📡 Cách 3: Gửi lệnh trực tiếp qua Topic
 

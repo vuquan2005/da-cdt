@@ -35,7 +35,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash ${USERNAME} \
-    && usermod -aG dialout,video,input ${USERNAME} 2>/dev/null || true \
+    && usermod -aG dialout,video,input,messagebus ${USERNAME} 2>/dev/null || true \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
