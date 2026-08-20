@@ -27,11 +27,15 @@ RUN apt-get update \
         ros-humble-xacro \
         ros-humble-joint-state-publisher-gui \
         ros-humble-robot-state-publisher \
+        ros-humble-teleop-twist-keyboard \
+        joystick \
+        evtest \
         sudo \
         vim \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash ${USERNAME} \
+    && usermod -aG dialout,video,input ${USERNAME} 2>/dev/null || true \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
