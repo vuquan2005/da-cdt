@@ -21,7 +21,6 @@ setup(
     maintainer_email='TODO@email.com',
     description='YOLO object detection and vision processing node for robot0',
     license='MIT',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'yolo_detector = robot0_vision.yolo_detector_node:main',
