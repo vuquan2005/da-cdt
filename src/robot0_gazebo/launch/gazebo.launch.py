@@ -23,6 +23,7 @@ def generate_launch_description():
     # Environment variables for Gazebo resource finding (resolve model:// and package://)
     pkg_share_parent = os.path.dirname(pkg_robot0_gazebo)
     gazebo_models_dir = os.path.join(pkg_robot0_gazebo, 'models')
+    pkg_lib_dir = os.path.abspath(os.path.join(pkg_robot0_gazebo, '..', '..', 'lib'))
 
     resource_dirs = [
         pkg_share_parent,
@@ -35,6 +36,13 @@ def generate_launch_description():
         '/home/vuquan/edu/ros-cdt'
     ]
     env_resource_paths = ':'.join(list(dict.fromkeys(resource_dirs)))
+
+    plugin_dirs = [
+        pkg_lib_dir,
+        '/workspaces/ros-cdt/install/robot0_gazebo/lib',
+        '/home/vuquan/edu/ros-cdt/install/robot0_gazebo/lib'
+    ]
+    env_plugin_paths = ':'.join(list(dict.fromkeys(plugin_dirs)))
 
     set_gz_resource_path = AppendEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
@@ -51,6 +59,14 @@ def generate_launch_description():
     set_gz_model_path = AppendEnvironmentVariable(
         name='GAZEBO_MODEL_PATH',
         value=env_resource_paths
+    )
+    set_ign_plugin_path = AppendEnvironmentVariable(
+        name='IGN_GAZEBO_SYSTEM_PLUGIN_PATH',
+        value=env_plugin_paths
+    )
+    set_gz_plugin_path = AppendEnvironmentVariable(
+        name='GZ_SIM_SYSTEM_PLUGIN_PATH',
+        value=env_plugin_paths
     )
 
     # Launch arguments
@@ -142,6 +158,8 @@ def generate_launch_description():
         set_ign_resource_path,
         set_sdf_path,
         set_gz_model_path,
+        set_ign_plugin_path,
+        set_gz_plugin_path,
         declare_use_sim_time_cmd,
         declare_world_cmd,
         declare_use_rviz_cmd,

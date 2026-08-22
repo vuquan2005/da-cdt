@@ -30,9 +30,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0.0083 0.01 0.03" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://robot0_description/meshes/base_link.stl" />
+        <box size="0.24 0.28 0.06" />
       </geometry>
     </collision>
 
@@ -331,9 +331,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
+      <origin xyz="0 0.068 -0.033" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://robot0_description/meshes/lift_arm.stl" />
+        <box size="0.15 0.17 0.10" />
       </geometry>
     </collision>
   </link>
@@ -391,10 +391,10 @@
       <joint_name>lift_arm_joint</joint_name>
     </plugin>
 
-    <!-- Planar / Kinematic Omnidirectional Velocity Control -->
+    <!-- Planar / Kinematic Omnidirectional Velocity Control (Custom: NO Z-reset, Free Gravity Fall) -->
     <plugin
-      filename="ignition-gazebo-velocity-control-system"
-      name="ignition::gazebo::systems::VelocityControl">
+      filename="robot0_planar_velocity_control"
+      name="robot0_gazebo::PlanarVelocityControl">
       <topic>/cmd_vel</topic>
     </plugin>
 
@@ -462,7 +462,7 @@
         <optical_frame_id>camera_optical_link</optical_frame_id>
       </camera>
       <always_on>1</always_on>
-      <update_rate>30</update_rate>
+      <update_rate>15</update_rate>
       <visualize>true</visualize>
       <topic>/camera/image_raw</topic>
     </sensor>
