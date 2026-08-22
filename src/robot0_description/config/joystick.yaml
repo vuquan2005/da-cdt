@@ -1,6 +1,7 @@
 joy_node:
   ros__parameters:
     # SDL device name; stable even when Linux /dev/input/jsN changes (e.g. keyd).
+    device_id: 0
     device_name: "PowerA Xbox Series X Controller"
     deadzone: 0.05
     autorepeat_rate: 20.0

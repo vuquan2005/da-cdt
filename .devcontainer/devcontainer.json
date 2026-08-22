@@ -10,8 +10,18 @@
   "updateRemoteUserUID": true,
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind",
-  "runArgs": ["--network=host", "--ipc=host", "--gpus=all", "--device=/dev/input"],
-  "mounts": ["source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind"],
+  "privileged": true,
+  "runArgs": [
+    "--network=host",
+    "--ipc=host",
+    "--gpus=all",
+    "--privileged"
+  ],
+  "mounts": [
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind",
+    "source=/dev,target=/dev,type=bind",
+    "source=/run/udev,target=/run/udev,type=bind,readonly"
+  ],
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
     "NVIDIA_VISIBLE_DEVICES": "all",
