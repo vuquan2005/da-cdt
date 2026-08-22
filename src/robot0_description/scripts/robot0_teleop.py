@@ -14,6 +14,8 @@ class Robot0Teleop(Node):
 
         # Parameters
         self.declare_parameter('deadzone', 0.05)
+        self.declare_parameter('require_enable_button', True)
+        self.declare_parameter('enable_button', 4)       # Button LB (index 4)
         self.declare_parameter('scale_linear_x', 0.5)
         self.declare_parameter('scale_linear_y', 0.5)
         self.declare_parameter('scale_angular_z', 1.2)
@@ -73,6 +75,8 @@ class Robot0Teleop(Node):
 
         msg = self.latest_joy
         deadzone = self.get_parameter('deadzone').value
+        require_enable = self.get_parameter('require_enable_button').value
+        enable_btn_idx = self.get_parameter('enable_button').value
         scale_x = self.get_parameter('scale_linear_x').value
         scale_y = self.get_parameter('scale_linear_y').value
         scale_ang = self.get_parameter('scale_angular_z').value
@@ -86,7 +90,11 @@ class Robot0Teleop(Node):
         btn_b = msg.buttons[1] if len(msg.buttons) > 1 else 0
         btn_x = msg.buttons[2] if len(msg.buttons) > 2 else 0
         btn_y = msg.buttons[3] if len(msg.buttons) > 3 else 0
+        btn_lb = msg.buttons[enable_btn_idx] if len(msg.buttons) > enable_btn_idx else 0
         btn_rb = msg.buttons[5] if len(msg.buttons) > 5 else 0
+
+        # Enable/Deadman check
+        is_enabled = (btn_lb == 1) if require_enable else True
 
         # Axes: LeftX(0), LeftY(1), LT(2), RightX(3), RightY(4), RT(5), DpadX(6), DpadY(7)
         axis_left_x = msg.axes[0] if len(msg.axes) > 0 else 0.0
@@ -103,25 +111,26 @@ class Robot0Teleop(Node):
         twist = Twist()
         is_moving_now = False
 
-        # Translation: Left stick
-        if abs(axis_left_y) > deadzone:
-            twist.linear.x = axis_left_y * scale_x * multiplier
-            is_moving_now = True
+        if is_enabled:
+            # Translation: Left stick
+            if abs(axis_left_y) > deadzone:
+                twist.linear.x = axis_left_y * scale_x * multiplier
+                is_moving_now = True
 
-        if abs(axis_left_x) > deadzone:
-            twist.linear.y = axis_left_x * scale_y * multiplier
-            is_moving_now = True
+            if abs(axis_left_x) > deadzone:
+                twist.linear.y = axis_left_x * scale_y * multiplier
+                is_moving_now = True
 
-        # In-place Rotation: Button X (Rotate Left) or Button B (Rotate Right)
-        if btn_x == 1 and btn_b == 0:
-            twist.angular.z = scale_ang * multiplier      # Turn Left (CCW)
-            is_moving_now = True
-        elif btn_b == 1 and btn_x == 0:
-            twist.angular.z = -scale_ang * multiplier     # Turn Right (CW)
-            is_moving_now = True
-        elif abs(axis_right_x) > deadzone:
-            twist.angular.z = axis_right_x * scale_ang * multiplier
-            is_moving_now = True
+            # In-place Rotation: Button X (Rotate Left) or Button B (Rotate Right)
+            if btn_x == 1 and btn_b == 0:
+                twist.angular.z = scale_ang * multiplier      # Turn Left (CCW)
+                is_moving_now = True
+            elif btn_b == 1 and btn_x == 0:
+                twist.angular.z = -scale_ang * multiplier     # Turn Right (CW)
+                is_moving_now = True
+            elif abs(axis_right_x) > deadzone:
+                twist.angular.z = axis_right_x * scale_ang * multiplier
+                is_moving_now = True
 
         if is_moving_now:
             self.cmd_vel_pub.publish(twist)
