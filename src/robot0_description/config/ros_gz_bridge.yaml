@@ -34,3 +34,35 @@
   ros_type_name: "tf2_msgs/msg/TFMessage"
   gz_type_name: "ignition.msgs.Pose_V"
   direction: GZ_TO_ROS
+
+# Lift Arm Position Command (ROS 2 -> Gazebo)
+- ros_topic_name: "/lift_joint_cmd"
+  gz_topic_name: "/model/robot0/joint/lift_arm_joint/0/cmd_pos"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "ignition.msgs.Double"
+  direction: ROS_TO_GZ
+
+# Wheel Velocity Commands (ROS 2 -> Gazebo)
+- ros_topic_name: "/wheel_fl_cmd_vel"
+  gz_topic_name: "/model/robot0/joint/wheel_fl_joint/cmd_vel"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "ignition.msgs.Double"
+  direction: ROS_TO_GZ
+
+- ros_topic_name: "/wheel_fr_cmd_vel"
+  gz_topic_name: "/model/robot0/joint/wheel_fr_joint/cmd_vel"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "ignition.msgs.Double"
+  direction: ROS_TO_GZ
+
+- ros_topic_name: "/wheel_rl_cmd_vel"
+  gz_topic_name: "/model/robot0/joint/wheel_rl_joint/cmd_vel"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "ignition.msgs.Double"
+  direction: ROS_TO_GZ
+
+- ros_topic_name: "/wheel_rr_cmd_vel"
+  gz_topic_name: "/model/robot0/joint/wheel_rr_joint/cmd_vel"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "ignition.msgs.Double"
+  direction: ROS_TO_GZ

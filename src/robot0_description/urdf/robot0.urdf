@@ -195,20 +195,20 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="3.14159265358979 0 0" />
+      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
       <geometry>
-        <mesh filename="package://robot0_description/meshes/wheel_right.stl" />
+        <cylinder radius="0.0487" length="0.045" />
       </geometry>
     </collision>
   </link>
 
   <joint name="wheel_fr_joint" type="continuous">
-    <origin xyz="0.162171576273727 0.109279512977855 -0.023933876070515" rpy="-1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="0.162171576273727 0.109279512977855 -0.02385" rpy="-1.5707963267949 -1.5707963267949 0" />
     <parent link="base_link" />
     <child link="wheel_fr_link" />
     <axis xyz="0 -1 0" />
     <limit effort="10.0" velocity="20.0" />
-    <dynamics damping="0.05" friction="0.05" />
+    <dynamics damping="0.01" friction="0.01" />
   </joint>
 
   <!-- Front-Left Wheel (Red X UP, Green Y OUTWARD Left) -->
@@ -228,20 +228,20 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
       <geometry>
-        <mesh filename="package://robot0_description/meshes/wheel_left.stl" />
+        <cylinder radius="0.0487" length="0.045" />
       </geometry>
     </collision>
   </link>
 
   <joint name="wheel_fl_joint" type="continuous">
-    <origin xyz="-0.145628423726273 0.109279512977855 -0.0237659380661" rpy="1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="-0.145628423726273 0.109279512977855 -0.02385" rpy="1.5707963267949 -1.5707963267949 0" />
     <parent link="base_link" />
     <child link="wheel_fl_link" />
     <axis xyz="0 1 0" />
     <limit effort="10.0" velocity="20.0" />
-    <dynamics damping="0.05" friction="0.05" />
+    <dynamics damping="0.01" friction="0.01" />
   </joint>
 
   <!-- Rear-Right Wheel (Red X UP, Green Y OUTWARD Right) -->
@@ -261,20 +261,20 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="3.14159265358979 0 3.14159265358979" />
+      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
       <geometry>
-        <mesh filename="package://robot0_description/meshes/wheel_left.stl" />
+        <cylinder radius="0.0487" length="0.045" />
       </geometry>
     </collision>
   </link>
 
   <joint name="wheel_rr_joint" type="continuous">
-    <origin xyz="0.162171576273727 -0.090720487022145 -0.023765938066099" rpy="-1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="0.162171576273727 -0.090720487022145 -0.02385" rpy="-1.5707963267949 -1.5707963267949 0" />
     <parent link="base_link" />
     <child link="wheel_rr_link" />
     <axis xyz="0 -1 0" />
     <limit effort="10.0" velocity="20.0" />
-    <dynamics damping="0.05" friction="0.05" />
+    <dynamics damping="0.01" friction="0.01" />
   </joint>
 
   <!-- Rear-Left Wheel (Red X UP, Green Y OUTWARD Left) -->
@@ -294,20 +294,20 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 3.14159265358979" />
+      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
       <geometry>
-        <mesh filename="package://robot0_description/meshes/wheel_right.stl" />
+        <cylinder radius="0.0487" length="0.045" />
       </geometry>
     </collision>
   </link>
 
   <joint name="wheel_rl_joint" type="continuous">
-    <origin xyz="-0.145628423726273 -0.090720487022145 -0.023933876070516" rpy="1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="-0.145628423726273 -0.090720487022145 -0.02385" rpy="1.5707963267949 -1.5707963267949 0" />
     <parent link="base_link" />
     <child link="wheel_rl_link" />
     <axis xyz="0 1 0" />
     <limit effort="10.0" velocity="20.0" />
-    <dynamics damping="0.05" friction="0.05" />
+    <dynamics damping="0.01" friction="0.01" />
   </joint>
 
   <!-- ========================================== -->
@@ -379,6 +379,42 @@
       <robot_base_frame>base_footprint</robot_base_frame>
       <tf_topic>/tf</tf_topic>
       <dimensions>3</dimensions>
+    </plugin>
+
+    <!-- Lift Arm Joint Position Controller Plugin -->
+    <plugin
+      filename="ignition-gazebo-joint-position-controller-system"
+      name="ignition::gazebo::systems::JointPositionController">
+      <joint_name>lift_arm_joint</joint_name>
+      <topic>/model/robot0/joint/lift_arm_joint/0/cmd_pos</topic>
+      <p_gain>5000.0</p_gain>
+      <i_gain>100.0</i_gain>
+      <d_gain>50.0</d_gain>
+    </plugin>
+    <!-- Wheel Velocity Controllers (for synchronized visual rotation) -->
+    <plugin
+      filename="ignition-gazebo-joint-controller-system"
+      name="ignition::gazebo::systems::JointController">
+      <joint_name>wheel_fl_joint</joint_name>
+      <topic>/model/robot0/joint/wheel_fl_joint/cmd_vel</topic>
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-joint-controller-system"
+      name="ignition::gazebo::systems::JointController">
+      <joint_name>wheel_fr_joint</joint_name>
+      <topic>/model/robot0/joint/wheel_fr_joint/cmd_vel</topic>
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-joint-controller-system"
+      name="ignition::gazebo::systems::JointController">
+      <joint_name>wheel_rl_joint</joint_name>
+      <topic>/model/robot0/joint/wheel_rl_joint/cmd_vel</topic>
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-joint-controller-system"
+      name="ignition::gazebo::systems::JointController">
+      <joint_name>wheel_rr_joint</joint_name>
+      <topic>/model/robot0/joint/wheel_rr_joint/cmd_vel</topic>
     </plugin>
   </gazebo>
 
