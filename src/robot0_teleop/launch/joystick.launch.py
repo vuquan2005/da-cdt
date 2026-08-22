@@ -6,8 +6,8 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    pkg_robot0_description = get_package_share_directory('robot0_description')
-    default_config_path = os.path.join(pkg_robot0_description, 'config', 'joy_teleop.yaml')
+    pkg_robot0_teleop = get_package_share_directory('robot0_teleop')
+    default_config_path = os.path.join(pkg_robot0_teleop, 'config', 'joy_teleop.yaml')
 
     # Launch arguments
     config_file_arg = DeclareLaunchArgument(
@@ -39,10 +39,10 @@ def generate_launch_description():
         output='screen'
     )
 
-    # Robot0 Teleop Node (Controls base /cmd_vel with auto-brake & lift /lift_position_controller/commands)
+    # Robot0 Teleop Node (Controls base /cmd_vel with auto-brake & lift /lift_joint_cmd)
     teleop_node = Node(
-        package='robot0_description',
-        executable='robot0_teleop.py',
+        package='robot0_teleop',
+        executable='teleop_node',
         name='robot0_teleop',
         parameters=[
             config_file,

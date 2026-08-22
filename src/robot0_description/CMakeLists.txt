@@ -8,14 +8,10 @@ endif()
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY config launch meshes rviz urdf worlds
+  DIRECTORY config launch meshes rviz urdf
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(
-  PROGRAMS scripts/robot0_teleop.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-
 ament_package()
+
 
