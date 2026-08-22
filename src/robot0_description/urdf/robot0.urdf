@@ -7,7 +7,7 @@
   <link name="base_footprint" />
 
   <joint name="base_footprint_joint" type="fixed">
-    <origin xyz="0 0 0.06" rpy="0 0 0" />
+    <origin xyz="0 0 0.06" rpy="0 0 -1.5707963267948966" />
     <parent link="base_footprint" />
     <child link="base_link" />
   </joint>
@@ -363,21 +363,22 @@
       <joint_name>lift_arm_joint</joint_name>
     </plugin>
 
+    <!-- Planar / Kinematic Omnidirectional Velocity Control -->
     <plugin
-      filename="ignition-gazebo-mecanum-drive-system"
-      name="ignition::gazebo::systems::MecanumDrive">
-      <front_left_joint>wheel_fl_joint</front_left_joint>
-      <front_right_joint>wheel_fr_joint</front_right_joint>
-      <back_left_joint>wheel_rl_joint</back_left_joint>
-      <back_right_joint>wheel_rr_joint</back_right_joint>
-      <wheel_separation>0.3078</wheel_separation>
-      <wheel_base>0.2000</wheel_base>
-      <wheel_radius>0.0487</wheel_radius>
+      filename="ignition-gazebo-velocity-control-system"
+      name="ignition::gazebo::systems::VelocityControl">
       <topic>/cmd_vel</topic>
+    </plugin>
+
+    <!-- Ground Truth Odometry & TF Publisher -->
+    <plugin
+      filename="ignition-gazebo-odometry-publisher-system"
+      name="ignition::gazebo::systems::OdometryPublisher">
       <odom_topic>/odom</odom_topic>
+      <odom_frame>odom</odom_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
       <tf_topic>/tf</tf_topic>
-      <frame_id>odom</frame_id>
-      <child_frame_id>base_footprint</child_frame_id>
+      <dimensions>3</dimensions>
     </plugin>
   </gazebo>
 
@@ -389,35 +390,27 @@
     <material>Gazebo/Orange</material>
   </gazebo>
 
-  <gazebo reference="wheel_fr_link">
-    <mu1>1.0</mu1>
-    <mu2>0.8</mu2>
-    <kp>1000000.0</kp>
-    <kd>100.0</kd>
-    <material>Gazebo/DarkGrey</material>
-  </gazebo>
-
   <gazebo reference="wheel_fl_link">
-    <mu1>1.0</mu1>
-    <mu2>0.8</mu2>
-    <kp>1000000.0</kp>
-    <kd>100.0</kd>
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
     <material>Gazebo/DarkGrey</material>
   </gazebo>
 
-  <gazebo reference="wheel_rr_link">
-    <mu1>1.0</mu1>
-    <mu2>0.8</mu2>
-    <kp>1000000.0</kp>
-    <kd>100.0</kd>
+  <gazebo reference="wheel_fr_link">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
     <material>Gazebo/DarkGrey</material>
   </gazebo>
 
   <gazebo reference="wheel_rl_link">
-    <mu1>1.0</mu1>
-    <mu2>0.8</mu2>
-    <kp>1000000.0</kp>
-    <kd>100.0</kd>
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+  <gazebo reference="wheel_rr_link">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
     <material>Gazebo/DarkGrey</material>
   </gazebo>
 
