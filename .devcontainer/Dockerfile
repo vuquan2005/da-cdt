@@ -33,11 +33,17 @@ RUN apt-get update \
         ros-humble-ros2-control \
         ros-humble-ros2-controllers \
         ros-humble-ign-ros2-control \
+        ros-humble-cv-bridge \
+        ros-humble-image-transport \
+        ros-humble-image-transport-plugins \
+        python3-pip \
+        python3-opencv \
         joystick \
         evtest \
         sudo \
         vim \
     && rm -rf /var/lib/apt/lists/* \
+    && pip3 install --no-cache-dir ultralytics \
     && groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash ${USERNAME} \
     && usermod -aG dialout,video,input,messagebus ${USERNAME} 2>/dev/null || true \

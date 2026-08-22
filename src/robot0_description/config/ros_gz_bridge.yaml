@@ -35,6 +35,21 @@
   gz_type_name: "ignition.msgs.Pose_V"
   direction: GZ_TO_ROS
 
+# Camera Image (Gazebo -> ROS 2)
+- ros_topic_name: "/camera/image_raw"
+  gz_topic_name: "/camera/image_raw"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "ignition.msgs.Image"
+  direction: GZ_TO_ROS
+
+# Camera Info (Gazebo -> ROS 2)
+- ros_topic_name: "/camera/camera_info"
+  gz_topic_name: "/camera/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "ignition.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+
+
 # Lift Arm Position Command (ROS 2 -> Gazebo)
 - ros_topic_name: "/lift_joint_cmd"
   gz_topic_name: "/model/robot0/joint/lift_arm_joint/0/cmd_pos"

@@ -168,3 +168,6 @@ ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0, y: 0.0, z: 0.
 | `/joint_states` | `sensor_msgs/msg/JointState` | Góc và vận tốc quay 4 bánh xe                                      |
 | `/clock`        | `rosgraph_msgs/msg/Clock`    | Đồng bộ thời gian mô phỏng Gazebo                                  |
 | `/tf`           | `tf2_msgs/msg/TFMessage`     | Cây biến đổi hệ tọa độ (`odom` -> `base_footprint` -> `base_link`) |
+| `/camera/image_raw` | `sensor_msgs/msg/Image`    | Luồng hình ảnh RGB từ camera robot |
+| `/camera/camera_info`| `sensor_msgs/msg/CameraInfo`| Thông số nội tại camera (intrinsics) |
+
