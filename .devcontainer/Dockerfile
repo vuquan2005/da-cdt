@@ -34,6 +34,7 @@ RUN apt-get update \
         ros-humble-ros2-controllers \
         ros-humble-ign-ros2-control \
         ros-humble-cv-bridge \
+        ros-humble-vision-msgs \
         ros-humble-image-transport \
         ros-humble-image-transport-plugins \
         python3-pip \
@@ -43,12 +44,14 @@ RUN apt-get update \
         sudo \
         vim \
     && rm -rf /var/lib/apt/lists/* \
-    && pip3 install --no-cache-dir ultralytics \
+    && pip3 install --no-cache-dir "numpy<2.0.0" "setuptools<80" "opencv-python<5" ultralytics \
     && groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash ${USERNAME} \
     && usermod -aG dialout,video,input,messagebus ${USERNAME} 2>/dev/null || true \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
-    && chmod 0440 /etc/sudoers.d/${USERNAME}
+    && chmod 0440 /etc/sudoers.d/${USERNAME} \
+    && mkdir -p /home/${USERNAME}/.config/Ultralytics \
+    && chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.config
 
 # rosdep is initialized system-wide; dependency downloads are still performed
 # explicitly by the developer after opening the workspace.

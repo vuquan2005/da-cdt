@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    model_path: "epoch60.pt"               # Tên hoặc đường dẫn file trọng số YOLO
+    image_topic: "/camera/image_raw"       # Topic ảnh gốc từ camera robot
+    annotated_image_topic: "/yolo/annotated_image" # Topic ảnh đã vẽ bounding box
+    confidence_threshold: 0.5             # Ngưỡng tin cậy (0.0 -> 1.0)
+    iou_threshold: 0.45                   # Ngưỡng NMS IoU
+    device: ""                            # Để trống để tự nhận diện GPU CUDA (nếu có), hoặc "cpu" / "cuda:0"
+    target_class: ""                      # Để trống để nhận diện tất cả, hoặc chỉ định tên class (ví dụ: "box")
+    enable_tracking: false                # true để bật ByteTrack object tracking

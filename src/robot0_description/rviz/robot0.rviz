@@ -76,6 +76,21 @@ Visualization Manager:
       Value: /camera/image_raw
     Update Interval: 0
     Value: true
+  - Class: rviz_default_plugins/Image
+    Enabled: true
+    Max Value: 1
+    Median window: 5
+    Min Value: 0
+    Name: YOLO Detections
+    Normalize Range: false
+    Topic:
+      Depth: 5
+      Durability Policy: Volatile
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /yolo/annotated_image
+    Update Interval: 0
+    Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48

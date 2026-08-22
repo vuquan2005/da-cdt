@@ -16,23 +16,33 @@ ros-cdt/
 │   ├── tasks.json                  # Phím tắt build (Ctrl+Shift+B)
 │   └── extensions.json             # Khuyến nghị extension ROS, C++, Python
 ├── src/
-│   └── robot0_description/        # Package mô tả & mô phỏng robot
-│       ├── CMakeLists.txt          # ament_cmake build script
-│       ├── package.xml             # ROS 2 package manifest (format 3)
-│       ├── urdf/
-│       │   └── robot0.urdf         # Mô tả robot (khớp bánh xe Mecanum, plugins Gazebo)
-│       ├── meshes/                 # 30 file CAD 3D (.STL)
-│       ├── worlds/
-│       │   └── empty.sdf           # Thế giới mô phỏng Gazebo (Physics, Sun, Ground)
+│   ├── robot0_description/        # Package mô tả & mô phỏng robot
+│   │   ├── CMakeLists.txt          # ament_cmake build script
+│   │   ├── package.xml             # ROS 2 package manifest (format 3)
+│   │   ├── urdf/
+│   │   │   └── robot0.urdf         # Mô tả robot (khớp bánh xe Mecanum, plugins Gazebo)
+│   │   ├── meshes/                 # 30 file CAD 3D (.STL)
+│   │   ├── worlds/
+│   │   │   └── empty.sdf           # Thế giới mô phỏng Gazebo (Physics, Sun, Ground)
+│   │   ├── config/
+│   │   │   ├── joystick.yaml       # Cấu hình nút bấm & chế độ Mecanum Holonomic
+│   │   │   └── ros_gz_bridge.yaml  # Cầu nối dữ liệu ROS 2 <-> Gazebo
+│   │   ├── rviz/
+│   │   │   └── robot0.rviz         # Cấu hình hiển thị RViz2
+│   │   └── launch/
+│   │       ├── display.launch.py   # Mở hiển thị trên RViz2 với GUI chỉnh khớp
+│   │       ├── gazebo.launch.py    # Khởi chạy toàn bộ mô phỏng Gazebo + Bridge + RViz2
+│   │       └── joystick.launch.py  # Khởi chạy điều khiển bằng tay cầm Joystick
+│   └── robot0_vision/             # Package nhận diện ảnh YOLO (Python)
+│       ├── package.xml             # ament_python manifest
+│       ├── setup.py                # Python package build script
 │       ├── config/
-│       │   ├── joystick.yaml       # Cấu hình nút bấm & chế độ Mecanum Holonomic
-│       │   └── ros_gz_bridge.yaml  # Cầu nối dữ liệu ROS 2 <-> Gazebo
-│       ├── rviz/
-│       │   └── robot0.rviz         # Cấu hình hiển thị RViz2
-│       └── launch/
-│           ├── display.launch.py   # Mở hiển thị trên RViz2 với GUI chỉnh khớp
-│           ├── gazebo.launch.py    # Khởi chạy toàn bộ mô phỏng Gazebo + Bridge + RViz2
-│           └── joystick.launch.py  # Khởi chạy điều khiển bằng tay cầm Joystick
+│       │   └── yolo_params.yaml    # Cấu hình model_path, confidence, topic
+│       ├── launch/
+│       │   └── yolo_detector.launch.py # Khởi chạy node nhận diện YOLO
+│       └── robot0_vision/
+│           └── yolo_detector_node.py   # Node YOLO inference & visual tracking
+├── epoch60.pt                      # File trọng số mô hình YOLO đã train
 ├── .gitignore                      # Bỏ qua build/, install/, log/, python cache
 └── README.md
 ```
@@ -159,15 +169,34 @@ ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0, y: 0.0, z: 0.
 
 ---
 
+### 5. Khởi chạy Nhận diện hình ảnh YOLO (`robot0_vision`)
+
+Sau khi đã khởi chạy mô phỏng Gazebo, mở một terminal mới và chạy:
+
+```bash
+# Khởi chạy node YOLO với trọng số epoch60.pt mặc định
+ros2 launch robot0_vision yolo_detector.launch.py
+
+# Hoặc tùy chỉnh ngưỡng confidence hoặc đường dẫn model khác:
+ros2 launch robot0_vision yolo_detector.launch.py conf:=0.6 model_path:=epoch60.pt
+```
+
+Hình ảnh nhận diện cùng Bounding Box sẽ được hiển thị trực tiếp trên RViz2 tại mục **YOLO Detections** (`/yolo/annotated_image`).
+
+---
+
 ## 📊 Danh sách Topic chính
 
-| Topic           | ROS 2 Type                   | Chức năng                                                          |
-| --------------- | ---------------------------- | ------------------------------------------------------------------ |
-| `/cmd_vel`      | `geometry_msgs/msg/Twist`    | Gửi vận tốc điều khiển robot                                       |
-| `/odom`         | `nav_msgs/msg/Odometry`      | Tọa độ và vận tốc thực tế từ mô phỏng                              |
-| `/joint_states` | `sensor_msgs/msg/JointState` | Góc và vận tốc quay 4 bánh xe                                      |
-| `/clock`        | `rosgraph_msgs/msg/Clock`    | Đồng bộ thời gian mô phỏng Gazebo                                  |
-| `/tf`           | `tf2_msgs/msg/TFMessage`     | Cây biến đổi hệ tọa độ (`odom` -> `base_footprint` -> `base_link`) |
-| `/camera/image_raw` | `sensor_msgs/msg/Image`    | Luồng hình ảnh RGB từ camera robot |
-| `/camera/camera_info`| `sensor_msgs/msg/CameraInfo`| Thông số nội tại camera (intrinsics) |
+| Topic                  | ROS 2 Type                   | Chức năng                                                          |
+| ---------------------- | ---------------------------- | ------------------------------------------------------------------ |
+| `/cmd_vel`             | `geometry_msgs/msg/Twist`    | Gửi vận tốc điều khiển robot                                       |
+| `/odom`                | `nav_msgs/msg/Odometry`      | Tọa độ và vận tốc thực tế từ mô phỏng                              |
+| `/joint_states`        | `sensor_msgs/msg/JointState` | Góc và vận tốc quay 4 bánh xe                                      |
+| `/clock`               | `rosgraph_msgs/msg/Clock`    | Đồng bộ thời gian mô phỏng Gazebo                                  |
+| `/tf`                  | `tf2_msgs/msg/TFMessage`     | Cây biến đổi hệ tọa độ (`odom` -> `base_footprint` -> `base_link`) |
+| `/camera/image_raw`    | `sensor_msgs/msg/Image`      | Luồng hình ảnh RGB từ camera robot                                 |
+| `/camera/camera_info`  | `sensor_msgs/msg/CameraInfo` | Thông số nội tại camera (intrinsics)                               |
+| `/yolo/annotated_image`| `sensor_msgs/msg/Image`      | Ảnh đã vẽ Bounding Box, nhãn nhận diện & FPS                       |
+| `/yolo/target_center`  | `geometry_msgs/msg/PointStamped` | Độ lệch chuẩn hóa $(dx, dy)$ của mục tiêu để bám đuổi          |
+| `/yolo/detections_json`| `std_msgs/msg/String`        | Danh sách chi tiết các object nhận diện (định dạng JSON)           |
 
