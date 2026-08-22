@@ -83,20 +83,37 @@ def generate_launch_description():
         launch_arguments={'gz_args': ['-r ', world]}.items()
     )
 
-    # Spawn robot entity directly from URDF file (reliable, does not wait for ROS topics)
+    # Spawn robot entity from robot_description topic (includes xacro path expansions)
     spawn_robot = Node(
         package='ros_gz_sim',
         executable='create',
         output='screen',
         arguments=[
             '-world', 'default',
-            '-file', default_urdf_path,
+            '-topic', 'robot_description',
             '-name', 'robot0',
             '-allow_renaming', 'true',
             '-x', '0.0',
             '-y', '0.0',
             '-z', '0.08'
         ]
+    )
+
+    # ROS 2 Control Spawners
+    joint_state_broadcaster_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_state_broadcaster', '--controller-manager-timeout', '30'],
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen'
+    )
+
+    lift_position_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['lift_position_controller', '--controller-manager-timeout', '30'],
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen'
     )
 
     # ROS-Gazebo Parameter Bridge
@@ -131,6 +148,8 @@ def generate_launch_description():
         gz_sim,
         robot_state_publisher_node,
         spawn_robot,
+        joint_state_broadcaster_spawner,
+        lift_position_controller_spawner,
         bridge_node,
         rviz_node
     ])

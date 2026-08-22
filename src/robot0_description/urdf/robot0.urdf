@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<robot name="robot0">
+<robot name="robot0" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- ========================================== -->
   <!-- Base Links & Footprint                     -->
@@ -412,6 +412,46 @@
     <mu1>0.0</mu1>
     <mu2>0.0</mu2>
     <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+  <!-- ========================================== -->
+  <!-- ros2_control Hardware Interface            -->
+  <!-- ========================================== -->
+  <ros2_control name="IgnitionSystem" type="system">
+    <hardware>
+      <plugin>ign_ros2_control/IgnitionSystem</plugin>
+    </hardware>
+    <joint name="lift_arm_joint">
+      <command_interface name="position">
+        <param name="min">0.0</param>
+        <param name="max">0.18</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="wheel_fl_joint">
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="wheel_fr_joint">
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="wheel_rl_joint">
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="wheel_rr_joint">
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+  <!-- ros2_control Gazebo Plugin -->
+  <gazebo>
+    <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+      <parameters>$(find robot0_description)/config/controllers.yaml</parameters>
+    </plugin>
   </gazebo>
 
 </robot>

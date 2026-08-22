@@ -28,6 +28,11 @@ RUN apt-get update \
         ros-humble-joint-state-publisher-gui \
         ros-humble-robot-state-publisher \
         ros-humble-teleop-twist-keyboard \
+        ros-humble-teleop-tools \
+        ros-humble-joy-teleop \
+        ros-humble-ros2-control \
+        ros-humble-ros2-controllers \
+        ros-humble-ign-ros2-control \
         joystick \
         evtest \
         sudo \

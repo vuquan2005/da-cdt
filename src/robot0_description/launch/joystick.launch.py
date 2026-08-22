@@ -7,7 +7,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     pkg_robot0_description = get_package_share_directory('robot0_description')
-    default_config_path = os.path.join(pkg_robot0_description, 'config', 'joystick.yaml')
+    default_config_path = os.path.join(pkg_robot0_description, 'config', 'joy_teleop.yaml')
 
     # Launch arguments
     config_file_arg = DeclareLaunchArgument(
@@ -39,16 +39,17 @@ def generate_launch_description():
         output='screen'
     )
 
-    # Teleop Twist Joy Node
+    # Robot0 Teleop Node (Controls base /cmd_vel with auto-brake & lift /lift_position_controller/commands)
     teleop_node = Node(
-        package='teleop_twist_joy',
-        executable='teleop_node',
-        name='teleop_twist_joy_node',
+        package='robot0_description',
+        executable='robot0_teleop.py',
+        name='robot0_teleop',
         parameters=[
             config_file,
-            {'use_sim_time': use_sim_time}
+            {
+                'use_sim_time': use_sim_time
+            }
         ],
-        remappings=[('/cmd_vel', '/cmd_vel')],
         output='screen'
     )
 
