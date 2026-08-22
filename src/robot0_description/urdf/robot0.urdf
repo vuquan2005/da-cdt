@@ -361,8 +361,9 @@
   </link>
 
   <!-- Joint from base_link to camera_link located at RealSense optical center on base_link.stl -->
+  <!-- Tilted down by 0.5 rad pitch for better ground and near-field vision -->
   <joint name="camera_joint" type="fixed">
-    <origin xyz="0.00767 0.1788 0.272" rpy="0 0 1.5707963267948966" />
+    <origin xyz="0.00767 0.1788 0.272" rpy="0 0.5 1.5707963267948966" />
     <parent link="base_link" />
     <child link="camera_link" />
   </joint>
@@ -449,7 +450,8 @@
   <gazebo reference="camera_link">
     <sensor name="camera" type="camera">
       <camera>
-        <horizontal_fov>1.25</horizontal_fov>
+        <!-- Wide-angle FOV: ~90 deg (1.5708 rad) -->
+        <horizontal_fov>1.5708</horizontal_fov>
         <image>
           <width>640</width>
           <height>480</height>
