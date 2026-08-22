@@ -195,6 +195,29 @@ Hình ảnh nhận diện cùng Bounding Box sẽ được hiển thị trực t
 
 ---
 
+### 6. Khởi chạy toàn bộ hệ thống đồng thời (Mô phỏng + Joy + Vision)
+
+Có 2 cách để chạy đồng thời cả 3 thành phần:
+
+#### ⚡ Cách 1: Sử dụng VS Code Tasks (Giao diện đồ họa)
+1. Nhấn tổ hợp phím **`Ctrl+Shift+P`** (hoặc `F1`) -> gõ **`Tasks: Run Task`**.
+2. Chọn một trong hai task:
+   * **`ROS 2: Run All (Gazebo + Joy + Vision) [Split Terminals]`**: Tự động mở 3 terminal song song để bạn dễ quan sát log riêng của từng thành phần.
+   * **`ROS 2: Launch All (Single Terminal)`**: Chạy toàn bộ trên 1 terminal duy nhất.
+
+#### 🚀 Cách 2: Khởi chạy bằng Master Launch File (Dòng lệnh)
+```bash
+ros2 launch robot0_gazebo all.launch.py
+```
+> **Tùy chọn bổ sung:**
+> * Tắt bớt thành phần không cần thiết (ví dụ tắt Joy hoặc Vision):
+>   ```bash
+>   ros2 launch robot0_gazebo all.launch.py joy:=false
+>   ros2 launch robot0_gazebo all.launch.py vision:=false rviz:=false
+>   ```
+
+---
+
 ## 📊 Danh sách Topic chính
 
 | Topic | ROS 2 Message Type | Chức năng |
