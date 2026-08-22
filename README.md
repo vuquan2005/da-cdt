@@ -150,12 +150,13 @@ Mở một terminal mới (trong container) và chọn một trong các phương
    | Phím / Cần gạt | Chức năng | Ghi chú |
    | :--- | :--- | :--- |
    | **`LB / L1`** | **Deadman Switch (Nút an toàn)** | **Phải giữ nút này** khi gạt cần để robot di chuyển. |
-   | **`RB / R1`** | **Turbo (Tăng tốc)** | Giữ đồng thời để nhân đôi vận tốc. |
+   | **`LT / L2`** | **Độ lợi tịnh tiến (Linear Gain)** | Không nhấn: $1.0\times$ / Nhấn nhẹ: $0.5\times$ (chính xác) $\to$ Hết hành trình: $3.0\times$ (tăng tốc). |
+   | **`RT / R2`** | **Độ lợi tự xoay (Angular Gain)** | Nhấn cò để tăng độ lợi xoay góc (Yaw) mượt mà từ $1.0\times \to 3.0\times$. |
+   | **`RB / R1`** | **Turbo Digital (Tối đa)** | Giữ nút để tăng tức thì cả vận tốc tịnh tiến & xoay lên mức $3.0\times$. |
    | **Cần trái (Left Stick)** | **Tiến / Lùi / Đi ngang (Strafe)** | Điều khiển di chuyển toàn hướng Mecanum. |
    | **Cần phải (Right Stick)** | **Xoay góc (Yaw)** | Xoay trái / phải. |
-   | **Nút `X` / `B`** | **Xoay tại chỗ nhanh** | `X`: Xoay trái (CCW) / `B`: Xoay phải (CW). |
-   | **Nút `Y` / D-Pad Lên** | **Nâng tay gắp (Lift Up)** | Tăng chiều cao tay nâng (tối đa 0.18 m). |
-   | **Nút `A` / D-Pad Xuống**| **Hạ tay gắp (Lift Down)** | Giảm chiều cao tay nâng (tối thiểu 0.0 m). |
+   | **Nút `Y`** | **Nâng tay gắp (Lift Up)** | Tăng chiều cao tay nâng (tối đa 0.18 m). |
+   | **Nút `A`** | **Hạ tay gắp (Lift Down)** | Giảm chiều cao tay nâng (tối thiểu 0.0 m). |
 
 #### 🎮 Cách 2: Điều khiển bằng bàn phím (Keyboard Teleop)
 

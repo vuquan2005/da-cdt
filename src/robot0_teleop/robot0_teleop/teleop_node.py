@@ -19,7 +19,7 @@ class Robot0Teleop(Node):
         self.declare_parameter('scale_linear_x', 0.5)
         self.declare_parameter('scale_linear_y', 0.5)
         self.declare_parameter('scale_angular_z', 1.2)
-        self.declare_parameter('turbo_multiplier', 2.0)
+        self.declare_parameter('turbo_multiplier', 3.0)
         self.declare_parameter('lift_speed', 0.10)       # 0.10 m/s speed of lift
         self.declare_parameter('lift_min', 0.0)
         self.declare_parameter('lift_max', 0.18)
@@ -47,6 +47,8 @@ class Robot0Teleop(Node):
         self.current_lift_pos = 0.0
         self.was_moving = False
         self.latest_joy = None
+        self.lt_calibrated = False
+        self.rt_calibrated = False
 
         # Control loop at 20Hz (50ms interval)
         self.timer_period = 0.05
@@ -57,7 +59,7 @@ class Robot0Teleop(Node):
         initial_msg.data = 0.0
         self.lift_pub.publish(initial_msg)
 
-        self.get_logger().info('Robot0 Teleop Node started with active auto-brake, continuous lift & kinematic wheel rotation.')
+        self.get_logger().info('Robot0 Teleop Node started with active auto-brake, continuous lift, analog LT/RT turbo & kinematic wheel rotation.')
 
     def joy_callback(self, msg: Joy):
         self.latest_joy = msg
@@ -99,14 +101,44 @@ class Robot0Teleop(Node):
         # Axes: LeftX(0), LeftY(1), LT(2), RightX(3), RightY(4), RT(5), DpadX(6), DpadY(7)
         axis_left_x = msg.axes[0] if len(msg.axes) > 0 else 0.0
         axis_left_y = msg.axes[1] if len(msg.axes) > 1 else 0.0
+        axis_lt = msg.axes[2] if len(msg.axes) > 2 else 1.0
         axis_right_x = msg.axes[3] if len(msg.axes) > 3 else 0.0
-        axis_dpad_y = msg.axes[7] if len(msg.axes) > 7 else 0.0
-
-        # Turbo multiplier if RB is held
-        multiplier = turbo_mult if (btn_rb == 1) else 1.0
+        axis_rt = msg.axes[5] if len(msg.axes) > 5 else 1.0
 
         # -----------------------------------------------------------------
-        # 1. Base Movement Control (/cmd_vel) & Mecanum Kinematic Wheels
+        # 1. Analog Triggers Processing (LT for Linear Gain, RT for Angular Gain)
+        # -----------------------------------------------------------------
+        # LT Trigger: Gain = 1.0 (unpressed), 0.5 (light press) -> 3.0 (full travel)
+        if not self.lt_calibrated:
+            if abs(axis_lt - 1.0) < 0.1 or abs(axis_lt) > 0.05:
+                self.lt_calibrated = True
+
+        linear_multiplier = 1.0
+        if self.lt_calibrated:
+            lt_depth = max(0.0, min(1.0, (1.0 - axis_lt) / 2.0))
+            if lt_depth > deadzone:
+                u_lt = (lt_depth - deadzone) / (1.0 - deadzone)
+                linear_multiplier = 0.5 + (turbo_mult - 0.5) * u_lt
+
+        # RT Trigger: Gain = 1.0 (unpressed) -> 3.0 (full travel) for self-rotation
+        if not self.rt_calibrated:
+            if abs(axis_rt - 1.0) < 0.1 or abs(axis_rt) > 0.05:
+                self.rt_calibrated = True
+
+        ang_multiplier = 1.0
+        if self.rt_calibrated:
+            rt_depth = max(0.0, min(1.0, (1.0 - axis_rt) / 2.0))
+            if rt_depth > deadzone:
+                u_rt = (rt_depth - deadzone) / (1.0 - deadzone)
+                ang_multiplier = 1.0 + (turbo_mult - 1.0) * u_rt
+
+        # Digital RB button override (applies turbo_mult to both linear and angular)
+        if btn_rb == 1:
+            linear_multiplier = max(linear_multiplier, turbo_mult)
+            ang_multiplier = max(ang_multiplier, turbo_mult)
+
+        # -----------------------------------------------------------------
+        # 2. Base Movement Control (/cmd_vel) & Mecanum Kinematic Wheels
         # -----------------------------------------------------------------
         twist = Twist()
         is_moving_now = False
@@ -114,22 +146,16 @@ class Robot0Teleop(Node):
         if is_enabled:
             # Translation: Left stick
             if abs(axis_left_y) > deadzone:
-                twist.linear.x = axis_left_y * scale_x * multiplier
+                twist.linear.x = axis_left_y * scale_x * linear_multiplier
                 is_moving_now = True
 
             if abs(axis_left_x) > deadzone:
-                twist.linear.y = axis_left_x * scale_y * multiplier
+                twist.linear.y = axis_left_x * scale_y * linear_multiplier
                 is_moving_now = True
 
-            # In-place Rotation: Button X (Rotate Left) or Button B (Rotate Right)
-            if btn_x == 1 and btn_b == 0:
-                twist.angular.z = scale_ang * multiplier      # Turn Left (CCW)
-                is_moving_now = True
-            elif btn_b == 1 and btn_x == 0:
-                twist.angular.z = -scale_ang * multiplier     # Turn Right (CW)
-                is_moving_now = True
-            elif abs(axis_right_x) > deadzone:
-                twist.angular.z = axis_right_x * scale_ang * multiplier
+            # Rotation (Yaw): Right stick
+            if abs(axis_right_x) > deadzone:
+                twist.angular.z = axis_right_x * scale_ang * ang_multiplier
                 is_moving_now = True
 
         if is_moving_now:
@@ -153,14 +179,14 @@ class Robot0Teleop(Node):
         step = lift_speed * self.timer_period
 
         lift_changed = False
-        # Raise: Button Y or D-Pad Up
-        if btn_y == 1 or axis_dpad_y > 0.5:
+        # Raise: Button Y
+        if btn_y == 1:
             new_pos = min(lift_max, self.current_lift_pos + step)
             if new_pos != self.current_lift_pos:
                 self.current_lift_pos = new_pos
                 lift_changed = True
-        # Lower: Button A or D-Pad Down
-        elif btn_a == 1 or axis_dpad_y < -0.5:
+        # Lower: Button A
+        elif btn_a == 1:
             new_pos = max(lift_min, self.current_lift_pos - step)
             if new_pos != self.current_lift_pos:
                 self.current_lift_pos = new_pos

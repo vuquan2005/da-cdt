@@ -13,7 +13,7 @@ robot0_teleop:
     scale_linear_x: 0.5
     scale_linear_y: 0.5
     scale_angular_z: 1.2
-    turbo_multiplier: 2.0
+    turbo_multiplier: 3.0
     lift_speed: 0.10
     lift_min: 0.0
     lift_max: 0.18
