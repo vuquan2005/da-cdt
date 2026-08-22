@@ -1,6 +1,6 @@
 /**:
   ros__parameters:
-    model_path: "epoch60.pt"               # Tên hoặc đường dẫn file trọng số YOLO
+    model_path: "models/best.pt"           # Tên hoặc đường dẫn file trọng số YOLO (trong package share hoặc tuyệt đối)
     image_topic: "/camera/image_raw"       # Topic ảnh gốc từ camera robot
     annotated_image_topic: "/yolo/annotated_image" # Topic ảnh đã vẽ bounding box
     confidence_threshold: 0.5             # Ngưỡng tin cậy (0.0 -> 1.0)

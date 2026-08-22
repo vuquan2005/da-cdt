@@ -8,11 +8,12 @@ from launch_ros.actions import Node
 def generate_launch_description():
     pkg_robot0_vision = get_package_share_directory('robot0_vision')
     default_config_path = os.path.join(pkg_robot0_vision, 'config', 'yolo_params.yaml')
+    default_model_path = os.path.join(pkg_robot0_vision, 'models', 'best.pt')
 
     # Launch Arguments
     model_path_arg = DeclareLaunchArgument(
         'model_path',
-        default_value='epoch60.pt',
+        default_value=default_model_path,
         description='Path or filename of YOLO weights'
     )
 

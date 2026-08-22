@@ -70,7 +70,7 @@ class YoloDetectorNode(Node):
         super().__init__('yolo_detector_node')
 
         # Declare parameters
-        self.declare_parameter('model_path', 'epoch60.pt')
+        self.declare_parameter('model_path', 'models/best.pt')
         self.declare_parameter('image_topic', '/camera/image_raw')
         self.declare_parameter('annotated_image_topic', '/yolo/annotated_image')
         self.declare_parameter('confidence_threshold', 0.5)
@@ -159,11 +159,33 @@ class YoloDetectorNode(Node):
 
     def _resolve_model_path(self, model_param: str) -> str:
         """Find the full path to the model weights file."""
+        # 1. Direct path (absolute or relative to current working dir)
+        if os.path.isfile(model_param):
+            return os.path.abspath(model_param)
+
+        basename = os.path.basename(model_param)
+
+        # 2. Check package share directory
+        try:
+            from ament_index_python.packages import get_package_share_directory
+            pkg_share = get_package_share_directory('robot0_vision')
+            candidates = [
+                os.path.join(pkg_share, model_param),
+                os.path.join(pkg_share, 'models', basename),
+                os.path.join(pkg_share, basename),
+            ]
+            for candidate in candidates:
+                if os.path.isfile(candidate):
+                    return os.path.abspath(candidate)
+        except Exception:
+            pass
+
+        # 3. Check workspace source / relative candidates
         candidates = [
-            model_param,
-            os.path.join('/workspaces/ros-cdt', model_param),
-            os.path.join(os.getcwd(), model_param),
-            os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', model_param),
+            os.path.join(os.getcwd(), 'src', 'robot0_vision', 'models', basename),
+            os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'src', 'robot0_vision', 'models', basename),
+            os.path.join(os.path.dirname(__file__), '..', 'models', basename),
+            os.path.join('/workspaces/ros-cdt', 'src', 'robot0_vision', 'models', basename),
         ]
         for candidate in candidates:
             if os.path.isfile(candidate):

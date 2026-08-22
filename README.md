@@ -38,11 +38,12 @@ ros-cdt/
 │       ├── setup.py                # Python package build script
 │       ├── config/
 │       │   └── yolo_params.yaml    # Cấu hình model_path, confidence, topic
+│       ├── models/
+│       │   └── best.pt             # Trọng số mô hình YOLO đã huấn luyện
 │       ├── launch/
 │       │   └── yolo_detector.launch.py # Khởi chạy node nhận diện YOLO
 │       └── robot0_vision/
 │           └── yolo_detector_node.py   # Node YOLO inference & visual tracking
-├── epoch60.pt                      # File trọng số mô hình YOLO đã train
 ├── .gitignore                      # Bỏ qua build/, install/, log/, python cache
 └── README.md
 ```
@@ -174,11 +175,11 @@ ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0, y: 0.0, z: 0.
 Sau khi đã khởi chạy mô phỏng Gazebo, mở một terminal mới và chạy:
 
 ```bash
-# Khởi chạy node YOLO với trọng số epoch60.pt mặc định
+# Khởi chạy node YOLO với trọng số models/best.pt mặc định
 ros2 launch robot0_vision yolo_detector.launch.py
 
 # Hoặc tùy chỉnh ngưỡng confidence hoặc đường dẫn model khác:
-ros2 launch robot0_vision yolo_detector.launch.py conf:=0.6 model_path:=epoch60.pt
+ros2 launch robot0_vision yolo_detector.launch.py conf:=0.6 model_path:=models/best.pt
 ```
 
 Hình ảnh nhận diện cùng Bounding Box sẽ được hiển thị trực tiếp trên RViz2 tại mục **YOLO Detections** (`/yolo/annotated_image`).
