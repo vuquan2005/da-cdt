@@ -22,7 +22,7 @@ class Robot0Teleop(Node):
         self.declare_parameter('turbo_multiplier', 3.0)
         self.declare_parameter('lift_speed', 0.10)       # 0.10 m/s speed of lift
         self.declare_parameter('lift_min', 0.0)
-        self.declare_parameter('lift_max', 0.18)
+        self.declare_parameter('lift_max', 0.20)
 
         # Mecanum Robot Geometry
         self.wheel_radius = 0.0487  # m

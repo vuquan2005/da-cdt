@@ -16,4 +16,4 @@ robot0_teleop:
     turbo_multiplier: 3.0
     lift_speed: 0.10
     lift_min: 0.0
-    lift_max: 0.18
+    lift_max: 0.20
