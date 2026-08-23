@@ -22,6 +22,7 @@ def generate_launch_description():
     use_joy = LaunchConfiguration('joy', default='true')
     use_vision = LaunchConfiguration('vision', default='true')
     conf = LaunchConfiguration('conf', default='0.5')
+    imgsz = LaunchConfiguration('imgsz', default='640')
 
     # Declare Launch Arguments
     declare_use_sim_time_cmd = DeclareLaunchArgument(
@@ -60,6 +61,12 @@ def generate_launch_description():
         description='YOLO confidence threshold'
     )
 
+    declare_imgsz_cmd = DeclareLaunchArgument(
+        'imgsz',
+        default_value='640',
+        description='YOLO inference image size (640, 480, 320)'
+    )
+
     # 1. Mô phỏng Gazebo (Gazebo Fortress + Bridge + Robot State Publisher + RViz2)
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -89,7 +96,8 @@ def generate_launch_description():
             os.path.join(pkg_robot0_vision, 'launch', 'yolo_detector.launch.py')
         ),
         launch_arguments={
-            'conf': conf
+            'conf': conf,
+            'imgsz': imgsz
         }.items(),
         condition=IfCondition(use_vision)
     )
@@ -101,7 +109,9 @@ def generate_launch_description():
         declare_use_joy_cmd,
         declare_use_vision_cmd,
         declare_conf_cmd,
+        declare_imgsz_cmd,
         gazebo_launch,
         joystick_launch,
         vision_launch
     ])
+

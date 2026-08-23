@@ -29,6 +29,24 @@ def generate_launch_description():
         description='Confidence threshold'
     )
 
+    imgsz_arg = DeclareLaunchArgument(
+        'imgsz',
+        default_value='640',
+        description='Inference image size (e.g. 640, 480, 320)'
+    )
+
+    device_arg = DeclareLaunchArgument(
+        'device',
+        default_value='',
+        description='Compute device (empty for auto, "cuda:0", "cpu")'
+    )
+
+    target_class_arg = DeclareLaunchArgument(
+        'target_class',
+        default_value='',
+        description='Filter specific target class name (empty for all)'
+    )
+
     params_file_arg = DeclareLaunchArgument(
         'params_file',
         default_value=default_config_path,
@@ -47,6 +65,9 @@ def generate_launch_description():
                 'model_path': LaunchConfiguration('model_path'),
                 'image_topic': LaunchConfiguration('image_topic'),
                 'confidence_threshold': LaunchConfiguration('conf'),
+                'imgsz': LaunchConfiguration('imgsz'),
+                'device': LaunchConfiguration('device'),
+                'target_class': LaunchConfiguration('target_class'),
             }
         ]
     )
@@ -55,6 +76,10 @@ def generate_launch_description():
         model_path_arg,
         image_topic_arg,
         conf_arg,
+        imgsz_arg,
+        device_arg,
+        target_class_arg,
         params_file_arg,
         yolo_node
     ])
+

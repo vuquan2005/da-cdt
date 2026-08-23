@@ -1,10 +1,25 @@
 /**:
   ros__parameters:
+    # --- Model & Hardware Settings ---
     model_path: "models/best.pt"           # Tên hoặc đường dẫn file trọng số YOLO (trong package share hoặc tuyệt đối)
+    device: ""                            # Để trống để tự nhận diện GPU CUDA (nếu có), hoặc "cpu" / "cuda:0"
+    imgsz: 640                            # Kích thước ảnh đầu vào model (640, 480, 320...). Giảm xuống 320/480 để tăng tốc đáng kể trên CPU
+    half: true                            # Bật FP16 Half Precision khi chạy trên GPU CUDA (tăng tốc 2-3x)
+
+    # --- Topic & Communication Settings ---
     image_topic: "/camera/image_raw"       # Topic ảnh gốc từ camera robot
     annotated_image_topic: "/yolo/annotated_image" # Topic ảnh đã vẽ bounding box
+    target_point_topic: "/yolo/target_center"     # Topic tọa độ mục tiêu (PointStamped)
+    detections_json_topic: "/yolo/detections_json" # Topic kết quả nhận diện dạng JSON (String)
+    qos_reliability: "best_effort"        # "best_effort" hoặc "reliable" (mặc định best_effort tương thích sensor data)
+
+    # --- Detection & Tracking Settings ---
     confidence_threshold: 0.5             # Ngưỡng tin cậy (0.0 -> 1.0)
     iou_threshold: 0.45                   # Ngưỡng NMS IoU
-    device: ""                            # Để trống để tự nhận diện GPU CUDA (nếu có), hoặc "cpu" / "cuda:0"
-    target_class: ""                      # Để trống để nhận diện tất cả, hoặc chỉ định tên class (ví dụ: "box")
+    target_class: ""                      # Để trống để nhận diện tất cả, hoặc chỉ định tên class (ví dụ: "chip", "qr", "al", "samsung")
     enable_tracking: false                # true để bật ByteTrack object tracking
+
+    # --- Performance & Queue Settings ---
+    max_fps: 0.0                          # Giới hạn FPS tối đa (0.0 = không giới hạn, xử lý nhanh nhất có thể theo tốc độ GPU/CPU)
+    publish_annotated_image: true         # Bật/tắt vẽ và publish ảnh annotated (tự động bỏ qua vẽ khi không có subscriber để tiết kiệm CPU/GPU)
+
