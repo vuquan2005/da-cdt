@@ -1,96 +1,182 @@
 Panels:
-- Class: rviz_common/Displays
-  Help Height: 78
-  Name: Displays
-  Property Tree Widget:
-    Expanded:
-    - /Global Options1
-    - /Status1
-    - /RobotModel1
-    - /TF1
-    Splitter Ratio: 0.5
-  Tree Height: 557
+  - Class: rviz_common/Displays
+    Help Height: 78
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Status1
+        - /RobotModel1
+        - /TF1
+      Splitter Ratio: 0.5
+    Tree Height: 356
 Visualization Manager:
-  Class: ''
+  Class: ""
   Displays:
-  - Alpha: 0.5
-    Cell Size: 1
-    Class: rviz_default_plugins/Grid
-    Color: 160; 160; 164
-    Enabled: true
-    Line Style:
-      Line Width: 0.03
-      Value: Lines
-    Name: Grid
-    Normal Cell Count: 0
-    Offset:
-      X: 0
-      Y: 0
-      Z: 0
-    Plane: XY
-    Plane Cell Count: 10
-    Reference Frame: <Fixed Frame>
-    Value: true
-  - Alpha: 1
-    Class: rviz_default_plugins/RobotModel
-    Collision Enabled: false
-    Description File: ''
-    Description Source: Topic
-    Description Topic:
-      Depth: 5
-      Durability Policy: Volatile
-      History Policy: Keep Last
-      Reliability Policy: Reliable
-      Value: /robot_description
-    Enabled: true
-    Name: RobotModel
-    TF Prefix: ''
-    Update Interval: 0
-    Value: true
-    Visual Enabled: true
-  - Class: rviz_default_plugins/TF
-    Enabled: true
-    Frame Timeout: 15
-    Frames:
-      All Enabled: true
-    Marker Scale: 0.35
-    Name: TF
-    Show Arrows: true
-    Show Axes: true
-    Show Names: true
-    Tree: {}
-    Update Interval: 0
-    Value: true
-  - Class: rviz_default_plugins/Image
-    Enabled: true
-    Max Value: 1
-    Median window: 5
-    Min Value: 0
-    Name: Camera Live
-    Normalize Range: false
-    Topic:
-      Depth: 5
-      Durability Policy: Volatile
-      History Policy: Keep Last
-      Reliability Policy: Reliable
-      Value: /camera/image_raw
-    Update Interval: 0
-    Value: true
-  - Class: rviz_default_plugins/Image
-    Enabled: true
-    Max Value: 1
-    Median window: 5
-    Min Value: 0
-    Name: YOLO Detections
-    Normalize Range: false
-    Topic:
-      Depth: 5
-      Durability Policy: Volatile
-      History Policy: Keep Last
-      Reliability Policy: Reliable
-      Value: /yolo/annotated_image
-    Update Interval: 0
-    Value: true
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz_default_plugins/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_optical_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        lift_arm_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_fl_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_fr_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_rl_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_rr_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        camera_link:
+          Value: true
+        camera_optical_link:
+          Value: true
+        lift_arm_link:
+          Value: true
+        odom:
+          Value: true
+        wheel_fl_link:
+          Value: true
+        wheel_fr_link:
+          Value: true
+        wheel_rl_link:
+          Value: true
+        wheel_rr_link:
+          Value: true
+      Marker Scale: 0.3499999940395355
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        base_footprint:
+          base_link:
+            camera_link:
+              camera_optical_link:
+                {}
+            lift_arm_link:
+              {}
+            wheel_fl_link:
+              {}
+            wheel_fr_link:
+              {}
+            wheel_rl_link:
+              {}
+            wheel_rr_link:
+              {}
+        odom:
+          {}
+      Update Interval: 0
+      Value: true
+    - Class: rviz_default_plugins/Image
+      Enabled: true
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Camera Live
+      Normalize Range: false
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /camera/image_raw
+      Value: true
+    - Class: rviz_default_plugins/Image
+      Enabled: true
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: YOLO Detections
+      Normalize Range: false
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /yolo/annotated_image
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -98,11 +184,11 @@ Visualization Manager:
     Frame Rate: 30
   Name: root
   Tools:
-  - Class: rviz_default_plugins/Interact
-    Hide Inactive Objects: true
-  - Class: rviz_default_plugins/MoveCamera
-  - Class: rviz_default_plugins/Select
-  - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Interact
+      Hide Inactive Objects: true
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
   Transformation:
     Current:
       Class: rviz_default_plugins/TF
@@ -110,22 +196,37 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.5
+      Distance: 1.4531692266464233
       Enable Stereo Rendering:
-        Stereo Eye Separation: 0.06
+        Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
         X: 0
         Y: 0
-        Z: 0.1
+        Z: 0.10000000149011612
       Focal Shape Fixed Size: true
-      Focal Shape Size: 0.05
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
-      Near Clip Distance: 0.01
-      Pitch: 0.5
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 1.4897964000701904
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.785
+      Yaw: 0.85999995470047
+    Saved: ~
+Window Geometry:
+  Camera Live:
+    collapsed: false
+  Displays:
+    collapsed: false
+  Height: 1014
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000200000000000001ad000001edfc0200000001fb000000100044006900730070006c00610079007301000001ee000001ed000000c700ffffff0000000200000780000001adfc0100000002fb0000001600430061006d0065007200610020004c0069007600650100000000000004170000008000fffffffb0000001e0059004f004c004f00200044006500740065006300740069006f006e0073010000041d000003630000009900ffffff000005cd000001ed00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Width: 1920
+  X: 0
+  Y: 29
+  YOLO Detections:
+    collapsed: false

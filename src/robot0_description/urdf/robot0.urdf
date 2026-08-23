@@ -330,11 +330,44 @@
         <color rgba="1.0 0.45 0.0 1.0" />
       </material>
     </visual>
-    <collision>
-      <origin xyz="0 0.068 -0.033" rpy="0 0 0" />
+    <!-- Back Vertical Slider Carriage Collision -->
+    <collision name="lift_arm_slider_collision">
+      <origin xyz="0 0.008 -0.033" rpy="0 0 0" />
       <geometry>
-        <box size="0.15 0.17 0.10" />
+        <box size="0.149 0.051 0.106" />
       </geometry>
+    </collision>
+
+    <!-- Left Fork Blade (Slides into pallet tunnel) -->
+    <collision name="lift_arm_fork_l_collision">
+      <origin xyz="-0.0203 0.0935 -0.083" rpy="0 0 0" />
+      <geometry>
+        <box size="0.018 0.115 0.006" />
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>1.5</mu>
+            <mu2>1.5</mu2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+
+    <!-- Right Fork Blade (Slides into pallet tunnel) -->
+    <collision name="lift_arm_fork_r_collision">
+      <origin xyz="0.0203 0.0935 -0.083" rpy="0 0 0" />
+      <geometry>
+        <box size="0.018 0.115 0.006" />
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>1.5</mu>
+            <mu2>1.5</mu2>
+          </ode>
+        </friction>
+      </surface>
     </collision>
   </link>
 
@@ -363,7 +396,7 @@
   <!-- Joint from base_link to camera_link located at RealSense optical center on base_link.stl -->
   <!-- Tilted down by 0.5 rad pitch for better ground and near-field vision -->
   <joint name="camera_joint" type="fixed">
-    <origin xyz="0.00767 0.1788 0.272" rpy="0 0.5 1.5707963267948966" />
+    <origin xyz="0.00767 0.1788 0.272" rpy="0 0.7 1.5707963267948966" />
     <parent link="base_link" />
     <child link="camera_link" />
   </joint>

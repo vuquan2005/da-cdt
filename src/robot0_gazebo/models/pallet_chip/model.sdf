@@ -1,0 +1,220 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="pallet_chip">
+    <static>false</static>
+    <link name="link">
+      <inertial>
+        <mass>0.25</mass>
+        <inertia>
+          <ixx>0.0003</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0003</iyy>
+          <iyz>0</iyz>
+          <izz>0.0004</izz>
+        </inertia>
+      </inertial>
+
+      <!-- ==================== PALLET STRUCTURE (PRIMITIVE BOXES) ==================== -->
+      <!-- Pallet Top Deck Visual -->
+      <visual name="visual_deck">
+        <pose>0 0 0.023 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.09 0.09 0.006</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.75 0.5 0.25 1.0</ambient>
+          <diffuse>0.82 0.55 0.28 1.0</diffuse>
+          <specular>0.1 0.1 0.1 1.0</specular>
+        </material>
+      </visual>
+
+      <!-- Pallet Foot 1 (Left Runner: extends along Y axis for front-entry fork) -->
+      <visual name="visual_foot_1">
+        <pose>-0.0375 0 0.010 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.015 0.09 0.020</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.65 0.42 0.20 1.0</ambient>
+          <diffuse>0.72 0.46 0.22 1.0</diffuse>
+          <specular>0.1 0.1 0.1 1.0</specular>
+        </material>
+      </visual>
+
+      <!-- Pallet Foot 2 (Middle Runner) -->
+      <visual name="visual_foot_2">
+        <pose>0 0 0.010 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.015 0.09 0.020</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.65 0.42 0.20 1.0</ambient>
+          <diffuse>0.72 0.46 0.22 1.0</diffuse>
+          <specular>0.1 0.1 0.1 1.0</specular>
+        </material>
+      </visual>
+
+      <!-- Pallet Foot 3 (Right Runner) -->
+      <visual name="visual_foot_3">
+        <pose>0.0375 0 0.010 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.015 0.09 0.020</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.65 0.42 0.20 1.0</ambient>
+          <diffuse>0.72 0.46 0.22 1.0</diffuse>
+          <specular>0.1 0.1 0.1 1.0</specular>
+        </material>
+      </visual>
+
+      <!-- ==================== PALLET COLLISIONS ==================== -->
+      <!-- Pallet Top Deck Collision -->
+      <collision name="collision_deck">
+        <pose>0 0 0.023 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.09 0.09 0.006</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.2</mu>
+              <mu2>1.2</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+      <!-- Pallet Foot Collisions (Left, Middle, Right Runners) -->
+      <collision name="collision_foot_1">
+        <pose>-0.0375 0 0.010 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.015 0.09 0.020</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_foot_2">
+        <pose>0 0 0.010 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.015 0.09 0.020</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_foot_3">
+        <pose>0.0375 0 0.010 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.015 0.09 0.020</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- ==================== 4 GOODS BLOCKS VISUALS ==================== -->
+      <!-- Block 1: Front-Left -->
+      <visual name="visual_block_1">
+        <pose>-0.021 -0.021 0.0452 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.038 0.038 0.038</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.9 0.9 0.9 1.0</ambient>
+          <diffuse>0.9 0.9 0.9 1.0</diffuse>
+          <pbr>
+            <metal>
+              <albedo_map>model://pallet_chip/materials/textures/block_3.png</albedo_map>
+              <roughness>0.3</roughness>
+              <metalness>0.0</metalness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+
+      <!-- Block 2: Front-Right -->
+      <visual name="visual_block_2">
+        <pose>0.021 -0.021 0.0452 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.038 0.038 0.038</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.9 0.9 0.9 1.0</ambient>
+          <diffuse>0.9 0.9 0.9 1.0</diffuse>
+          <pbr>
+            <metal>
+              <albedo_map>model://pallet_chip/materials/textures/block_3.png</albedo_map>
+              <roughness>0.3</roughness>
+              <metalness>0.0</metalness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+
+      <!-- Block 3: Rear-Left -->
+      <visual name="visual_block_3">
+        <pose>-0.021 0.021 0.0452 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.038 0.038 0.038</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.9 0.9 0.9 1.0</ambient>
+          <diffuse>0.9 0.9 0.9 1.0</diffuse>
+          <pbr>
+            <metal>
+              <albedo_map>model://pallet_chip/materials/textures/block_3.png</albedo_map>
+              <roughness>0.3</roughness>
+              <metalness>0.0</metalness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+
+      <!-- Block 4: Rear-Right -->
+      <visual name="visual_block_4">
+        <pose>0.021 0.021 0.0452 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.038 0.038 0.038</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.9 0.9 0.9 1.0</ambient>
+          <diffuse>0.9 0.9 0.9 1.0</diffuse>
+          <pbr>
+            <metal>
+              <albedo_map>model://pallet_chip/materials/textures/block_3.png</albedo_map>
+              <roughness>0.3</roughness>
+              <metalness>0.0</metalness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+
+      <!-- Consolidated Collision for All 4 Blocks (Ultra-Fast Physics Solver) -->
+      <collision name="collision_blocks">
+        <pose>0 0 0.0452 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.08 0.08 0.038</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

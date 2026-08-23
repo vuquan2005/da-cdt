@@ -30,8 +30,13 @@ def generate_launch_description():
         pkg_robot0_gazebo,
         pkg_robot0_description,
         gazebo_models_dir,
+        os.path.join(pkg_robot0_gazebo, 'models'),
+        '/workspaces/ros-cdt/src/robot0_gazebo/models',
+        '/workspaces/ros-cdt/install/robot0_gazebo/share/robot0_gazebo/models',
         '/workspaces/ros-cdt/src',
         '/workspaces/ros-cdt',
+        '/home/vuquan/edu/ros-cdt/src/robot0_gazebo/models',
+        '/home/vuquan/edu/ros-cdt/install/robot0_gazebo/share/robot0_gazebo/models',
         '/home/vuquan/edu/ros-cdt/src',
         '/home/vuquan/edu/ros-cdt'
     ]
@@ -125,9 +130,10 @@ def generate_launch_description():
             '-topic', 'robot_description',
             '-name', 'robot0',
             '-allow_renaming', 'true',
-            '-x', '0.0',
-            '-y', '0.0',
-            '-z', '0.08'
+            '-x', '-0.985',
+            '-y', '0.64',
+            '-z', '0.08',
+            '-Y', '0.0'
         ]
     )
 
