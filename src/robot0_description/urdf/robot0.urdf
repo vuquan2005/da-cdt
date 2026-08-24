@@ -2,24 +2,25 @@
 <robot name="robot0" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- ========================================== -->
-  <!-- Base Links & Footprint                     -->
+  <!-- Base Links & Footprint (ROS Standard REP-103) -->
   <!-- ========================================== -->
   <link name="base_footprint" />
 
+  <!-- Clean, intuitive origin: rpy="0 0 0" (REP-103: +X Forward, +Y Left, +Z Up) -->
   <joint name="base_footprint_joint" type="fixed">
-    <origin xyz="0 0 0.06" rpy="0 0 -1.5707963267948966" />
+    <origin xyz="0 0 0.06" rpy="0 0 0" />
     <parent link="base_footprint" />
     <child link="base_link" />
   </joint>
 
   <link name="base_link">
     <inertial>
-      <origin xyz="0.0082536 -0.0003708 0.0149603" rpy="0 0 0" />
+      <origin xyz="-0.0003708 -0.0082536 0.0149603" rpy="0 0 0" />
       <mass value="1.85" />
-      <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.010" iyz="0" izz="0.012" />
+      <inertia ixx="0.010" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.012" />
     </inertial>
 
-    <!-- Main Chassis Base -->
+    <!-- Main Chassis Base (Rotated to +X Forward) -->
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
@@ -30,15 +31,15 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0.0083 0.01 0.03" rpy="0 0 0" />
+      <origin xyz="0.01 -0.0083 0.03" rpy="0 0 0" />
       <geometry>
-        <box size="0.24 0.28 0.06" />
+        <box size="0.28 0.24 0.06" />
       </geometry>
     </collision>
 
     <!-- Front-Right Motor Bracket -->
     <visual>
-      <origin xyz="0.131271576273728 0.129279512977854 -0.00376593806610101" rpy="-1.5707963267949 0 3.14159265358979" />
+      <origin xyz="0.129279512977854 -0.131271576273728 -0.00376593806610101" rpy="-1.5707963267949 0 1.5707963267948934" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/motor_bracket_fr.stl" />
       </geometry>
@@ -47,7 +48,7 @@
 
     <!-- Front-Left Motor Bracket -->
     <visual>
-      <origin xyz="-0.114728423726273 0.089279512977854 -0.00376593806610101" rpy="-1.5707963267949 0 0" />
+      <origin xyz="0.089279512977854 0.114728423726273 -0.00376593806610101" rpy="-1.5707963267949 0 -1.5707963267948966" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/motor_bracket_fl.stl" />
       </geometry>
@@ -56,7 +57,7 @@
 
     <!-- Rear-Right Motor Bracket -->
     <visual>
-      <origin xyz="0.131271576273728 -0.070720487022142 -0.003765938066101" rpy="-1.5707963267949 0 3.14159265358979" />
+      <origin xyz="-0.070720487022142 -0.131271576273728 -0.003765938066101" rpy="-1.5707963267949 0 1.5707963267948934" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/motor_bracket_rr.stl" />
       </geometry>
@@ -65,7 +66,7 @@
 
     <!-- Rear-Left Motor Bracket -->
     <visual>
-      <origin xyz="-0.114728423726274 -0.115720487022144 -0.00376593806610199" rpy="-1.57079632679489 0 0" />
+      <origin xyz="-0.115720487022144 0.114728423726274 -0.00376593806610199" rpy="-1.57079632679489 0 -1.5707963267948966" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/motor_bracket_rl.stl" />
       </geometry>
@@ -74,7 +75,7 @@
 
     <!-- Front-Right Motor -->
     <visual>
-      <origin xyz="0.128271576273727 0.109279512977855 -0.0307659380661" rpy="1.5707963267949 0 1.5707963267949" />
+      <origin xyz="0.109279512977855 -0.128271576273727 -0.0307659380661" rpy="1.5707963267949 0 0" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
       </geometry>
@@ -83,7 +84,7 @@
 
     <!-- Front-Left Motor -->
     <visual>
-      <origin xyz="-0.111728423726273 0.109279512977855 -0.0307659380661" rpy="-1.5707963267949 0 -1.5707963267949" />
+      <origin xyz="0.109279512977855 0.111728423726273 -0.0307659380661" rpy="-1.5707963267949 0 -3.141592653589793" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/motor_jgb37_520_left.stl" />
       </geometry>
@@ -92,7 +93,7 @@
 
     <!-- Rear-Right Motor -->
     <visual>
-      <origin xyz="0.128271576273727 -0.090720487022144 -0.0307659380661" rpy="1.5707963267949 0 1.5707963267949" />
+      <origin xyz="-0.090720487022144 -0.128271576273727 -0.0307659380661" rpy="1.5707963267949 0 0" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
       </geometry>
@@ -101,7 +102,7 @@
 
     <!-- Rear-Left Motor -->
     <visual>
-      <origin xyz="-0.111728423726273 -0.090720487022144 -0.0307659380661" rpy="-1.5707963267949 0 -1.5707963267949" />
+      <origin xyz="-0.090720487022144 0.111728423726273 -0.0307659380661" rpy="-1.5707963267949 0 -3.141592653589793" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/motor_jgb37_520_left.stl" />
       </geometry>
@@ -110,7 +111,7 @@
 
     <!-- Lift Base Column -->
     <visual>
-      <origin xyz="0.008271576273727 0.137279512977854 0.00223406193389999" rpy="1.5707963267949 0 0" />
+      <origin xyz="0.137279512977854 -0.008271576273727 0.00223406193389999" rpy="1.5707963267949 0 -1.5707963267948966" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/lift_base.stl" />
       </geometry>
@@ -119,7 +120,7 @@
 
     <!-- Lift Motor -->
     <visual>
-      <origin xyz="0.008271576273727 0.119779512977854 0.0292340619339" rpy="-1.5707963267949 0 0" />
+      <origin xyz="0.119779512977854 -0.008271576273727 0.0292340619339" rpy="-1.5707963267949 0 -1.5707963267948966" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
       </geometry>
@@ -128,7 +129,7 @@
 
     <!-- Lift Guide Pipe 1 -->
     <visual>
-      <origin xyz="0.065771576273727 0.137279512977855 0.00823406193389999" rpy="1.5707963267949 0 -1.72157870312163" />
+      <origin xyz="0.137279512977855 -0.065771576273727 0.00823406193389999" rpy="1.5707963267949 0 -3.2923750299165266" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/lift_pipe_1.stl" />
       </geometry>
@@ -137,7 +138,7 @@
 
     <!-- Lift Guide Pipe 2 -->
     <visual>
-      <origin xyz="0.008271576273727 0.137279512977855 0.046010455529876" rpy="1.5707963267949 0 -1.42001395046816" />
+      <origin xyz="0.137279512977855 -0.008271576273727 0.046010455529876" rpy="1.5707963267949 0 -2.9908102772630566" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/lift_pipe_2.stl" />
       </geometry>
@@ -146,7 +147,7 @@
 
     <!-- Lift Top Cap -->
     <visual>
-      <origin xyz="0.008271576273728 0.137279512977854 0.2682340619339" rpy="1.5707963267949 0 0" />
+      <origin xyz="0.137279512977854 -0.008271576273728 0.2682340619339" rpy="1.5707963267949 0 -1.5707963267948966" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/lift_top_cap.stl" />
       </geometry>
@@ -155,7 +156,7 @@
 
     <!-- Lift Timing Belt -->
     <visual>
-      <origin xyz="0.008271576273728 0.128279512977855 0.2782340619339" rpy="1.5707963267949 1.5707963267949 0" />
+      <origin xyz="0.128279512977855 -0.008271576273728 0.2782340619339" rpy="1.5707963267949 1.5707963267949 -1.5707963267948966" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/lift_belt.stl" />
       </geometry>
@@ -166,7 +167,7 @@
 
     <!-- Lift Top Pulley -->
     <visual>
-      <origin xyz="0.008271576273728 0.128279512977855 0.2797340619339" rpy="-1.5707963267949 -0.897413987985829 3.14159265358979" />
+      <origin xyz="0.128279512977855 -0.008271576273728 0.2797340619339" rpy="-1.5707963267949 -0.897413987985829 1.5707963267948934" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/lift_pulley_20t.stl" />
       </geometry>
@@ -178,7 +179,7 @@
   <!-- Mecanum Wheels (Continuous Joints)         -->
   <!-- ========================================== -->
 
-  <!-- Front-Right Wheel (Red X UP, Green Y OUTWARD Right) -->
+  <!-- Front-Right Wheel -->
   <link name="wheel_fr_link">
     <inertial>
       <origin xyz="1.85e-08 0.000719 3.74e-07" rpy="0 0 0" />
@@ -203,7 +204,7 @@
   </link>
 
   <joint name="wheel_fr_joint" type="continuous">
-    <origin xyz="0.162171576273727 0.109279512977855 -0.02385" rpy="-1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="0.109279512977855 -0.162171576273727 -0.02385" rpy="-1.5707963267949 -1.5707963267949 -1.5707963267948966" />
     <parent link="base_link" />
     <child link="wheel_fr_link" />
     <axis xyz="0 -1 0" />
@@ -211,7 +212,7 @@
     <dynamics damping="0.01" friction="0.01" />
   </joint>
 
-  <!-- Front-Left Wheel (Red X UP, Green Y OUTWARD Left) -->
+  <!-- Front-Left Wheel -->
   <link name="wheel_fl_link">
     <inertial>
       <origin xyz="1.85e-08 0.000719 3.74e-07" rpy="0 0 0" />
@@ -236,7 +237,7 @@
   </link>
 
   <joint name="wheel_fl_joint" type="continuous">
-    <origin xyz="-0.145628423726273 0.109279512977855 -0.02385" rpy="1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="0.109279512977855 0.145628423726273 -0.02385" rpy="1.5707963267949 -1.5707963267949 -1.5707963267948966" />
     <parent link="base_link" />
     <child link="wheel_fl_link" />
     <axis xyz="0 1 0" />
@@ -244,7 +245,7 @@
     <dynamics damping="0.01" friction="0.01" />
   </joint>
 
-  <!-- Rear-Right Wheel (Red X UP, Green Y OUTWARD Right) -->
+  <!-- Rear-Right Wheel -->
   <link name="wheel_rr_link">
     <inertial>
       <origin xyz="1.85e-08 0.000719 3.74e-07" rpy="0 0 0" />
@@ -269,7 +270,7 @@
   </link>
 
   <joint name="wheel_rr_joint" type="continuous">
-    <origin xyz="0.162171576273727 -0.090720487022145 -0.02385" rpy="-1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="-0.090720487022145 -0.162171576273727 -0.02385" rpy="-1.5707963267949 -1.5707963267949 -1.5707963267948966" />
     <parent link="base_link" />
     <child link="wheel_rr_link" />
     <axis xyz="0 -1 0" />
@@ -277,7 +278,7 @@
     <dynamics damping="0.01" friction="0.01" />
   </joint>
 
-  <!-- Rear-Left Wheel (Red X UP, Green Y OUTWARD Left) -->
+  <!-- Rear-Left Wheel -->
   <link name="wheel_rl_link">
     <inertial>
       <origin xyz="1.85e-08 0.000719 3.74e-07" rpy="0 0 0" />
@@ -302,7 +303,7 @@
   </link>
 
   <joint name="wheel_rl_joint" type="continuous">
-    <origin xyz="-0.145628423726273 -0.090720487022145 -0.02385" rpy="1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="-0.090720487022145 0.145628423726273 -0.02385" rpy="1.5707963267949 -1.5707963267949 -1.5707963267948966" />
     <parent link="base_link" />
     <child link="wheel_rl_link" />
     <axis xyz="0 1 0" />
@@ -314,15 +315,15 @@
   <!-- Lift Mechanism (Prismatic Movable Arm)     -->
   <!-- ========================================== -->
 
-  <!-- Lift Main Arm (Clean Frame: Blue Z axis points straight UP) -->
+  <!-- Lift Main Arm -->
   <link name="lift_arm_link">
     <inertial>
-      <origin xyz="3.0454656503736E-05 -0.0180613677899576 -0.0256536372783613" rpy="1.5707963267949 0 0" />
+      <origin xyz="-0.0180613677899576 -3.0454656503736E-05 -0.0256536372783613" rpy="1.5707963267949 0 -1.5707963267948966" />
       <mass value="0.161814335334686" />
-      <inertia ixx="0.00045993" ixy="-1.38e-07" ixz="-1.26e-07" iyy="0.00038242" iyz="-0.00018047" izz="0.00040656" />
+      <inertia ixx="0.00038242" ixy="-1.38e-07" ixz="-1.26e-07" iyy="0.00045993" iyz="-0.00018047" izz="0.00040656" />
     </inertial>
     <visual>
-      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
+      <origin xyz="0 0 0" rpy="1.5707963267949 0 -1.5707963267948966" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/lift_arm.stl" />
       </geometry>
@@ -330,19 +331,19 @@
         <color rgba="1.0 0.45 0.0 1.0" />
       </material>
     </visual>
-    <!-- Back Vertical Slider Carriage Collision (Stretched +3cm) -->
+    <!-- Back Vertical Slider Carriage Collision -->
     <collision name="lift_arm_slider_collision">
-      <origin xyz="0 0.008 -0.048" rpy="0 0 0" />
+      <origin xyz="0.008 0 -0.048" rpy="0 0 0" />
       <geometry>
-        <box size="0.149 0.051 0.136" />
+        <box size="0.051 0.149 0.136" />
       </geometry>
     </collision>
 
-    <!-- Left Fork Blade (Ultra-thin 3mm collision for smooth pallet sliding) -->
+    <!-- Left Fork Blade (Ultra-thin 4mm collision centered with STL mesh) -->
     <collision name="lift_arm_fork_l_collision">
-      <origin xyz="-0.0203 0.0935 -0.1115" rpy="0 0 0" />
+      <origin xyz="0.0935 0.0203 -0.1130" rpy="0 0 0" />
       <geometry>
-        <box size="0.018 0.115 0.003" />
+        <box size="0.115 0.018 0.004" />
       </geometry>
       <surface>
         <friction>
@@ -354,11 +355,11 @@
       </surface>
     </collision>
 
-    <!-- Right Fork Blade (Ultra-thin 3mm collision for smooth pallet sliding) -->
+    <!-- Right Fork Blade (Ultra-thin 4mm collision centered with STL mesh) -->
     <collision name="lift_arm_fork_r_collision">
-      <origin xyz="0.0203 0.0935 -0.1115" rpy="0 0 0" />
+      <origin xyz="0.0935 -0.0203 -0.1130" rpy="0 0 0" />
       <geometry>
-        <box size="0.018 0.115 0.003" />
+        <box size="0.115 0.018 0.004" />
       </geometry>
       <surface>
         <friction>
@@ -373,7 +374,7 @@
 
   <!-- Prismatic Joint: Moves cleanly along Blue Z axis (Global UP) -->
   <joint name="lift_arm_joint" type="prismatic">
-    <origin xyz="0.008271576273727 0.137279512977855 0.0435" rpy="0 0 0" />
+    <origin xyz="0.137279512977855 -0.008271576273727 0.0435" rpy="0 0 0" />
     <parent link="base_link" />
     <child link="lift_arm_link" />
     <axis xyz="0 0 1" />
@@ -384,7 +385,6 @@
   <!-- ========================================== -->
   <!-- Camera Sensor (Intel RealSense on base_link)-->
   <!-- ========================================== -->
-  <!-- Note: base_link.stl already includes the RealSense 3D geometry -->
   <link name="camera_link">
     <inertial>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -393,10 +393,9 @@
     </inertial>
   </link>
 
-  <!-- Joint from base_link to camera_link located at RealSense optical center on base_link.stl -->
-  <!-- Tilted down by 0.5 rad pitch for better ground and near-field vision -->
+  <!-- Joint from base_link to camera_link: forward in +X, tilted down by 0.7 rad pitch -->
   <joint name="camera_joint" type="fixed">
-    <origin xyz="0.00767 0.1788 0.272" rpy="0 0.7 1.5707963267948966" />
+    <origin xyz="0.1788 -0.00767 0.272" rpy="0 0.7 0" />
     <parent link="base_link" />
     <child link="camera_link" />
   </joint>
@@ -425,7 +424,7 @@
       <joint_name>lift_arm_joint</joint_name>
     </plugin>
 
-    <!-- Planar / Kinematic Omnidirectional Velocity Control (Custom: NO Z-reset, Free Gravity Fall) -->
+    <!-- Planar / Kinematic Omnidirectional Velocity Control -->
     <plugin
       filename="robot0_planar_velocity_control"
       name="robot0_gazebo::PlanarVelocityControl">
@@ -443,16 +442,19 @@
       <dimensions>3</dimensions>
     </plugin>
 
-    <!-- Lift Arm Joint Position Controller Plugin -->
+    <!-- Lift Arm Joint Position Controller Plugin (Tuned for smooth motion without force spikes) -->
     <plugin
       filename="ignition-gazebo-joint-position-controller-system"
       name="ignition::gazebo::systems::JointPositionController">
       <joint_name>lift_arm_joint</joint_name>
       <topic>/model/robot0/joint/lift_arm_joint/0/cmd_pos</topic>
-      <p_gain>5000.0</p_gain>
-      <i_gain>0.0</i_gain>
-      <d_gain>50.0</d_gain>
+      <p_gain>800.0</p_gain>
+      <i_gain>5.0</i_gain>
+      <d_gain>30.0</d_gain>
+      <i_max>5.0</i_max>
+      <i_min>-5.0</i_min>
     </plugin>
+
     <!-- Wheel Velocity Controllers (for synchronized visual rotation) -->
     <plugin
       filename="ignition-gazebo-joint-controller-system"
@@ -482,8 +484,8 @@
 
   <gazebo reference="camera_link">
     <sensor name="camera" type="camera">
+      <!-- Wide-angle FOV: ~90 deg (1.5708 rad) -->
       <camera>
-        <!-- Wide-angle FOV: ~90 deg (1.5708 rad) -->
         <horizontal_fov>1.5708</horizontal_fov>
         <image>
           <width>640</width>
@@ -534,46 +536,6 @@
     <mu1>0.0</mu1>
     <mu2>0.0</mu2>
     <material>Gazebo/DarkGrey</material>
-  </gazebo>
-
-  <!-- ========================================== -->
-  <!-- ros2_control Hardware Interface            -->
-  <!-- ========================================== -->
-  <ros2_control name="IgnitionSystem" type="system">
-    <hardware>
-      <plugin>ign_ros2_control/IgnitionSystem</plugin>
-    </hardware>
-    <joint name="lift_arm_joint">
-      <command_interface name="position">
-        <param name="min">0.0</param>
-        <param name="max">0.20</param>
-      </command_interface>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-    <joint name="wheel_fl_joint">
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-    <joint name="wheel_fr_joint">
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-    <joint name="wheel_rl_joint">
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-    <joint name="wheel_rr_joint">
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-  </ros2_control>
-
-  <!-- ros2_control Gazebo Plugin -->
-  <gazebo>
-    <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
-      <parameters>$(find robot0_description)/config/controllers.yaml</parameters>
-    </plugin>
   </gazebo>
 
 </robot>

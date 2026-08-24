@@ -3,7 +3,7 @@
 
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Joy
+from sensor_msgs.msg import Joy, JointState
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 
@@ -40,11 +40,13 @@ class Robot0Teleop(Node):
         self.wheel_rl_pub = self.create_publisher(Float64, '/wheel_rl_cmd_vel', 10)
         self.wheel_rr_pub = self.create_publisher(Float64, '/wheel_rr_cmd_vel', 10)
 
-        # Subscriber to /joy
+        # Subscriber to /joy and /joint_states
         self.joy_sub = self.create_subscription(Joy, '/joy', self.joy_callback, 10)
+        self.joint_sub = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
 
         # Internal state
         self.current_lift_pos = 0.0
+        self.actual_lift_pos = 0.0
         self.was_moving = False
         self.latest_joy = None
         self.lt_calibrated = False
@@ -63,6 +65,12 @@ class Robot0Teleop(Node):
 
     def joy_callback(self, msg: Joy):
         self.latest_joy = msg
+
+    def joint_state_callback(self, msg: JointState):
+        if 'lift_arm_joint' in msg.name:
+            idx = msg.name.index('lift_arm_joint')
+            if len(msg.position) > idx:
+                self.actual_lift_pos = float(msg.position[idx])
 
     def publish_wheels(self, w_fl: float, w_fr: float, w_rl: float, w_rr: float):
         msg = Float64()
@@ -179,15 +187,21 @@ class Robot0Teleop(Node):
         step = lift_speed * self.timer_period
 
         lift_changed = False
+        # Sync with actual position when not actively commanding
+        if btn_y == 0 and btn_a == 0 and abs(self.current_lift_pos - self.actual_lift_pos) > 0.002:
+            self.current_lift_pos = self.actual_lift_pos
+
         # Raise: Button Y
         if btn_y == 1:
-            new_pos = min(lift_max, self.current_lift_pos + step)
+            base_ref = self.actual_lift_pos if abs(self.current_lift_pos - self.actual_lift_pos) > 0.01 else self.current_lift_pos
+            new_pos = min(lift_max, base_ref + step)
             if new_pos != self.current_lift_pos:
                 self.current_lift_pos = new_pos
                 lift_changed = True
         # Lower: Button A
         elif btn_a == 1:
-            new_pos = max(lift_min, self.current_lift_pos - step)
+            base_ref = self.actual_lift_pos if abs(self.current_lift_pos - self.actual_lift_pos) > 0.01 else self.current_lift_pos
+            new_pos = max(lift_min, base_ref - step)
             if new_pos != self.current_lift_pos:
                 self.current_lift_pos = new_pos
                 lift_changed = True

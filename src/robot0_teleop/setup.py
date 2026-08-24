@@ -23,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'teleop_node = robot0_teleop.teleop_node:main',
+            'autonomous_mission = robot0_teleop.autonomous_mission:main',
         ],
     },
 )

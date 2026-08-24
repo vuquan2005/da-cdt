@@ -31,12 +31,12 @@
         </material>
       </visual>
 
-      <!-- Pallet Foot 1 (Left Runner: extends along Y axis for front-entry fork) -->
+      <!-- Pallet Foot 1 (Left Runner: 10mm width) -->
       <visual name="visual_foot_1">
-        <pose>-0.0375 0 0.010 0 0 0</pose>
+        <pose>-0.040 0 0.010 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.015 0.09 0.020</size>
+            <size>0.010 0.09 0.020</size>
           </box>
         </geometry>
         <material>
@@ -46,12 +46,12 @@
         </material>
       </visual>
 
-      <!-- Pallet Foot 2 (Middle Runner) -->
+      <!-- Pallet Foot 2 (Middle Runner: 10mm width) -->
       <visual name="visual_foot_2">
         <pose>0 0 0.010 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.015 0.09 0.020</size>
+            <size>0.010 0.09 0.020</size>
           </box>
         </geometry>
         <material>
@@ -61,12 +61,12 @@
         </material>
       </visual>
 
-      <!-- Pallet Foot 3 (Right Runner) -->
+      <!-- Pallet Foot 3 (Right Runner: 10mm width) -->
       <visual name="visual_foot_3">
-        <pose>0.0375 0 0.010 0 0 0</pose>
+        <pose>0.040 0 0.010 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.015 0.09 0.020</size>
+            <size>0.010 0.09 0.020</size>
           </box>
         </geometry>
         <material>
@@ -95,12 +95,12 @@
         </surface>
       </collision>
 
-      <!-- Pallet Foot Collisions (Left, Middle, Right Runners) -->
+      <!-- Pallet Foot Collisions (Left, Middle, Right Runners: 10mm) -->
       <collision name="collision_foot_1">
-        <pose>-0.0375 0 0.010 0 0 0</pose>
+        <pose>-0.040 0 0.010 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.015 0.09 0.020</size>
+            <size>0.010 0.09 0.020</size>
           </box>
         </geometry>
       </collision>
@@ -108,15 +108,15 @@
         <pose>0 0 0.010 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.015 0.09 0.020</size>
+            <size>0.010 0.09 0.020</size>
           </box>
         </geometry>
       </collision>
       <collision name="collision_foot_3">
-        <pose>0.0375 0 0.010 0 0 0</pose>
+        <pose>0.040 0 0.010 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.015 0.09 0.020</size>
+            <size>0.010 0.09 0.020</size>
           </box>
         </geometry>
       </collision>
