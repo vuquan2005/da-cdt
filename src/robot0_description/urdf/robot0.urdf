@@ -450,7 +450,7 @@
       <joint_name>lift_arm_joint</joint_name>
       <topic>/model/robot0/joint/lift_arm_joint/0/cmd_pos</topic>
       <p_gain>5000.0</p_gain>
-      <i_gain>100.0</i_gain>
+      <i_gain>0.0</i_gain>
       <d_gain>50.0</d_gain>
     </plugin>
     <!-- Wheel Velocity Controllers (for synchronized visual rotation) -->
