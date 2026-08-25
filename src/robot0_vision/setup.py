@@ -17,10 +17,10 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='TODO',
-    maintainer_email='TODO@email.com',
+    maintainer='Robocon Developer',
+    maintainer_email='dev@example.com',
     description='YOLO object detection and vision processing node for robot0',
-    license='MIT',
+    license='BSD-3-Clause',
     entry_points={
         'console_scripts': [
             'yolo_detector = robot0_vision.yolo_detector_node:main',

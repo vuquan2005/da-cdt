@@ -26,29 +26,29 @@
       }
     },
     {
-      "label": "ROS 2: Kill All Processes (Cleanup Gazebo & Nodes)",
+      "label": "ROS 2: Kill All Processes",
       "type": "shell",
-      "command": "pkill -9 -f 'gz|ign|ros_gz|rviz2|robot_state_publisher|teleop_node|joy_node|yolo_detector' || true",
+      "command": "pkill -9 -f 'gz|ign|ros_gz|rviz2|robot_state_publisher|joint_state_publisher|teleop_node|joy_node|yolo_detector|line_sensor_node' || true",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
         "panel": "shared"
-      } 
+      }
     },
     {
-      "label": "ROS 2: Run All (Gazebo + Joy + Vision) [Split Terminals]",
-      "dependsOn": [
-        "ROS 2: Gazebo Simulation",
-        "ROS 2: Joystick Teleop",
-        "ROS 2: YOLO Vision"
-      ],
-      "dependsOrder": "parallel",
-      "problemMatcher": []
-    },
-    {
-      "label": "ROS 2: Launch All (Single Terminal)",
+      "label": "ROS 2: Launch All",
       "type": "shell",
       "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_gazebo all.launch.py",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "ROS 2: Launch App Nodes",
+      "type": "shell",
+      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_gazebo nodes.launch.py",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -59,36 +59,20 @@
       "label": "ROS 2: Gazebo Simulation",
       "type": "shell",
       "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_gazebo gazebo.launch.py",
-      "isBackground": true,
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
-        "panel": "dedicated",
-        "group": "ros2_pipeline"
+        "panel": "dedicated"
       }
     },
     {
-      "label": "ROS 2: Joystick Teleop",
+      "label": "ROS 2: Display Robot Model",
       "type": "shell",
-      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_teleop joystick.launch.py",
-      "isBackground": true,
+      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_description display.launch.py",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
-        "panel": "dedicated",
-        "group": "ros2_pipeline"
-      }
-    },
-    {
-      "label": "ROS 2: YOLO Vision",
-      "type": "shell",
-      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_vision yolo_detector.launch.py",
-      "isBackground": true,
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "group": "ros2_pipeline"
+        "panel": "dedicated"
       }
     }
   ]

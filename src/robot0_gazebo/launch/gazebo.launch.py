@@ -85,8 +85,6 @@ def generate_launch_description():
     world = LaunchConfiguration('world', default=default_world_path)
     use_rviz = LaunchConfiguration('rviz', default='true')
 
-    use_line_sensor = LaunchConfiguration('line_sensor', default='true')
-
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
         default_value='true',
