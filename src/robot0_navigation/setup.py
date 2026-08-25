@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import find_packages, setup
 
-package_name = 'robot0_teleop'
+package_name = 'robot0_navigation'
 
 setup(
     name=package_name,
@@ -18,11 +18,11 @@ setup(
     zip_safe=True,
     maintainer='Robocon Developer',
     maintainer_email='dev@example.com',
-    description='Teleoperation and manual joystick control package for robot0',
+    description='Autonomous navigation, waypoint mapping, and mission control package for robot0',
     license='BSD-3-Clause',
     entry_points={
         'console_scripts': [
-            'teleop_node = robot0_teleop.teleop_node:main',
+            'autonomous_mission = robot0_navigation.autonomous_mission:main',
         ],
     },
 )

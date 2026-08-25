@@ -15,6 +15,7 @@ ros-cdt/
 │   ├── settings.json               # Cấu hình đường dẫn Python/ROS và file associations
 │   ├── tasks.json                  # Phím tắt build (Ctrl+Shift+B)
 │   └── extensions.json             # Khuyến nghị extension ROS, C++, Python
+├── ARENA_COORDINATES.md            # 📍 Tài liệu tổng hợp bản đồ tọa độ sa bàn
 ├── src/
 │   ├── robot0_description/        # 📦 Mô hình CAD, URDF & Hiển thị tĩnh (ament_cmake)
 │   │   ├── CMakeLists.txt
@@ -41,7 +42,19 @@ ros-cdt/
 │   │   └── launch/
 │   │       └── gazebo.launch.py    # Khởi chạy Gazebo + Bridge + Robot State Publisher + RViz2
 │   │
-│   ├── robot0_teleop/             # 🎮 Điều khiển từ xa & Joystick (ament_python)
+│   ├── robot0_navigation/         # 🧭 Điều hướng & Nhiệm vụ tự hành (ament_python)
+│   │   ├── package.xml
+│   │   ├── setup.py
+│   │   ├── config/
+│   │   │   └── arena_coordinates.yaml # Bản đồ tọa độ sa bàn dạng YAML
+│   │   ├── launch/
+│   │   │   └── mission.launch.py   # Khởi chạy nhiệm vụ lấy/thả hàng tự hành
+│   │   └── robot0_navigation/
+│   │       ├── __init__.py
+│   │       ├── arena_coordinates.py # Single Source of Truth tọa độ sa bàn & hàm tìm kiếm
+│   │       └── autonomous_mission.py # Máy trạng thái FSM điều khiển tự hành lấy/thả hàng
+│   │
+│   ├── robot0_teleop/             # 🎮 Điều khiển thủ công & Gamepad/Joystick (ament_python)
 │   │   ├── package.xml
 │   │   ├── setup.py
 │   │   ├── config/
@@ -49,7 +62,7 @@ ros-cdt/
 │   │   ├── launch/
 │   │   │   └── joystick.launch.py  # Khởi chạy joy_node + teleop_node
 │   │   └── robot0_teleop/
-│   │       └── teleop_node.py      # Xử lý động học Mecanum, auto-brake & điều khiển tay nâng
+│   │       └── teleop_node.py      # Xử lý động học Mecanum & joystick
 │   │
 │   └── robot0_vision/             # 👁️ Nhận diện ảnh & bám mục tiêu YOLO (ament_python)
 │       ├── package.xml
@@ -180,7 +193,24 @@ ros2 topic pub /lift_joint_cmd std_msgs/msg/Float64 "{data: 0.12}" -1
 
 ---
 
-### 5. Khởi chạy Nhận diện hình ảnh YOLO (`robot0_vision`)
+### 5. Chạy nhiệm vụ tự hành lấy/thả hàng (`robot0_navigation`)
+
+Sau khi đã khởi chạy mô phỏng Gazebo, mở một terminal mới và chạy:
+
+```bash
+# Mặc định: Lấy Pallet Tầng 1 bên Trái tại kệ rack_left_bot và quay về vị trí xuất phát
+ros2 launch robot0_navigation mission.launch.py
+
+# Tùy biến: Lấy Pallet Tầng 2 bên Phải và chuyển đến ô tập kết màu Xanh dương (Blue)
+ros2 launch robot0_navigation mission.launch.py rack:=rack_left_bot shelf:=2 slot:=right dropoff:=blue
+
+# Lấy Pallet tại kệ khác (rack_left_mid, rack_left_top, rack_bot_mid_left)
+ros2 launch robot0_navigation mission.launch.py rack:=rack_left_mid shelf:=1 slot:=left dropoff:=green
+```
+
+---
+
+### 6. Khởi chạy Nhận diện hình ảnh YOLO (`robot0_vision`)
 
 Sau khi đã khởi chạy mô phỏng Gazebo, mở một terminal mới và chạy:
 
@@ -196,7 +226,7 @@ Hình ảnh nhận diện cùng Bounding Box sẽ được hiển thị trực t
 
 ---
 
-### 6. Khởi chạy toàn bộ hệ thống đồng thời (Mô phỏng + Joy + Vision)
+### 7. Khởi chạy toàn bộ hệ thống đồng thời (Mô phỏng + Joy + Vision)
 
 Có 2 cách để chạy đồng thời cả 3 thành phần:
 

@@ -1,0 +1,83 @@
+# ==============================================================================
+# ROBOCON ARENA COORDINATES CONFIGURATION (WORLD FRAME / ODOM FRAME)
+# Half-Field Side: Robot Spawn Side (X <= 0)
+# Sa bàn: 4.0m x 2.0m (X: [-2.0, +2.0], Y: [-1.0, +1.0])
+# ==============================================================================
+
+arena:
+  dimensions:
+    length_x: 4.0   # meters (-2.0 to +2.0)
+    width_y: 2.0    # meters (-1.0 to +1.0)
+    center: [0.0, 0.0, 0.0]
+
+# --- Robot Spawn Pose ---
+robot_spawn:
+  x: -0.985
+  y: 0.640
+  z: 0.080
+  yaw: 3.14159265  # pi (rad), facing towards racks (-X direction)
+
+# --- Lift Joint Heights ---
+lift_heights:
+  level1_insert: 0.0295  # Align fork with bottom shelf pallet
+  level1_carry: 0.0700   # Lifted off bottom shelf
+  level2_insert: 0.1495  # Align fork with top/middle shelf pallet
+  level2_carry: 0.1850   # Lifted off top/middle shelf
+  transit: 0.0150        # Ground clearance while driving
+
+# --- Storage Racks (4 kệ hàng ở nửa sân X < 0) ---
+storage_racks:
+  rack_left_top:
+    description: "Kệ góc trên bên trái"
+    pose: {x: -1.893, y: -0.649, z: 0.0025, yaw: 1.5708}
+    approach_pose: {x: -1.600, y: -0.649, yaw: 3.1416}
+  rack_left_mid:
+    description: "Kệ ở giữa bên trái"
+    pose: {x: -1.894, y: -0.006, z: 0.0025, yaw: 1.5708}
+    approach_pose: {x: -1.600, y: -0.006, yaw: 3.1416}
+  rack_left_bot:
+    description: "Kệ góc dưới bên trái"
+    pose: {x: -1.894, y: 0.641, z: 0.0025, yaw: 1.5708}
+    approach_pose: {x: -1.600, y: 0.641, yaw: 3.1416}
+  rack_bot_mid_left:
+    description: "Kệ ở cạnh dưới (giữa trái)"
+    pose: {x: -0.490, y: 0.895, z: 0.0025, yaw: 0.0000}
+    approach_pose: {x: -0.490, y: 0.650, yaw: 1.5708}
+
+# --- Central Drop-Off Zones (5 ô vuông màu ở giữa sa bàn - nửa sân X < 0) ---
+dropoff_zones:
+  zone_1_blue:
+    index: 1
+    color: "blue"
+    description: "Ô số 1 (Viền Xanh dương)"
+    center_pose: {x: -0.1271, y: 0.6417, z: 0.0025}
+    bounds: {x_min: -0.255, x_max: 0.000, y_min: 0.513, y_max: 0.771}
+    approach_pose: {x: -0.420, y: 0.642, yaw: 0.0000}
+  zone_2_green:
+    index: 2
+    color: "green"
+    description: "Ô số 2 (Viền Xanh lá)"
+    center_pose: {x: -0.1271, y: 0.3138, z: 0.0025}
+    bounds: {x_min: -0.255, x_max: 0.000, y_min: 0.185, y_max: 0.443}
+    approach_pose: {x: -0.420, y: 0.314, yaw: 0.0000}
+  zone_3_white:
+    index: 3
+    color: "white"
+    description: "Ô số 3 (Viền Trắng - Trung tâm)"
+    center_pose: {x: -0.1271, y: -0.0047, z: 0.0025}
+    bounds: {x_min: -0.255, x_max: 0.000, y_min: -0.134, y_max: 0.124}
+    approach_pose: {x: -0.420, y: 0.000, yaw: 0.0000}
+  zone_4_yellow:
+    index: 4
+    color: "yellow"
+    description: "Ô số 4 (Viền Vàng)"
+    center_pose: {x: -0.1271, y: -0.3208, z: 0.0025}
+    bounds: {x_min: -0.255, x_max: 0.000, y_min: -0.450, y_max: -0.192}
+    approach_pose: {x: -0.420, y: -0.321, yaw: 0.0000}
+  zone_5_red:
+    index: 5
+    color: "red"
+    description: "Ô số 5 (Viền Đỏ)"
+    center_pose: {x: -0.1271, y: -0.6487, z: 0.0025}
+    bounds: {x_min: -0.255, x_max: 0.000, y_min: -0.778, y_max: -0.520}
+    approach_pose: {x: -0.420, y: -0.649, yaw: 0.0000}
