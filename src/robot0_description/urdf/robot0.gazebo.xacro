@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========================================== -->
+  <!-- Gazebo Simulation Plugins & Properties    -->
+  <!-- ========================================== -->
+  <gazebo>
+    <!-- Joint State Publisher -->
+    <plugin
+      filename="ignition-gazebo-joint-state-publisher-system"
+      name="ignition::gazebo::systems::JointStatePublisher">
+      <topic>/joint_states</topic>
+      <joint_name>wheel_fr_joint</joint_name>
+      <joint_name>wheel_fl_joint</joint_name>
+      <joint_name>wheel_rr_joint</joint_name>
+      <joint_name>wheel_rl_joint</joint_name>
+      <joint_name>lift_arm_joint</joint_name>
+    </plugin>
+
+    <!-- Planar / Kinematic Omnidirectional Velocity Control -->
+    <plugin
+      filename="robot0_planar_velocity_control"
+      name="robot0_gazebo::PlanarVelocityControl">
+      <topic>/cmd_vel</topic>
+    </plugin>
+
+    <!-- Ground Truth Odometry & TF Publisher -->
+    <plugin
+      filename="ignition-gazebo-odometry-publisher-system"
+      name="ignition::gazebo::systems::OdometryPublisher">
+      <odom_topic>/odom</odom_topic>
+      <odom_frame>odom</odom_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+      <tf_topic>/tf</tf_topic>
+      <dimensions>3</dimensions>
+    </plugin>
+
+    <!-- Lift Arm Joint Position Controller Plugin -->
+    <plugin
+      filename="ignition-gazebo-joint-position-controller-system"
+      name="ignition::gazebo::systems::JointPositionController">
+      <joint_name>lift_arm_joint</joint_name>
+      <topic>/model/robot0/joint/lift_arm_joint/0/cmd_pos</topic>
+      <p_gain>800.0</p_gain>
+      <i_gain>5.0</i_gain>
+      <d_gain>30.0</d_gain>
+      <i_max>5.0</i_max>
+      <i_min>-5.0</i_min>
+    </plugin>
+
+    <!-- Wheel Velocity Controllers (for synchronized visual rotation) -->
+    <plugin
+      filename="ignition-gazebo-joint-controller-system"
+      name="ignition::gazebo::systems::JointController">
+      <joint_name>wheel_fl_joint</joint_name>
+      <topic>/model/robot0/joint/wheel_fl_joint/cmd_vel</topic>
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-joint-controller-system"
+      name="ignition::gazebo::systems::JointController">
+      <joint_name>wheel_fr_joint</joint_name>
+      <topic>/model/robot0/joint/wheel_fr_joint/cmd_vel</topic>
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-joint-controller-system"
+      name="ignition::gazebo::systems::JointController">
+      <joint_name>wheel_rl_joint</joint_name>
+      <topic>/model/robot0/joint/wheel_rl_joint/cmd_vel</topic>
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-joint-controller-system"
+      name="ignition::gazebo::systems::JointController">
+      <joint_name>wheel_rr_joint</joint_name>
+      <topic>/model/robot0/joint/wheel_rr_joint/cmd_vel</topic>
+    </plugin>
+  </gazebo>
+
+  <!-- Gazebo Links Materials -->
+  <gazebo reference="base_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <gazebo reference="lift_arm_link">
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+</robot>

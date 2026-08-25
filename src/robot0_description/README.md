@@ -1,6 +1,21 @@
 # robot0_description
 
-Package chứa mô hình URDF, tài nguyên CAD 3D (.stl) và cấu hình hiển thị tĩnh trên RViz2 cho robot di động 4 bánh Mecanum tích hợp cơ cấu tay nâng dạng trượt (`robot0`).
+Package chứa mô hình mô tả robot định dạng Xacro/URDF, tài nguyên CAD 3D (.stl) và cấu hình hiển thị trên RViz2 cho robot di động 4 bánh Mecanum tích hợp cơ cấu tay nâng dạng trượt (`robot0`).
+
+---
+
+## Cấu trúc Mô hình Xacro
+
+```text
+urdf/
+├── robot0.urdf.xacro          # File tổng hợp chính (Master Entry)
+├── common_properties.xacro   # Hằng số, vật liệu (Colors/Materials), thông số bánh xe
+├── chassis.xacro             # base_footprint, base_link, khung gầm và trụ nâng cố định
+├── wheel.xacro               # Macro xacro và khởi tạo 4 bánh Mecanum
+├── lift.xacro                # Khớp trượt prismatic và link tay nâng
+├── camera.xacro              # Tọa độ và Gazebo Camera Sensor Plugin
+└── robot0.gazebo.xacro       # Gazebo plugins (odometry, kinematics, joint controllers)
+```
 
 ---
 

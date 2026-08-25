@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="robot0" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========================================== -->
+  <!-- Robot0 Top-Level Xacro Description         -->
+  <!-- ========================================== -->
+
+  <!-- Common Properties, Constants & Materials -->
+  <xacro:include filename="$(find robot0_description)/urdf/common_properties.xacro" />
+
+  <!-- Base Footprint & Base Link Chassis -->
+  <xacro:include filename="$(find robot0_description)/urdf/chassis.xacro" />
+
+  <!-- Mecanum Wheels (Macro & 4 Wheels) -->
+  <xacro:include filename="$(find robot0_description)/urdf/wheel.xacro" />
+
+  <!-- Lift Arm Mechanism -->
+  <xacro:include filename="$(find robot0_description)/urdf/lift.xacro" />
+
+  <!-- Intel RealSense Camera Sensor -->
+  <xacro:include filename="$(find robot0_description)/urdf/camera.xacro" />
+
+  <!-- Gazebo Fortress Simulation Plugins -->
+  <xacro:include filename="$(find robot0_description)/urdf/robot0.gazebo.xacro" />
+
+</robot>

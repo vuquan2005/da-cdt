@@ -16,8 +16,8 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Robocon Developer',
-    maintainer_email='dev@example.com',
+    maintainer='vuquan',
+    maintainer_email='66623851+vuquan2005@users.noreply.github.com',
     description='Autonomous navigation, waypoint mapping, and mission control package for robot0',
     license='BSD-3-Clause',
     entry_points={

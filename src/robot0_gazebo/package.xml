@@ -4,7 +4,7 @@
   <name>robot0_gazebo</name>
   <version>1.0.0</version>
   <description>Gazebo simulation and arena environment package for robot0</description>
-  <maintainer email="dev@example.com">Robocon Developer</maintainer>
+  <maintainer email="66623851+vuquan2005@users.noreply.github.com">vuquan</maintainer>
   <license>BSD-3-Clause</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

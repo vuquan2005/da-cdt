@@ -30,7 +30,7 @@ flowchart TD
     end
 
     subgraph DESCRIPTION["robot0_description"]
-        URDF["robot0.urdf & Meshes"]
+        URDF["robot0.urdf.xacro & Meshes"]
         RSP["robot_state_publisher"]
         URDF --> RSP
     end

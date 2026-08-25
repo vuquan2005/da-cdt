@@ -8,7 +8,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     pkg_share = get_package_share_directory('robot0_description')
-    default_model_path = os.path.join(pkg_share, 'urdf', 'robot0.urdf')
+    default_model_path = os.path.join(pkg_share, 'urdf', 'robot0.urdf.xacro')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz', 'robot0.rviz')
 
     model_arg = DeclareLaunchArgument(

@@ -4,7 +4,7 @@
   <name>robot0_vision</name>
   <version>1.0.0</version>
   <description>YOLO object detection and vision processing node for robot0</description>
-  <maintainer email="TODO@email.com">TODO</maintainer>
+  <maintainer email="66623851+vuquan2005@users.noreply.github.com">vuquan</maintainer>
   <license>MIT</license>
 
   <depend>rclpy</depend>

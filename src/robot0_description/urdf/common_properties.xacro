@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========================================== -->
+  <!-- Mathematical Constants                     -->
+  <!-- ========================================== -->
+  <xacro:property name="PI" value="3.1415926535897931" />
+  <xacro:property name="DEG_TO_RAD" value="${PI / 180.0}" />
+
+  <!-- ========================================== -->
+  <!-- Standard Materials (RViz Visual Colors)    -->
+  <!-- ========================================== -->
+  <material name="silver">
+    <color rgba="0.792 0.820 0.933 1.0" />
+  </material>
+
+  <material name="dark_grey">
+    <color rgba="0.2 0.2 0.2 1.0" />
+  </material>
+
+  <material name="wheel_grey">
+    <color rgba="0.3 0.3 0.3 1.0" />
+  </material>
+
+  <material name="orange">
+    <color rgba="1.0 0.45 0.0 1.0" />
+  </material>
+
+  <!-- ========================================== -->
+  <!-- Wheel Common Properties                    -->
+  <!-- ========================================== -->
+  <xacro:property name="wheel_radius" value="0.0487" />
+  <xacro:property name="wheel_length" value="0.045" />
+  <xacro:property name="wheel_mass" value="0.13187" />
+  <xacro:property name="wheel_effort_limit" value="10.0" />
+  <xacro:property name="wheel_velocity_limit" value="20.0" />
+
+</robot>

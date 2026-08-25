@@ -4,7 +4,7 @@
   <name>robot0_teleop</name>
   <version>1.0.0</version>
   <description>Teleoperation and joystick control package for robot0</description>
-  <maintainer email="dev@example.com">Robocon Developer</maintainer>
+  <maintainer email="66623851+vuquan2005@users.noreply.github.com">vuquan</maintainer>
   <license>BSD-3-Clause</license>
 
   <depend>rclpy</depend>

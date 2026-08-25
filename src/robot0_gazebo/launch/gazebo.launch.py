@@ -19,7 +19,7 @@ def generate_launch_description():
 
     # Default Paths
     default_world_path = os.path.join(pkg_robot0_gazebo, 'worlds', 'robocon_arena.sdf')
-    default_urdf_path = os.path.join(pkg_robot0_description, 'urdf', 'robot0.urdf')
+    default_urdf_path = os.path.join(pkg_robot0_description, 'urdf', 'robot0.urdf.xacro')
     default_bridge_config_path = os.path.join(pkg_robot0_gazebo, 'config', 'ros_gz_bridge.yaml')
     default_rviz_config_path = os.path.join(pkg_robot0_description, 'rviz', 'robot0.rviz')
 

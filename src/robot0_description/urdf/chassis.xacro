@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========================================== -->
+  <!-- Base Links & Footprint (ROS Standard REP-103) -->
+  <!-- ========================================== -->
+  <link name="base_footprint" />
+
+  <joint name="base_footprint_joint" type="fixed">
+    <origin xyz="0 0 0.06" rpy="0 0 0" />
+    <parent link="base_footprint" />
+    <child link="base_link" />
+  </joint>
+
+  <link name="base_link">
+    <inertial>
+      <origin xyz="-0.0003708 -0.0082536 0.0149603" rpy="0 0 0" />
+      <mass value="1.85" />
+      <inertia ixx="0.010" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.012" />
+    </inertial>
+
+    <!-- Main Chassis Base -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/base_link.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+    <collision>
+      <origin xyz="0.01 -0.0083 0.03" rpy="0 0 0" />
+      <geometry>
+        <box size="0.28 0.24 0.06" />
+      </geometry>
+    </collision>
+
+    <!-- Front-Right Motor Bracket -->
+    <visual>
+      <origin xyz="0.129279512977854 -0.131271576273728 -0.00376593806610101" rpy="-1.5707963267949 0 1.5707963267948934" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_bracket_fr.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Front-Left Motor Bracket -->
+    <visual>
+      <origin xyz="0.089279512977854 0.114728423726273 -0.00376593806610101" rpy="-1.5707963267949 0 -1.5707963267948966" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_bracket_fl.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Rear-Right Motor Bracket -->
+    <visual>
+      <origin xyz="-0.070720487022142 -0.131271576273728 -0.003765938066101" rpy="-1.5707963267949 0 1.5707963267948934" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_bracket_rr.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Rear-Left Motor Bracket -->
+    <visual>
+      <origin xyz="-0.115720487022144 0.114728423726274 -0.00376593806610199" rpy="-1.57079632679489 0 -1.5707963267948966" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_bracket_rl.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Front-Right Motor -->
+    <visual>
+      <origin xyz="0.109279512977855 -0.128271576273727 -0.0307659380661" rpy="1.5707963267949 0 0" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Front-Left Motor -->
+    <visual>
+      <origin xyz="0.109279512977855 0.111728423726273 -0.0307659380661" rpy="-1.5707963267949 0 -3.141592653589793" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_left.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Rear-Right Motor -->
+    <visual>
+      <origin xyz="-0.090720487022144 -0.128271576273727 -0.0307659380661" rpy="1.5707963267949 0 0" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Rear-Left Motor -->
+    <visual>
+      <origin xyz="-0.090720487022144 0.111728423726273 -0.0307659380661" rpy="-1.5707963267949 0 -3.141592653589793" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_left.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Base Column -->
+    <visual>
+      <origin xyz="0.137279512977854 -0.008271576273727 0.00223406193389999" rpy="1.5707963267949 0 -1.5707963267948966" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_base.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Motor -->
+    <visual>
+      <origin xyz="0.119779512977854 -0.008271576273727 0.0292340619339" rpy="-1.5707963267949 0 -1.5707963267948966" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/motor_jgb37_520_right.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Guide Pipe 1 -->
+    <visual>
+      <origin xyz="0.137279512977855 -0.065771576273727 0.00823406193389999" rpy="1.5707963267949 0 -3.2923750299165266" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_pipe_1.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Guide Pipe 2 -->
+    <visual>
+      <origin xyz="0.137279512977855 -0.008271576273727 0.046010455529876" rpy="1.5707963267949 0 -2.9908102772630566" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_pipe_2.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Top Cap -->
+    <visual>
+      <origin xyz="0.137279512977854 -0.008271576273728 0.2682340619339" rpy="1.5707963267949 0 -1.5707963267948966" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_top_cap.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+
+    <!-- Lift Timing Belt -->
+    <visual>
+      <origin xyz="0.128279512977855 -0.008271576273728 0.2782340619339" rpy="1.5707963267949 1.5707963267949 -1.5707963267948966" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_belt.stl" />
+      </geometry>
+      <material name="dark_grey" />
+    </visual>
+
+    <!-- Lift Top Pulley -->
+    <visual>
+      <origin xyz="0.128279512977855 -0.008271576273728 0.2797340619339" rpy="-1.5707963267949 -0.897413987985829 1.5707963267948934" />
+      <geometry>
+        <mesh filename="package://robot0_description/meshes/lift_pulley_20t.stl" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+  </link>
+
+</robot>
