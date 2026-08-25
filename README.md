@@ -226,24 +226,38 @@ Hình ảnh nhận diện cùng Bounding Box sẽ được hiển thị trực t
 
 ---
 
-### 7. Khởi chạy toàn bộ hệ thống đồng thời (Mô phỏng + Joy + Vision)
+### 7. Khởi chạy Mô phỏng Cảm biến Dò Line (`robot0_navigation`)
 
-Có 2 cách để chạy đồng thời cả 3 thành phần:
+Khởi động node mô phỏng mảng cảm biến quang/hồng ngoại (IR sensor array) gắn phía trước xe để bám line sa bàn:
+
+```bash
+ros2 launch robot0_navigation line_sensor.launch.py
+```
+
+Trạng thái các mắt cảm biến (chấm tròn xanh khi bắt được line, xám khi ở ngoài) và vector độ lệch tâm (mũi tên vàng) sẽ hiển thị trực quan theo thời gian thực trên RViz2 tại mục **Line Sensor Array** (`/line_sensor/markers`).
+
+---
+
+### 8. Khởi chạy toàn bộ hệ thống đồng thời (Mô phỏng + Line Sensor + Joy + Vision)
+
+Có 2 cách để chạy đồng thời toàn bộ các thành phần:
 
 #### ⚡ Cách 1: Sử dụng VS Code Tasks (Giao diện đồ họa)
 1. Nhấn tổ hợp phím **`Ctrl+Shift+P`** (hoặc `F1`) -> gõ **`Tasks: Run Task`**.
 2. Chọn một trong hai task:
-   * **`ROS 2: Run All (Gazebo + Joy + Vision) [Split Terminals]`**: Tự động mở 3 terminal song song để bạn dễ quan sát log riêng của từng thành phần.
+   * **`ROS 2: Run All (Gazebo + Joy + Vision) [Split Terminals]`**: Tự động mở các terminal song song để bạn dễ quan sát log riêng của từng thành phần.
    * **`ROS 2: Launch All (Single Terminal)`**: Chạy toàn bộ trên 1 terminal duy nhất.
 
-#### 🚀 Cách 2: Khởi chạy bằng Master Launch File (Dòng lệnh)
+#### 🚀 Cách 2: Khởi chạy bằng Master Bringup Launch File (Dòng lệnh)
 ```bash
 ros2 launch robot0_gazebo all.launch.py
 ```
 > **Tùy chọn bổ sung:**
-> * Tắt bớt thành phần không cần thiết (ví dụ tắt Joy hoặc Vision):
+> * Tắt/bật các thành phần linh hoạt:
 >   ```bash
+>   # Tắt Joy hoặc Vision hoặc Line Sensor
 >   ros2 launch robot0_gazebo all.launch.py joy:=false
+>   ros2 launch robot0_gazebo all.launch.py line_sensor:=false
 >   ros2 launch robot0_gazebo all.launch.py vision:=false rviz:=false
 >   ```
 
@@ -268,3 +282,13 @@ ros2 launch robot0_gazebo all.launch.py
 | `/yolo/annotated_image` | `sensor_msgs/msg/Image` | Ảnh đã vẽ Bounding Box, nhãn nhận diện & FPS |
 | `/yolo/target_center` | `geometry_msgs/msg/PointStamped` | Tọa độ lệch chuẩn hóa $(dx, dy)$ của mục tiêu |
 | `/yolo/detections_json` | `std_msgs/msg/String` | Danh sách chi tiết các object nhận diện (JSON) |
+| `/line_sensor/raw` | `std_msgs/msg/Int32MultiArray` | Trạng thái nhị phân của dải cảm biến chính (0: nền, 1: line) |
+| `/line_sensor/front/raw` | `std_msgs/msg/Int32MultiArray` | Trạng thái nhị phân 8 mắt dải trước (Front Array) |
+| `/line_sensor/front/error` | `std_msgs/msg/Float32` | Độ lệch tâm $e_{\text{front}}$ của dải trước (mét) |
+| `/line_sensor/rear/raw` | `std_msgs/msg/Int32MultiArray` | Trạng thái nhị phân 8 mắt dải sau (Rear Array) |
+| `/line_sensor/rear/error` | `std_msgs/msg/Float32` | Độ lệch tâm $e_{\text{rear}}$ của dải sau (mét) |
+| `/line_sensor/lateral_error` | `std_msgs/msg/Float32` | Độ lệch tịnh tiến ngang của tâm xe ($d_{\text{lateral}} = \frac{e_f + e_r}{2}$) |
+| `/line_sensor/heading_error` | `std_msgs/msg/Float32` | Góc lệch thân xe so với đường line ($\theta_{\text{error}} = \arctan\frac{e_f - e_r}{L}$) (rad) |
+| `/line_sensor/line_detected` | `std_msgs/msg/Bool` | Cờ báo hiệu có đang bắt được line hay không |
+| `/line_sensor/markers` | `visualization_msgs/msg/MarkerArray` | Hiển thị 3D cả 2 thanh cảm biến, 16 mắt đọc & vector lệch trên RViz2 |
+| `/arena/map` | `nav_msgs/msg/OccupancyGrid` | Bản đồ 2D toàn bộ sa bàn và vạch kẻ sàn đấu cho RViz2 |

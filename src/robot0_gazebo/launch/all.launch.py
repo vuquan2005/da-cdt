@@ -11,6 +11,7 @@ def generate_launch_description():
     pkg_robot0_gazebo = get_package_share_directory('robot0_gazebo')
     pkg_robot0_teleop = get_package_share_directory('robot0_teleop')
     pkg_robot0_vision = get_package_share_directory('robot0_vision')
+    pkg_robot0_navigation = get_package_share_directory('robot0_navigation')
 
     # Default Paths
     default_world_path = os.path.join(pkg_robot0_gazebo, 'worlds', 'robocon_arena.sdf')
@@ -21,6 +22,7 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration('rviz', default='true')
     use_joy = LaunchConfiguration('joy', default='true')
     use_vision = LaunchConfiguration('vision', default='true')
+    use_line_sensor = LaunchConfiguration('line_sensor', default='true')
     conf = LaunchConfiguration('conf', default='0.5')
     imgsz = LaunchConfiguration('imgsz', default='640')
 
@@ -55,6 +57,12 @@ def generate_launch_description():
         description='Launch YOLO vision detector if true'
     )
 
+    declare_use_line_sensor_cmd = DeclareLaunchArgument(
+        'line_sensor',
+        default_value='true',
+        description='Launch Dual Array Line Sensor simulator if true'
+    )
+
     declare_conf_cmd = DeclareLaunchArgument(
         'conf',
         default_value='0.5',
@@ -79,7 +87,18 @@ def generate_launch_description():
         }.items()
     )
 
-    # 2. Điều khiển Joystick (joy_node + teleop_node)
+    # 2. Cảm biến dò line (Dual Array Line Sensor Simulator)
+    line_sensor_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_robot0_navigation, 'launch', 'line_sensor.launch.py')
+        ),
+        launch_arguments={
+            'use_sim_time': use_sim_time
+        }.items(),
+        condition=IfCondition(use_line_sensor)
+    )
+
+    # 3. Điều khiển Joystick (joy_node + teleop_node)
     joystick_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_robot0_teleop, 'launch', 'joystick.launch.py')
@@ -90,7 +109,7 @@ def generate_launch_description():
         condition=IfCondition(use_joy)
     )
 
-    # 3. Thị giác máy tính YOLO (yolo_detector_node)
+    # 4. Thị giác máy tính YOLO (yolo_detector_node)
     vision_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_robot0_vision, 'launch', 'yolo_detector.launch.py')
@@ -108,9 +127,11 @@ def generate_launch_description():
         declare_use_rviz_cmd,
         declare_use_joy_cmd,
         declare_use_vision_cmd,
+        declare_use_line_sensor_cmd,
         declare_conf_cmd,
         declare_imgsz_cmd,
         gazebo_launch,
+        line_sensor_launch,
         joystick_launch,
         vision_launch
     ])

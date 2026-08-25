@@ -1,7 +1,7 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, AppendEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, AppendEnvironmentVariable, TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command
@@ -78,6 +78,8 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     world = LaunchConfiguration('world', default=default_world_path)
     use_rviz = LaunchConfiguration('rviz', default='true')
+
+    use_line_sensor = LaunchConfiguration('line_sensor', default='true')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
@@ -171,7 +173,10 @@ def generate_launch_description():
         declare_use_rviz_cmd,
         gz_sim,
         robot_state_publisher_node,
-        spawn_robot,
+        TimerAction(
+            period=3.0,
+            actions=[spawn_robot]
+        ),
         bridge_node,
         rviz_node
     ])
