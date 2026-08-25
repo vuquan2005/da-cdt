@@ -1,5 +1,5 @@
 import os
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, AppendEnvironmentVariable, TimerAction
 from launch.conditions import IfCondition
@@ -14,6 +14,9 @@ def generate_launch_description():
     pkg_robot0_description = get_package_share_directory('robot0_description')
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
+    pkg_gazebo_prefix = get_package_prefix('robot0_gazebo')
+    pkg_description_prefix = get_package_prefix('robot0_description')
+
     # Default Paths
     default_world_path = os.path.join(pkg_robot0_gazebo, 'worlds', 'robocon_arena.sdf')
     default_urdf_path = os.path.join(pkg_robot0_description, 'urdf', 'robot0.urdf')
@@ -23,31 +26,34 @@ def generate_launch_description():
     # Environment variables for Gazebo resource finding (resolve model:// and package://)
     pkg_share_parent = os.path.dirname(pkg_robot0_gazebo)
     gazebo_models_dir = os.path.join(pkg_robot0_gazebo, 'models')
-    pkg_lib_dir = os.path.abspath(os.path.join(pkg_robot0_gazebo, '..', '..', 'lib'))
 
     resource_dirs = [
         pkg_share_parent,
+        os.path.dirname(pkg_robot0_description),
         pkg_robot0_gazebo,
         pkg_robot0_description,
         gazebo_models_dir,
-        os.path.join(pkg_robot0_gazebo, 'models'),
-        '/workspaces/ros-cdt/src/robot0_gazebo/models',
-        '/workspaces/ros-cdt/install/robot0_gazebo/share/robot0_gazebo/models',
-        '/workspaces/ros-cdt/src',
-        '/workspaces/ros-cdt',
-        '/home/vuquan/edu/ros-cdt/src/robot0_gazebo/models',
-        '/home/vuquan/edu/ros-cdt/install/robot0_gazebo/share/robot0_gazebo/models',
-        '/home/vuquan/edu/ros-cdt/src',
-        '/home/vuquan/edu/ros-cdt'
+        os.path.join(pkg_robot0_description, 'models'),
     ]
-    env_resource_paths = ':'.join(list(dict.fromkeys(resource_dirs)))
+    # Also include share paths from AMENT_PREFIX_PATH if available
+    ament_prefix_path = os.environ.get('AMENT_PREFIX_PATH', '')
+    for p in ament_prefix_path.split(':'):
+        if p:
+            resource_dirs.append(os.path.join(p, 'share'))
+
+    resource_dirs = [d for d in dict.fromkeys(resource_dirs) if os.path.exists(d)]
+    env_resource_paths = ':'.join(resource_dirs)
 
     plugin_dirs = [
-        pkg_lib_dir,
-        '/workspaces/ros-cdt/install/robot0_gazebo/lib',
-        '/home/vuquan/edu/ros-cdt/install/robot0_gazebo/lib'
+        os.path.join(pkg_gazebo_prefix, 'lib'),
+        os.path.join(pkg_description_prefix, 'lib'),
     ]
-    env_plugin_paths = ':'.join(list(dict.fromkeys(plugin_dirs)))
+    for p in ament_prefix_path.split(':'):
+        if p:
+            plugin_dirs.append(os.path.join(p, 'lib'))
+
+    plugin_dirs = [d for d in dict.fromkeys(plugin_dirs) if os.path.exists(d)]
+    env_plugin_paths = ':'.join(plugin_dirs)
 
     set_gz_resource_path = AppendEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',

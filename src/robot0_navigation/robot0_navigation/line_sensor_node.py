@@ -129,15 +129,21 @@ class LineSensorSimulatorNode(Node):
             try:
                 gazebo_share = get_package_share_directory('robot0_gazebo')
                 img_path = os.path.join(gazebo_share, 'models', 'arena_floor', 'materials', 'textures', 'floor.png')
-            except PackageNotFoundError:
+            except Exception:
                 img_path = ''
 
         if not img_path or not os.path.exists(img_path):
+            rel_texture = os.path.join('models', 'arena_floor', 'materials', 'textures', 'floor.png')
             candidate_paths = [
-                '/workspaces/ros-cdt/src/robot0_gazebo/models/arena_floor/materials/textures/floor.png',
-                '/workspaces/ros-cdt/install/robot0_gazebo/share/robot0_gazebo/models/arena_floor/materials/textures/floor.png',
-                os.path.expanduser('~/edu/ros-cdt/src/robot0_gazebo/models/arena_floor/materials/textures/floor.png'),
+                os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'robot0_gazebo', rel_texture)),
+                os.path.join(os.getcwd(), 'src', 'robot0_gazebo', rel_texture),
+                os.path.join(os.getcwd(), 'robot0_gazebo', rel_texture),
+                os.path.join(os.getcwd(), rel_texture),
             ]
+            for prefix in os.environ.get('AMENT_PREFIX_PATH', '').split(':'):
+                if prefix:
+                    candidate_paths.append(os.path.join(prefix, 'share', 'robot0_gazebo', rel_texture))
+
             for p in candidate_paths:
                 if os.path.exists(p):
                     img_path = p

@@ -268,10 +268,16 @@ class YoloDetectorNode(Node):
         # 3. Check workspace source / relative candidates
         candidates = [
             os.path.join(os.getcwd(), 'src', 'robot0_vision', 'models', basename),
-            os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'src', 'robot0_vision', 'models', basename),
-            os.path.join(os.path.dirname(__file__), '..', 'models', basename),
-            os.path.join('/workspaces/ros-cdt', 'src', 'robot0_vision', 'models', basename),
+            os.path.join(os.getcwd(), 'models', basename),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'src', 'robot0_vision', 'models', basename)),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models', basename)),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), 'models', basename)),
         ]
+        for prefix in os.environ.get('AMENT_PREFIX_PATH', '').split(':'):
+            if prefix:
+                candidates.append(os.path.join(prefix, 'share', 'robot0_vision', 'models', basename))
+                candidates.append(os.path.join(prefix, 'share', 'robot0_vision', basename))
+
         for candidate in candidates:
             if os.path.isfile(candidate):
                 return os.path.abspath(candidate)
