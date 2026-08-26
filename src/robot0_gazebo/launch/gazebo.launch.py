@@ -136,10 +136,10 @@ def generate_launch_description():
             '-topic', 'robot_description',
             '-name', 'robot0',
             '-allow_renaming', 'true',
-            '-x', '-0.985',
-            '-y', '0.64',
+            '-x', '0.0',
+            '-y', '0.0',
             '-z', '0.08',
-            '-Y', '3.14159265'
+            '-Y', '0.0'
         ]
     )
 

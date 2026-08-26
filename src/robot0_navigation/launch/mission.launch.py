@@ -8,18 +8,17 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     pkg_navigation = get_package_share_directory('robot0_navigation')
-    default_config = os.path.join(pkg_navigation, 'config', 'arena_coordinates.yaml')
 
-    target_rack = LaunchConfiguration('rack', default='rack_left_bot')
+    target_pallet = LaunchConfiguration('pallet', default='cpu')
     target_shelf = LaunchConfiguration('shelf', default='1')
     target_slot = LaunchConfiguration('slot', default='left')
     dropoff_color = LaunchConfiguration('dropoff', default='')
 
     return LaunchDescription([
-        DeclareLaunchArgument('rack', default_value='rack_left_bot', description='Target Rack name (rack_left_bot, rack_left_mid, rack_left_top, rack_bot_mid_left)'),
+        DeclareLaunchArgument('pallet', default_value='cpu', description='Target Pallet type: cpu, aluminum, chip, qr'),
         DeclareLaunchArgument('shelf', default_value='1', description='Shelf level: 1 (Bottom) or 2 (Top)'),
         DeclareLaunchArgument('slot', default_value='left', description='Pallet slot: left or right'),
-        DeclareLaunchArgument('dropoff', default_value='', description='Central Drop-off color: blue, green, white, yellow, red (empty for home base)'),
+        DeclareLaunchArgument('dropoff', default_value='', description='Drop-off station: blue, red, green (empty for auto-mapping)'),
 
         Node(
             package='robot0_navigation',
@@ -27,10 +26,10 @@ def generate_launch_description():
             name='autonomous_mission',
             output='screen',
             parameters=[{
-                'target_rack': target_rack,
-                'target_shelf_level': target_shelf,
-                'target_slot': target_slot,
-                'dropoff_color': dropoff_color,
+                'pallet_type': target_pallet,
+                'shelf_level': target_shelf,
+                'slot_side': target_slot,
+                'dropoff': dropoff_color,
             }]
         )
     ])

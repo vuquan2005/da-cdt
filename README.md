@@ -99,7 +99,7 @@ ros2 launch robot0_gazebo all.launch.py
   ```
 * **Nhiệm vụ tự hành gắp & trả Pallet:**
   ```bash
-  ros2 launch robot0_navigation mission.launch.py rack:=rack_left_bot shelf:=1 slot:=left dropoff:=blue
+  ros2 launch robot0_navigation mission.launch.py pallet:=cpu shelf:=1 slot:=left dropoff:=blue
   ```
 * **Kiểm tra mô hình & TF tĩnh (RViz2):**
   ```bash

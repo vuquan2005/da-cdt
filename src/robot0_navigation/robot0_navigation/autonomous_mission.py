@@ -1,34 +1,55 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 """
-Autonomous Pallet Retrieval & Drop-Off Mission Node for Robot0.
-Refactored into robot0_navigation package using standardized ROS 2 architecture.
+Autonomous Mission Node for Robot0 AMR:
+Performs fully automated Pick-and-Place Pallet Transport:
+Home -> Approach Rack -> Insert Forks -> Lift Pallet -> Reverse ->
+Navigate to Drop-off Station -> Insert -> Lower Pallet -> Reverse -> Return Home.
 """
 
 import math
 import time
+from enum import Enum, auto
 from typing import Optional
 
 import rclpy
 from rclpy.node import Node
-from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64
 
 from robot0_navigation.arena_coordinates import (
-    ROBOT_SPAWN,
-    STORAGE_RACKS,
-    PALLETS,
-    DROPOFF_ZONES,
-    LIFT_HEIGHT_TRANSIT,
-    LIFT_HEIGHT_LEVEL1_INSERT,
-    LIFT_HEIGHT_LEVEL1_CARRY,
-    LIFT_HEIGHT_LEVEL2_INSERT,
-    LIFT_HEIGHT_LEVEL2_CARRY,
-    LIFT_ARM_LATERAL_OFFSET,
-    get_dropoff_by_color,
+    Pose2D,
+    HOME_BASE,
+    PalletSlot,
+    DropOffStation,
+    PALLET_SLOTS,
+    DROPOFF_STATIONS,
+    get_slot_by_type,
+    get_slot_by_shelf_and_side,
+    get_dropoff_station,
+    get_default_dropoff_for_item,
 )
+
+
+class MissionState(Enum):
+    INIT = auto()
+    NAV_TO_RACK_APPROACH = auto()
+    ADJUST_LIFT_APPROACH = auto()
+    INSERT_FORKS = auto()
+    LIFT_PALLET = auto()
+    RETRACT_FROM_RACK = auto()
+    NAV_TO_DROPOFF_APPROACH = auto()
+    INSERT_DROPOFF = auto()
+    LOWER_PALLET = auto()
+    RETRACT_FROM_DROPOFF = auto()
+    RETURN_HOME = auto()
+    COMPLETE = auto()
+
+
+def quaternion_to_yaw(q) -> float:
+    siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+    cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+    return math.atan2(siny_cosp, cosy_cosp)
 
 
 def normalize_angle(angle: float) -> float:
@@ -39,315 +60,198 @@ def normalize_angle(angle: float) -> float:
     return angle
 
 
-def quat_to_yaw(qx: float, qy: float, qz: float, qw: float) -> float:
-    siny_cosp = 2.0 * (qw * qz + qx * qy)
-    cosy_cosp = 1.0 - 2.0 * (qy * qy + qz * qz)
-    return math.atan2(siny_cosp, cosy_cosp)
-
-
-class AutonomousPalletMission(Node):
-    # FSM State definitions
-    STATE_WAIT_ODOM = "WAIT_ODOM"
-    STATE_NAV_STAGING = "NAV_STAGING"
-    STATE_PRE_LIFT_ALIGN = "PRE_LIFT_ALIGN"
-    STATE_FORK_INSERT = "FORK_INSERT"
-    STATE_LIFT_PALLET = "LIFT_PALLET"
-    STATE_FORK_RETRACT = "FORK_RETRACT"
-    STATE_NAV_DELIVERY = "NAV_DELIVERY"
-    STATE_LOWER_PALLET = "LOWER_PALLET"
-    STATE_COMPLETED = "COMPLETED"
-
+class AutonomousMissionNode(Node):
     def __init__(self):
-        super().__init__('autonomous_pallet_mission')
+        super().__init__('autonomous_mission')
 
-        # Declare ROS 2 parameters
-        self.declare_parameter('target_rack', 'rack_left_bot')
-        self.declare_parameter('target_shelf_level', 1)  # 1 for Bottom shelf, 2 for Top shelf
-        self.declare_parameter('target_slot', 'left')     # 'left' or 'right'
-        self.declare_parameter('dropoff_color', '')       # Empty for return home, or 'blue', 'green', etc.
+        # Parameters
+        self.declare_parameter('pallet_type', 'cpu')
+        self.declare_parameter('shelf_level', 1)
+        self.declare_parameter('slot_side', 'left')
+        self.declare_parameter('dropoff', '')
 
-        self.rack_name = self.get_parameter('target_rack').get_parameter_value().string_value
-        self.shelf_level = self.get_parameter('target_shelf_level').get_parameter_value().integer_value
-        self.slot = self.get_parameter('target_slot').get_parameter_value().string_value.lower()
-        self.dropoff_color = self.get_parameter('dropoff_color').get_parameter_value().string_value.lower()
+        pallet_type_param = self.get_parameter('pallet_type').get_parameter_value().string_value
+        shelf_param = self.get_parameter('shelf_level').get_parameter_value().integer_value
+        slot_param = self.get_parameter('slot_side').get_parameter_value().string_value
+        dropoff_param = self.get_parameter('dropoff').get_parameter_value().string_value
 
-        # Mecanum Robot Geometry
-        self.wheel_radius = 0.0487
-        self.lx = 0.1000
-        self.ly = 0.1539
-        self.k_geom = self.lx + self.ly
+        # Select target pallet slot
+        self.target_slot: Optional[PalletSlot] = get_slot_by_type(pallet_type_param)
+        if self.target_slot is None:
+            self.target_slot = get_slot_by_shelf_and_side(shelf_param, slot_param)
+        if self.target_slot is None:
+            self.target_slot = PALLET_SLOTS["cpu_bottom_left"]
 
-        # Publishers
+        # Select target dropoff station
+        if dropoff_param:
+            self.target_dropoff: Optional[DropOffStation] = get_dropoff_station(dropoff_param)
+        else:
+            self.target_dropoff = get_default_dropoff_for_item(self.target_slot.item_type)
+
+        if self.target_dropoff is None:
+            self.target_dropoff = DROPOFF_STATIONS["blue"]
+
+        self.get_logger().info(
+            f"=== Mission Configured ==="
+            f"\n  Target Pallet: {self.target_slot.name} (Type: {self.target_slot.item_type}, Shelf: {self.target_slot.shelf_level})"
+            f"\n  Target Drop-off: {self.target_dropoff.name} (Color: {self.target_dropoff.color})"
+        )
+
+        # Publishers & Subscribers
         self.cmd_vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.lift_pub = self.create_publisher(Float64, '/lift_joint_cmd', 10)
-        self.wheel_fl_pub = self.create_publisher(Float64, '/wheel_fl_cmd_vel', 10)
-        self.wheel_fr_pub = self.create_publisher(Float64, '/wheel_fr_cmd_vel', 10)
-        self.wheel_rl_pub = self.create_publisher(Float64, '/wheel_rl_cmd_vel', 10)
-        self.wheel_rr_pub = self.create_publisher(Float64, '/wheel_rr_cmd_vel', 10)
-
-        # Subscribers
+        self.lift_cmd_pub = self.create_publisher(Float64, '/lift_joint_cmd', 10)
         self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
 
-        # Internal Robot Pose
-        self.current_x: Optional[float] = None
-        self.current_y: Optional[float] = None
-        self.current_yaw: Optional[float] = None
-        self.home_x: Optional[float] = None
-        self.home_y: Optional[float] = None
-        self.home_yaw: Optional[float] = None
+        # State tracking
+        self.current_pose: Optional[Pose2D] = None
+        self.state: MissionState = MissionState.INIT
+        self.state_start_time: float = 0.0
+        self.target_lift_height: float = 0.0
 
-        # Mission State
-        self.state = self.STATE_WAIT_ODOM
-        self.state_start_time = time.time()
+        # Motion Control Gains
+        self.k_lin = 1.2
+        self.k_ang = 2.0
+        self.max_lin_vel = 0.4
+        self.max_ang_vel = 1.0
+        self.pos_tolerance = 0.03 # 3cm
+        self.yaw_tolerance = 0.05 # ~2.8 deg
 
-        # Target Coordinates & Waypoint Calculation
-        self._calculate_target_geometry()
-
-        # Control Loop Timer (20 Hz)
+        # Main Control Loop (20 Hz)
         self.timer = self.create_timer(0.05, self.control_loop)
 
-        self.get_logger().info("=================================================================")
-        self.get_logger().info(f"Robot0 Navigation Mission Initialized:")
-        self.get_logger().info(f"  Rack: {self.rack_name} | Shelf Level: {self.shelf_level} | Slot: {self.slot.upper()}")
-        self.get_logger().info(f"  Staging Pose : X={self.staging_x:.3f}m, Y={self.staging_y:.3f}m, Yaw={math.degrees(self.target_yaw):.1f}°")
-        self.get_logger().info(f"  Insertion Pose: X={self.insert_x:.3f}m, Y={self.insert_y:.3f}m")
-        self.get_logger().info(f"  Lift Heights  : Insert={self.lift_insert_height*100:.2f}cm, Carry={self.lift_carry_height*100:.2f}cm")
-        if self.dropoff_target:
-            self.get_logger().info(f"  Drop-off Zone : {self.dropoff_target.description}")
-        else:
-            self.get_logger().info(f"  Delivery Mode : Return to Home Base")
-        self.get_logger().info("=================================================================")
-
-    def _calculate_target_geometry(self):
-        # 1. Look up Rack
-        if self.rack_name not in STORAGE_RACKS:
-            self.get_logger().warn(f"Rack '{self.rack_name}' not found. Defaulting to 'rack_left_bot'")
-            self.rack_name = "rack_left_bot"
-        rack = STORAGE_RACKS[self.rack_name]
-
-        # 2. Lift Height selection
-        if self.shelf_level == 2:
-            self.lift_insert_height = LIFT_HEIGHT_LEVEL2_INSERT
-            self.lift_carry_height = LIFT_HEIGHT_LEVEL2_CARRY
-        else:
-            self.lift_insert_height = LIFT_HEIGHT_LEVEL1_INSERT
-            self.lift_carry_height = LIFT_HEIGHT_LEVEL1_CARRY
-
-        # 3. Calculate target alignment based on rack orientation
-        # For left racks (Yaw = pi/2): slot offset is in world Y
-        if "left" in self.rack_name:
-            self.target_yaw = math.pi  # Facing towards left rack (-X)
-            # Lateral alignment with kinematic offset
-            if self.rack_name == "rack_left_bot":
-                base_y = 0.5810 if self.slot == 'left' else 0.7010
-            elif self.rack_name == "rack_left_mid":
-                base_y = -0.0660 if self.slot == 'left' else 0.0540
-            else:  # rack_left_top
-                base_y = -0.7090 if self.slot == 'left' else -0.5890
-            
-            self.staging_x = -1.450
-            self.insert_x = -1.685
-            self.staging_y = base_y - LIFT_ARM_LATERAL_OFFSET
-            self.insert_y = self.staging_y
-        else:
-            # Bottom rack (rack_bot_mid_left, Yaw = 0.0): facing world +Y
-            self.target_yaw = math.pi / 2.0
-            base_x = -0.550 if self.slot == 'left' else -0.430
-            self.staging_x = base_x + LIFT_ARM_LATERAL_OFFSET
-            self.insert_x = self.staging_x
-            self.staging_y = 0.450
-            self.insert_y = 0.685
-
-        # 4. Drop-off target
-        self.dropoff_target = get_dropoff_by_color(self.dropoff_color) if self.dropoff_color else None
-
     def odom_callback(self, msg: Odometry):
-        pos = msg.pose.pose.position
-        ori = msg.pose.pose.orientation
-        self.current_x = pos.x
-        self.current_y = pos.y
-        self.current_yaw = quat_to_yaw(ori.x, ori.y, ori.z, ori.w)
-
-        if self.home_x is None:
-            self.home_x = self.current_x
-            self.home_y = self.current_y
-            self.home_yaw = self.current_yaw
-            self.get_logger().info(
-                f"Spawn Pose Locked: X={self.home_x:.3f}m, Y={self.home_y:.3f}m, Yaw={math.degrees(self.home_yaw):.1f}°"
-            )
-
-    def publish_twist(self, vx: float, vy: float, wz: float):
-        twist = Twist()
-        twist.linear.x = float(vx)
-        twist.linear.y = float(vy)
-        twist.angular.z = float(wz)
-        self.cmd_vel_pub.publish(twist)
-
-        # Synchronize wheel velocity commands
-        w_fl = (vx - vy - self.k_geom * wz) / self.wheel_radius
-        w_fr = (vx + vy + self.k_geom * wz) / self.wheel_radius
-        w_rl = (vx + vy - self.k_geom * wz) / self.wheel_radius
-        w_rr = (vx - vy + self.k_geom * wz) / self.wheel_radius
-
-        m = Float64()
-        m.data = float(w_fl); self.wheel_fl_pub.publish(m)
-        m.data = float(w_fr); self.wheel_fr_pub.publish(m)
-        m.data = float(w_rl); self.wheel_rl_pub.publish(m)
-        m.data = float(w_rr); self.wheel_rr_pub.publish(m)
+        x = msg.pose.pose.position.x
+        y = msg.pose.pose.position.y
+        yaw = quaternion_to_yaw(msg.pose.pose.orientation)
+        self.current_pose = Pose2D(x=x, y=y, yaw=yaw)
 
     def set_lift(self, height: float):
+        self.target_lift_height = height
         msg = Float64()
         msg.data = float(height)
-        self.lift_pub.publish(msg)
+        self.lift_cmd_pub.publish(msg)
 
-    def compute_navigation_cmd(self, target_x: float, target_y: float, target_yaw: float, max_v=0.25, max_w=0.8):
-        dx_world = target_x - self.current_x
-        dy_world = target_y - self.current_y
-        dist = math.hypot(dx_world, dy_world)
+    def drive_to_pose(self, target: Pose2D, max_speed: Optional[float] = None) -> bool:
+        """Holonomic/Planar Drive to Target Pose2D. Returns True when arrived within tolerance."""
+        if self.current_pose is None:
+            return False
 
-        dyaw = normalize_angle(target_yaw - self.current_yaw)
+        max_v = max_speed if max_speed is not None else self.max_lin_vel
+        dx = target.x - self.current_pose.x
+        dy = target.y - self.current_pose.y
+        dist = math.hypot(dx, dy)
+        d_yaw = normalize_angle(target.yaw - self.current_pose.yaw)
 
-        cos_y = math.cos(self.current_yaw)
-        sin_y = math.sin(self.current_yaw)
+        if dist < self.pos_tolerance and abs(d_yaw) < self.yaw_tolerance:
+            self.stop_robot()
+            return True
 
-        dx_body = dx_world * cos_y + dy_world * sin_y
-        dy_body = -dx_world * sin_y + dy_world * cos_y
+        # Transform world error into robot body frame
+        c = math.cos(self.current_pose.yaw)
+        s = math.sin(self.current_pose.yaw)
+        body_dx = c * dx + s * dy
+        body_dy = -s * dx + c * dy
 
-        kp_pos = 1.2
-        kp_yaw = 1.5
+        cmd = Twist()
+        # Proportional velocity control in body frame
+        cmd.linear.x = max(min(self.k_lin * body_dx, max_v), -max_v)
+        cmd.linear.y = max(min(self.k_lin * body_dy, max_v), -max_v)
+        cmd.angular.z = max(min(self.k_ang * d_yaw, self.max_ang_vel), -self.max_ang_vel)
 
-        vx = max(min(kp_pos * dx_body, max_v), -max_v)
-        vy = max(min(kp_pos * dy_body, max_v), -max_v)
-        wz = max(min(kp_yaw * dyaw, max_w), -max_w)
+        self.cmd_vel_pub.publish(cmd)
+        return False
 
-        return vx, vy, wz, dist, abs(dyaw)
+    def stop_robot(self):
+        cmd = Twist()
+        self.cmd_vel_pub.publish(cmd)
 
-    def transition(self, next_state: str):
-        self.get_logger().info(f"FSM State Transition: {self.state} -> {next_state}")
-        self.state = next_state
+    def transition_to(self, new_state: MissionState):
+        self.get_logger().info(f"Transitioning: {self.state.name} -> {new_state.name}")
+        self.state = new_state
         self.state_start_time = time.time()
+        self.stop_robot()
 
     def control_loop(self):
-        if self.current_x is None:
+        if self.current_pose is None:
             return
 
-        elapsed = time.time() - self.state_start_time
+        now = time.time()
+        dt_state = now - self.state_start_time
 
-        # STATE 0: WAIT_ODOM
-        if self.state == self.STATE_WAIT_ODOM:
-            self.set_lift(LIFT_HEIGHT_TRANSIT)
-            self.publish_twist(0.0, 0.0, 0.0)
-            if elapsed > 1.0:
-                self.get_logger().info("Navigating to staging position in front of rack...")
-                self.transition(self.STATE_NAV_STAGING)
-
-        # STATE 1: NAV_STAGING
-        elif self.state == self.STATE_NAV_STAGING:
-            self.set_lift(LIFT_HEIGHT_TRANSIT)
-            vx, vy, wz, dist, dyaw = self.compute_navigation_cmd(
-                self.staging_x, self.staging_y, self.target_yaw, max_v=0.20, max_w=0.6
-            )
-            self.publish_twist(vx, vy, wz)
-
-            if dist < 0.02 and dyaw < 0.03:
-                self.publish_twist(0.0, 0.0, 0.0)
-                self.get_logger().info(f"Reached Staging Pose: X={self.current_x:.3f}m, Y={self.current_y:.3f}m")
-                self.transition(self.STATE_PRE_LIFT_ALIGN)
-
-        # STATE 2: PRE_LIFT_ALIGN
-        elif self.state == self.STATE_PRE_LIFT_ALIGN:
-            self.publish_twist(0.0, 0.0, 0.0)
-            self.set_lift(self.lift_insert_height)
-            if elapsed > 1.5:
-                self.get_logger().info(f"Fork aligned at {self.lift_insert_height*100:.2f}cm. Inserting fork...")
-                self.transition(self.STATE_FORK_INSERT)
-
-        # STATE 3: FORK_INSERT
-        elif self.state == self.STATE_FORK_INSERT:
-            self.set_lift(self.lift_insert_height)
-            vx, vy, wz, dist, dyaw = self.compute_navigation_cmd(
-                self.insert_x, self.insert_y, self.target_yaw, max_v=0.08, max_w=0.4
-            )
-            vy = max(min(vy, 0.02), -0.02)
-            self.publish_twist(vx, vy, wz)
-
-            reached = (self.current_x <= self.insert_x + 0.015) if "left" in self.rack_name else (self.current_y >= self.insert_y - 0.015)
-            if reached or elapsed > 6.0:
-                self.publish_twist(0.0, 0.0, 0.0)
-                self.get_logger().info(f"Fork inserted. Lifting pallet to {self.lift_carry_height*100:.2f}cm...")
-                self.transition(self.STATE_LIFT_PALLET)
-
-        # STATE 4: LIFT_PALLET
-        elif self.state == self.STATE_LIFT_PALLET:
-            self.publish_twist(0.0, 0.0, 0.0)
-            self.set_lift(self.lift_carry_height)
-            if elapsed > 2.0:
-                self.get_logger().info("Pallet lifted! Retracting fork from rack...")
-                self.transition(self.STATE_FORK_RETRACT)
-
-        # STATE 5: FORK_RETRACT
-        elif self.state == self.STATE_FORK_RETRACT:
-            self.set_lift(self.lift_carry_height)
-            vx, vy, wz, dist, dyaw = self.compute_navigation_cmd(
-                self.staging_x, self.staging_y, self.target_yaw, max_v=0.10, max_w=0.4
-            )
-            self.publish_twist(vx, vy, wz)
-
-            cleared = (self.current_x >= self.staging_x - 0.02) if "left" in self.rack_name else (self.current_y <= self.staging_y + 0.02)
-            if cleared or elapsed > 6.0:
-                self.publish_twist(0.0, 0.0, 0.0)
-                self.get_logger().info(f"Cleared rack at X={self.current_x:.3f}m, Y={self.current_y:.3f}m. Heading to delivery...")
-                self.transition(self.STATE_NAV_DELIVERY)
-
-        # STATE 6: NAV_DELIVERY (to Drop-off Zone or Home Base)
-        elif self.state == self.STATE_NAV_DELIVERY:
-            self.set_lift(self.lift_carry_height)
-            if self.dropoff_target:
-                tgt_x = self.dropoff_target.approach_pose.x
-                tgt_y = self.dropoff_target.approach_pose.y
-                tgt_yaw = self.dropoff_target.approach_pose.yaw
-            else:
-                tgt_x, tgt_y, tgt_yaw = self.home_x, self.home_y, self.home_yaw
-
-            vx, vy, wz, dist, dyaw = self.compute_navigation_cmd(tgt_x, tgt_y, tgt_yaw, max_v=0.25, max_w=0.6)
-            self.publish_twist(vx, vy, wz)
-
-            if dist < 0.03 and dyaw < 0.04:
-                self.publish_twist(0.0, 0.0, 0.0)
-                self.get_logger().info(f"Arrived at Destination: X={self.current_x:.3f}m, Y={self.current_y:.3f}m. Lowering Pallet...")
-                self.transition(self.STATE_LOWER_PALLET)
-
-        # STATE 7: LOWER_PALLET
-        elif self.state == self.STATE_LOWER_PALLET:
-            self.publish_twist(0.0, 0.0, 0.0)
+        if self.state == MissionState.INIT:
             self.set_lift(0.0)
-            if elapsed > 2.0:
-                self.get_logger().info("Pallet successfully placed!")
-                self.transition(self.STATE_COMPLETED)
+            self.transition_to(MissionState.NAV_TO_RACK_APPROACH)
 
-        # STATE 8: COMPLETED
-        elif self.state == self.STATE_COMPLETED:
-            self.publish_twist(0.0, 0.0, 0.0)
-            self.set_lift(0.0)
-            self.get_logger().info("================ MISSION ACCOMPLISHED ================")
+        elif self.state == MissionState.NAV_TO_RACK_APPROACH:
+            # 1. Drive to approach pose before the rack bay
+            if self.drive_to_pose(self.target_slot.approach_pose):
+                self.transition_to(MissionState.ADJUST_LIFT_APPROACH)
+
+        elif self.state == MissionState.ADJUST_LIFT_APPROACH:
+            # 2. Adjust lift to approach height
+            self.set_lift(self.target_slot.lift_height_approach)
+            if dt_state > 1.5:
+                self.transition_to(MissionState.INSERT_FORKS)
+
+        elif self.state == MissionState.INSERT_FORKS:
+            # 3. Drive forward slowly to insert forks inside pallet runners
+            if self.drive_to_pose(self.target_slot.insert_pose, max_speed=0.15):
+                self.transition_to(MissionState.LIFT_PALLET)
+
+        elif self.state == MissionState.LIFT_PALLET:
+            # 4. Raise lift to carry height
+            self.set_lift(self.target_slot.lift_height_carry)
+            if dt_state > 2.0:
+                self.transition_to(MissionState.RETRACT_FROM_RACK)
+
+        elif self.state == MissionState.RETRACT_FROM_RACK:
+            # 5. Reverse back to approach pose
+            if self.drive_to_pose(self.target_slot.approach_pose, max_speed=0.15):
+                self.transition_to(MissionState.NAV_TO_DROPOFF_APPROACH)
+
+        elif self.state == MissionState.NAV_TO_DROPOFF_APPROACH:
+            # 6. Navigate across arena to target dropoff approach pose
+            if self.drive_to_pose(self.target_dropoff.approach_pose):
+                self.transition_to(MissionState.INSERT_DROPOFF)
+
+        elif self.state == MissionState.INSERT_DROPOFF:
+            # 7. Drive slowly into dropoff station
+            if self.drive_to_pose(self.target_dropoff.insert_pose, max_speed=0.15):
+                self.transition_to(MissionState.LOWER_PALLET)
+
+        elif self.state == MissionState.LOWER_PALLET:
+            # 8. Lower pallet onto the dropoff rails
+            self.set_lift(self.target_dropoff.lift_height_place)
+            if dt_state > 2.0:
+                self.transition_to(MissionState.RETRACT_FROM_DROPOFF)
+
+        elif self.state == MissionState.RETRACT_FROM_DROPOFF:
+            # 9. Reverse out of dropoff station
+            if self.drive_to_pose(self.target_dropoff.approach_pose, max_speed=0.15):
+                self.transition_to(MissionState.RETURN_HOME)
+
+        elif self.state == MissionState.RETURN_HOME:
+            # 10. Return to Home Dock
+            if self.drive_to_pose(HOME_BASE):
+                self.transition_to(MissionState.COMPLETE)
+
+        elif self.state == MissionState.COMPLETE:
+            self.stop_robot()
+            self.get_logger().info("🎉 MISSION COMPLETE! Pallet successfully delivered.")
             self.timer.cancel()
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = AutonomousPalletMission()
+    node = AutonomousMissionNode()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
     finally:
-        try:
-            node.publish_twist(0.0, 0.0, 0.0)
-        except Exception:
-            pass
+        node.stop_robot()
         node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':

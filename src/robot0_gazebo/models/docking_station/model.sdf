@@ -1,0 +1,72 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="docking_station">
+    <static>true</static>
+    <link name="link">
+      <!-- Main Docking Pad Surface -->
+      <visual name="visual_pad">
+        <pose>0 0 0.001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.40 0.36 0.002</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.15 0.18 1.0</ambient>
+          <diffuse>0.22 0.22 0.26 1.0</diffuse>
+          <specular>0.3 0.3 0.3 1.0</specular>
+        </material>
+      </visual>
+
+      <!-- Yellow/Amber Boundary Strip Left -->
+      <visual name="visual_border_left">
+        <pose>0 -0.17 0.0015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.40 0.02 0.002</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.8 0.7 0.1 1.0</ambient>
+          <diffuse>0.95 0.85 0.1 1.0</diffuse>
+        </material>
+      </visual>
+
+      <!-- Yellow/Amber Boundary Strip Right -->
+      <visual name="visual_border_right">
+        <pose>0 0.17 0.0015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.40 0.02 0.002</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.8 0.7 0.1 1.0</ambient>
+          <diffuse>0.95 0.85 0.1 1.0</diffuse>
+        </material>
+      </visual>
+
+      <!-- Rear Docking Contact Stand -->
+      <visual name="visual_dock_back">
+        <pose>-0.20 0 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.04 0.24 0.06</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.1 0.5 0.2 1.0</ambient>
+          <diffuse>0.15 0.7 0.25 1.0</diffuse>
+        </material>
+      </visual>
+      <collision name="collision_dock_back">
+        <pose>-0.20 0 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.04 0.24 0.06</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

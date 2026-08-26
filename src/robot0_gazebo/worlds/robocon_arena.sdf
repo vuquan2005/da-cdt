@@ -28,6 +28,7 @@
       <render_engine>ogre2</render_engine>
     </plugin>
 
+    <!-- Balanced Environment Lighting -->
     <light type="directional" name="sun">
       <cast_shadows>false</cast_shadows>
       <pose>0 0 10 0 0 0</pose>
@@ -70,125 +71,128 @@
             </plane>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.82 0.82 0.85 1</ambient>
+            <diffuse>0.85 0.85 0.88 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
           </material>
         </visual>
       </link>
     </model>
 
+    <!-- Arena Boundary Walls -->
+    <model name="arena_perimeter">
+      <static>true</static>
+      <link name="link">
+        <!-- North Wall -->
+        <visual name="wall_north_vis">
+          <pose>0.15 1.6 0.075 0 0 0</pose>
+          <geometry><box><size>3.8 0.04 0.15</size></box></geometry>
+          <material><ambient>0.3 0.35 0.4 1</ambient><diffuse>0.4 0.45 0.5 1</diffuse></material>
+        </visual>
+        <collision name="wall_north_col">
+          <pose>0.15 1.6 0.075 0 0 0</pose>
+          <geometry><box><size>3.8 0.04 0.15</size></box></geometry>
+        </collision>
 
+        <!-- South Wall -->
+        <visual name="wall_south_vis">
+          <pose>0.15 -1.6 0.075 0 0 0</pose>
+          <geometry><box><size>3.8 0.04 0.15</size></box></geometry>
+          <material><ambient>0.3 0.35 0.4 1</ambient><diffuse>0.4 0.45 0.5 1</diffuse></material>
+        </visual>
+        <collision name="wall_south_col">
+          <pose>0.15 -1.6 0.075 0 0 0</pose>
+          <geometry><box><size>3.8 0.04 0.15</size></box></geometry>
+        </collision>
 
-    <!-- ==================== STORAGE RACKS (4 Vị trí phía bên Robot Spawn) ==================== -->
+        <!-- East Wall -->
+        <visual name="wall_east_vis">
+          <pose>2.0 0 0.075 0 0 0</pose>
+          <geometry><box><size>0.04 3.2 0.15</size></box></geometry>
+          <material><ambient>0.3 0.35 0.4 1</ambient><diffuse>0.4 0.45 0.5 1</diffuse></material>
+        </visual>
+        <collision name="wall_east_col">
+          <pose>2.0 0 0.075 0 0 0</pose>
+          <geometry><box><size>0.04 3.2 0.15</size></box></geometry>
+        </collision>
+
+        <!-- West Wall -->
+        <visual name="wall_west_vis">
+          <pose>-1.7 0 0.075 0 0 0</pose>
+          <geometry><box><size>0.04 3.2 0.15</size></box></geometry>
+          <material><ambient>0.3 0.35 0.4 1</ambient><diffuse>0.4 0.45 0.5 1</diffuse></material>
+        </visual>
+        <collision name="wall_west_col">
+          <pose>-1.7 0 0.075 0 0 0</pose>
+          <geometry><box><size>0.04 3.2 0.15</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- ==================== START / HOME DOCKING STATION (0, 0) ==================== -->
+    <include>
+      <uri>model://docking_station</uri>
+      <name>docking_home</name>
+      <pose>0.0 0.0 0.001 0 0 0</pose>
+    </include>
+
+    <!-- ==================== STORAGE RACK (PICKUP STATION) (X=1.5, Y=0.0) ==================== -->
     <include>
       <uri>model://storage_rack</uri>
-      <name>rack_left_top</name>
-      <pose>-1.893 -0.649 0.0025 0 0 1.5707963</pose>
-    </include>
-    <include>
-      <uri>model://storage_rack</uri>
-      <name>rack_left_mid</name>
-      <pose>-1.894 -0.006 0.0025 0 0 1.5707963</pose>
-    </include>
-    <include>
-      <uri>model://storage_rack</uri>
-      <name>rack_left_bot</name>
-      <pose>-1.894 0.641 0.0025 0 0 1.5707963</pose>
-    </include>
-    <include>
-      <uri>model://storage_rack</uri>
-      <name>rack_bot_mid_left</name>
-      <pose>-0.49 0.895 0.0025 0 0 0.0</pose>
+      <name>rack_pickup</name>
+      <pose>1.5 0.0 0.0025 0 0 1.5707963</pose>
     </include>
 
-    <!-- ==================== PALLETS (Phía bên Robot Spawn) ==================== -->
-    <!-- RACK LEFT TOP -->
-    <include>
-      <uri>model://pallet_aluminum</uri>
-      <name>pallet_aluminum_rack_left_top_b_left</name>
-      <pose>-1.893 -0.709 0.0285 0 0 1.5708</pose>
-    </include>
+    <!-- ==================== PALLETS ON STORAGE RACK ==================== -->
+    <!-- Bottom Shelf (Z = 0.0285m) -->
+    <!-- Left Bay (Y = -0.060) : CPU Pallet -->
     <include>
       <uri>model://pallet_cpu</uri>
-      <name>pallet_cpu_rack_left_top_b_right</name>
-      <pose>-1.893 -0.589 0.0285 0 0 1.5708</pose>
+      <name>pallet_cpu_bottom_left</name>
+      <pose>1.5 -0.060 0.0285 0 0 1.5708</pose>
     </include>
+    <!-- Right Bay (Y = +0.060) : Aluminum Pallet -->
     <include>
-      <uri>model://pallet_qr</uri>
-      <name>pallet_qr_rack_left_top_t_left</name>
-      <pose>-1.893 -0.709 0.1485 0 0 1.5708</pose>
-    </include>
-    <include>
-      <uri>model://pallet_chip</uri>
-      <name>pallet_chip_rack_left_top_t_right</name>
-      <pose>-1.893 -0.589 0.1485 0 0 1.5708</pose>
+      <uri>model://pallet_aluminum</uri>
+      <name>pallet_al_bottom_right</name>
+      <pose>1.5 0.060 0.0285 0 0 1.5708</pose>
     </include>
 
-    <!-- RACK LEFT MID -->
-    <include>
-      <uri>model://pallet_qr</uri>
-      <name>pallet_qr_rack_left_mid_b_left</name>
-      <pose>-1.894 -0.066 0.0285 0 0 1.5708</pose>
-    </include>
+    <!-- Top Shelf (Z = 0.1485m) -->
+    <!-- Left Bay (Y = -0.060) : Chip Pallet -->
     <include>
       <uri>model://pallet_chip</uri>
-      <name>pallet_chip_rack_left_mid_b_right</name>
-      <pose>-1.894 0.054 0.0285 0 0 1.5708</pose>
+      <name>pallet_chip_top_left</name>
+      <pose>1.5 -0.060 0.1485 0 0 1.5708</pose>
     </include>
+    <!-- Right Bay (Y = +0.060) : QR Pallet -->
     <include>
-      <uri>model://pallet_aluminum</uri>
-      <name>pallet_aluminum_rack_left_mid_t_left</name>
-      <pose>-1.894 -0.066 0.1485 0 0 1.5708</pose>
-    </include>
-    <include>
-      <uri>model://pallet_cpu</uri>
-      <name>pallet_cpu_rack_left_mid_t_right</name>
-      <pose>-1.894 0.054 0.1485 0 0 1.5708</pose>
+      <uri>model://pallet_qr</uri>
+      <name>pallet_qr_top_right</name>
+      <pose>1.5 0.060 0.1485 0 0 1.5708</pose>
     </include>
 
-    <!-- RACK LEFT BOT -->
+    <!-- ==================== DROP-OFF / UNLOADING STATIONS ==================== -->
+    <!-- 1. Blue Drop-off Station (North / Electronics Drop-off) -->
     <include>
-      <uri>model://pallet_aluminum</uri>
-      <name>pallet_aluminum_rack_left_bot_b_left</name>
-      <pose>-1.894 0.581 0.0285 0 0 1.5708</pose>
-    </include>
-    <include>
-      <uri>model://pallet_cpu</uri>
-      <name>pallet_cpu_rack_left_bot_b_right</name>
-      <pose>-1.894 0.701 0.0285 0 0 1.5708</pose>
-    </include>
-    <include>
-      <uri>model://pallet_qr</uri>
-      <name>pallet_qr_rack_left_bot_t_left</name>
-      <pose>-1.894 0.581 0.1485 0 0 1.5708</pose>
-    </include>
-    <include>
-      <uri>model://pallet_chip</uri>
-      <name>pallet_chip_rack_left_bot_t_right</name>
-      <pose>-1.894 0.701 0.1485 0 0 1.5708</pose>
+      <uri>model://dropoff_station_blue</uri>
+      <name>dropoff_blue</name>
+      <pose>0.0 1.2 0.0025 0 0 0.0</pose>
     </include>
 
-    <!-- RACK BOT MID LEFT -->
+    <!-- 2. Red Drop-off Station (South / Mechanical Drop-off) -->
     <include>
-      <uri>model://pallet_qr</uri>
-      <name>pallet_qr_rack_bot_mid_left_b_left</name>
-      <pose>-0.55 0.895 0.0285 0 0 0.0</pose>
+      <uri>model://dropoff_station_red</uri>
+      <name>dropoff_red</name>
+      <pose>0.0 -1.2 0.0025 0 0 3.14159265</pose>
     </include>
+
+    <!-- 3. Green Drop-off Station (West / QA & Inspection Drop-off) -->
     <include>
-      <uri>model://pallet_chip</uri>
-      <name>pallet_chip_rack_bot_mid_left_b_right</name>
-      <pose>-0.43 0.895 0.0285 0 0 0.0</pose>
+      <uri>model://dropoff_station_green</uri>
+      <name>dropoff_green</name>
+      <pose>-1.2 0.0 0.0025 0 0 -1.5707963</pose>
     </include>
-    <include>
-      <uri>model://pallet_aluminum</uri>
-      <name>pallet_aluminum_rack_bot_mid_left_t_left</name>
-      <pose>-0.55 0.895 0.1485 0 0 0.0</pose>
-    </include>
-    <include>
-      <uri>model://pallet_cpu</uri>
-      <name>pallet_cpu_rack_bot_mid_left_t_right</name>
-      <pose>-0.43 0.895 0.1485 0 0 0.0</pose>
-    </include>
+
   </world>
 </sdf>

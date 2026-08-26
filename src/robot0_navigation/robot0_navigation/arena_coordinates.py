@@ -1,268 +1,185 @@
+#!/usr/bin/env python3
 """
-Arena Coordinates and Waypoint Definition for Robot0 Simulation.
-Single Source of Truth for:
-- Robot Spawn & Start Zone
-- 4 Storage Racks
-- 16 Pallets (Aluminum, CPU, QR, Chip) across Bottom & Top Shelves
-- 5 Central Drop-Off Color Zones
-- Kinematics and Lift Height constants
+Standard Arena Coordinates & Waypoint Map for Robot0 AMR Logistics Arena.
+
+Defines:
+- Home / Start Docking Station (0.0, 0.0)
+- Pick-up Storage Rack (X = 1.5, Y = 0.0)
+- Pallet Slots (Bottom Shelf: CPU & Aluminum, Top Shelf: Chip & QR)
+- Drop-off Stations (Blue: North, Red: South, Green: West)
+- Approach and Insertion Waypoints for Autonomous Pick & Place
 """
 
-import math
 from dataclasses import dataclass
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
+import math
 
 
 @dataclass(frozen=True)
 class Pose2D:
     x: float
     y: float
-    yaw: float = 0.0
+    yaw: float  # Radians
+
+    def distance_to(self, other: "Pose2D") -> float:
+        return math.hypot(self.x - other.x, self.y - other.y)
+
+    def angle_diff(self, other: "Pose2D") -> float:
+        diff = other.yaw - self.yaw
+        while diff > math.pi:
+            diff -= 2 * math.pi
+        while diff < -math.pi:
+            diff += 2 * math.pi
+        return diff
 
 
 @dataclass(frozen=True)
-class Pose3D:
-    x: float
-    y: float
-    z: float
-    yaw: float = 0.0
-
-
-@dataclass(frozen=True)
-class StorageRack:
+class PalletSlot:
     name: str
-    description: str
-    pose: Pose3D
-    approach_pose: Pose2D
+    item_type: str        # 'cpu', 'aluminum', 'chip', 'qr'
+    shelf_level: int      # 1 = Bottom (Z=0.025m), 2 = Top (Z=0.145m)
+    slot_side: str        # 'left' (Y=-0.060) or 'right' (Y=+0.060)
+    pallet_pose: Pose2D
+    approach_pose: Pose2D # Robot waiting position before entering
+    insert_pose: Pose2D   # Robot position when forks are fully inserted
+    lift_height_approach: float  # Lift height before inserting (m)
+    lift_height_carry: float     # Lift height while carrying (m)
 
 
 @dataclass(frozen=True)
-class Pallet:
+class DropOffStation:
     name: str
-    rack: str
-    shelf: str        # 'bottom' (level 1) or 'top' (level 2)
-    slot: str         # 'left' or 'right'
-    item_type: str    # 'aluminum', 'cpu', 'qr', 'chip'
-    block_id: int
-    pose: Pose3D
-
-
-@dataclass(frozen=True)
-class DropOffZone:
-    name: str
-    index: int
-    color: str
-    description: str
-    center_pose: Pose3D
-    bounds: Tuple[float, float, float, float]  # (xmin, xmax, ymin, ymax)
-    approach_pose: Pose2D
+    color: str            # 'blue', 'red', 'green'
+    station_pose: Pose2D
+    approach_pose: Pose2D # Robot waiting position before entering
+    insert_pose: Pose2D   # Robot position when placing pallet
+    lift_height_place: float     # Lift height to release pallet (m)
 
 
 # ==============================================================================
-# 1. ROBOT SPAWN POSE & CONSTANTS
+# 1. HOME / START DOCKING STATION
 # ==============================================================================
-ROBOT_SPAWN = Pose3D(x=-0.985, y=0.640, z=0.080, yaw=3.14159265)
-
-# Kinematic offsets
-LIFT_ARM_LATERAL_OFFSET = 0.00827  # 8.27mm offset of lift_arm_joint in base_link
-FORK_REACH_DISTANCE = 0.2308       # 23.08cm distance from robot center to fork tips
-
-# Lift Height settings (meters)
-LIFT_HEIGHT_TRANSIT = 0.015        # Safe ground clearance while driving
-LIFT_HEIGHT_LEVEL1_INSERT = 0.0295 # Align fork with bottom shelf pallet opening
-LIFT_HEIGHT_LEVEL1_CARRY = 0.0700  # Elevated above bottom shelf
-LIFT_HEIGHT_LEVEL2_INSERT = 0.1495 # Align fork with middle shelf pallet opening
-LIFT_HEIGHT_LEVEL2_CARRY = 0.1850  # Elevated above middle shelf
+HOME_BASE = Pose2D(x=0.0, y=0.0, yaw=0.0)
 
 
 # ==============================================================================
-# 2. STORAGE RACKS (4 Racks on Team Side: X < 0)
+# 2. PICK-UP STORAGE RACK & PALLET SLOTS
 # ==============================================================================
-STORAGE_RACKS: Dict[str, StorageRack] = {
-    "rack_left_top": StorageRack(
-        name="rack_left_top",
-        description="Kệ góc trên bên trái",
-        pose=Pose3D(x=-1.893, y=-0.649, z=0.0025, yaw=1.5708),
-        approach_pose=Pose2D(x=-1.600, y=-0.649, yaw=3.1416),
+# Storage Rack center: X = 1.5, Y = 0.0, Yaw = 1.5708 (open side facing -X)
+# Fork length allows inserting when robot is at X ~ 1.38 - 1.40
+PALLET_SLOTS: Dict[str, PalletSlot] = {
+    "cpu_bottom_left": PalletSlot(
+        name="cpu_bottom_left",
+        item_type="cpu",
+        shelf_level=1,
+        slot_side="left",
+        pallet_pose=Pose2D(x=1.50, y=-0.060, yaw=1.5708),
+        approach_pose=Pose2D(x=1.10, y=-0.060, yaw=0.0000),
+        insert_pose=Pose2D(x=1.38, y=-0.060, yaw=0.0000),
+        lift_height_approach=0.000,
+        lift_height_carry=0.050,
     ),
-    "rack_left_mid": StorageRack(
-        name="rack_left_mid",
-        description="Kệ ở giữa bên trái",
-        pose=Pose3D(x=-1.894, y=-0.006, z=0.0025, yaw=1.5708),
-        approach_pose=Pose2D(x=-1.600, y=-0.006, yaw=3.1416),
+    "aluminum_bottom_right": PalletSlot(
+        name="aluminum_bottom_right",
+        item_type="aluminum",
+        shelf_level=1,
+        slot_side="right",
+        pallet_pose=Pose2D(x=1.50, y=0.060, yaw=1.5708),
+        approach_pose=Pose2D(x=1.10, y=0.060, yaw=0.0000),
+        insert_pose=Pose2D(x=1.38, y=0.060, yaw=0.0000),
+        lift_height_approach=0.000,
+        lift_height_carry=0.050,
     ),
-    "rack_left_bot": StorageRack(
-        name="rack_left_bot",
-        description="Kệ góc dưới bên trái",
-        pose=Pose3D(x=-1.894, y=0.641, z=0.0025, yaw=1.5708),
-        approach_pose=Pose2D(x=-1.600, y=0.641, yaw=3.1416),
+    "chip_top_left": PalletSlot(
+        name="chip_top_left",
+        item_type="chip",
+        shelf_level=2,
+        slot_side="left",
+        pallet_pose=Pose2D(x=1.50, y=-0.060, yaw=1.5708),
+        approach_pose=Pose2D(x=1.10, y=-0.060, yaw=0.0000),
+        insert_pose=Pose2D(x=1.38, y=-0.060, yaw=0.0000),
+        lift_height_approach=0.120,
+        lift_height_carry=0.160,
     ),
-    "rack_bot_mid_left": StorageRack(
-        name="rack_bot_mid_left",
-        description="Kệ ở cạnh dưới (giữa trái)",
-        pose=Pose3D(x=-0.490, y=0.895, z=0.0025, yaw=0.0000),
-        approach_pose=Pose2D(x=-0.490, y=0.650, yaw=1.5708),
+    "qr_top_right": PalletSlot(
+        name="qr_top_right",
+        item_type="qr",
+        shelf_level=2,
+        slot_side="right",
+        pallet_pose=Pose2D(x=1.50, y=0.060, yaw=1.5708),
+        approach_pose=Pose2D(x=1.10, y=0.060, yaw=0.0000),
+        insert_pose=Pose2D(x=1.38, y=0.060, yaw=0.0000),
+        lift_height_approach=0.120,
+        lift_height_carry=0.160,
     ),
 }
 
 
 # ==============================================================================
-# 3. PALLETS (16 Pallets across 4 Racks)
+# 3. DROP-OFF / UNLOADING STATIONS
 # ==============================================================================
-PALLETS: Dict[str, Pallet] = {
-    # --- RACK LEFT TOP ---
-    "pallet_aluminum_rack_left_top_b_left": Pallet(
-        name="pallet_aluminum_rack_left_top_b_left",
-        rack="rack_left_top", shelf="bottom", slot="left", item_type="aluminum", block_id=0,
-        pose=Pose3D(x=-1.893, y=-0.709, z=0.0285, yaw=1.5708)
+DROPOFF_STATIONS: Dict[str, DropOffStation] = {
+    "blue": DropOffStation(
+        name="dropoff_blue",
+        color="blue",
+        station_pose=Pose2D(x=0.00, y=1.20, yaw=0.0000),
+        approach_pose=Pose2D(x=0.00, y=0.80, yaw=1.5708),
+        insert_pose=Pose2D(x=0.00, y=1.08, yaw=1.5708),
+        lift_height_place=0.000,
     ),
-    "pallet_cpu_rack_left_top_b_right": Pallet(
-        name="pallet_cpu_rack_left_top_b_right",
-        rack="rack_left_top", shelf="bottom", slot="right", item_type="cpu", block_id=1,
-        pose=Pose3D(x=-1.893, y=-0.589, z=0.0285, yaw=1.5708)
+    "red": DropOffStation(
+        name="dropoff_red",
+        color="red",
+        station_pose=Pose2D(x=0.00, y=-1.20, yaw=3.1416),
+        approach_pose=Pose2D(x=0.00, y=-0.80, yaw=-1.5708),
+        insert_pose=Pose2D(x=0.00, y=-1.08, yaw=-1.5708),
+        lift_height_place=0.000,
     ),
-    "pallet_qr_rack_left_top_t_left": Pallet(
-        name="pallet_qr_rack_left_top_t_left",
-        rack="rack_left_top", shelf="top", slot="left", item_type="qr", block_id=2,
-        pose=Pose3D(x=-1.893, y=-0.709, z=0.1485, yaw=1.5708)
-    ),
-    "pallet_chip_rack_left_top_t_right": Pallet(
-        name="pallet_chip_rack_left_top_t_right",
-        rack="rack_left_top", shelf="top", slot="right", item_type="chip", block_id=3,
-        pose=Pose3D(x=-1.893, y=-0.589, z=0.1485, yaw=1.5708)
-    ),
-
-    # --- RACK LEFT MID ---
-    "pallet_qr_rack_left_mid_b_left": Pallet(
-        name="pallet_qr_rack_left_mid_b_left",
-        rack="rack_left_mid", shelf="bottom", slot="left", item_type="qr", block_id=2,
-        pose=Pose3D(x=-1.894, y=-0.066, z=0.0285, yaw=1.5708)
-    ),
-    "pallet_chip_rack_left_mid_b_right": Pallet(
-        name="pallet_chip_rack_left_mid_b_right",
-        rack="rack_left_mid", shelf="bottom", slot="right", item_type="chip", block_id=3,
-        pose=Pose3D(x=-1.894, y=0.054, z=0.0285, yaw=1.5708)
-    ),
-    "pallet_aluminum_rack_left_mid_t_left": Pallet(
-        name="pallet_aluminum_rack_left_mid_t_left",
-        rack="rack_left_mid", shelf="top", slot="left", item_type="aluminum", block_id=0,
-        pose=Pose3D(x=-1.894, y=-0.066, z=0.1485, yaw=1.5708)
-    ),
-    "pallet_cpu_rack_left_mid_t_right": Pallet(
-        name="pallet_cpu_rack_left_mid_t_right",
-        rack="rack_left_mid", shelf="top", slot="right", item_type="cpu", block_id=1,
-        pose=Pose3D(x=-1.894, y=0.054, z=0.1485, yaw=1.5708)
-    ),
-
-    # --- RACK LEFT BOT ---
-    "pallet_aluminum_rack_left_bot_b_left": Pallet(
-        name="pallet_aluminum_rack_left_bot_b_left",
-        rack="rack_left_bot", shelf="bottom", slot="left", item_type="aluminum", block_id=0,
-        pose=Pose3D(x=-1.894, y=0.581, z=0.0285, yaw=1.5708)
-    ),
-    "pallet_cpu_rack_left_bot_b_right": Pallet(
-        name="pallet_cpu_rack_left_bot_b_right",
-        rack="rack_left_bot", shelf="bottom", slot="right", item_type="cpu", block_id=1,
-        pose=Pose3D(x=-1.894, y=0.701, z=0.0285, yaw=1.5708)
-    ),
-    "pallet_qr_rack_left_bot_t_left": Pallet(
-        name="pallet_qr_rack_left_bot_t_left",
-        rack="rack_left_bot", shelf="top", slot="left", item_type="qr", block_id=2,
-        pose=Pose3D(x=-1.894, y=0.581, z=0.1485, yaw=1.5708)
-    ),
-    "pallet_chip_rack_left_bot_t_right": Pallet(
-        name="pallet_chip_rack_left_bot_t_right",
-        rack="rack_left_bot", shelf="top", slot="right", item_type="chip", block_id=3,
-        pose=Pose3D(x=-1.894, y=0.701, z=0.1485, yaw=1.5708)
-    ),
-
-    # --- RACK BOT MID LEFT ---
-    "pallet_qr_rack_bot_mid_left_b_left": Pallet(
-        name="pallet_qr_rack_bot_mid_left_b_left",
-        rack="rack_bot_mid_left", shelf="bottom", slot="left", item_type="qr", block_id=2,
-        pose=Pose3D(x=-0.550, y=0.895, z=0.0285, yaw=0.0000)
-    ),
-    "pallet_chip_rack_bot_mid_left_b_right": Pallet(
-        name="pallet_chip_rack_bot_mid_left_b_right",
-        rack="rack_bot_mid_left", shelf="bottom", slot="right", item_type="chip", block_id=3,
-        pose=Pose3D(x=-0.430, y=0.895, z=0.0285, yaw=0.0000)
-    ),
-    "pallet_aluminum_rack_bot_mid_left_t_left": Pallet(
-        name="pallet_aluminum_rack_bot_mid_left_t_left",
-        rack="rack_bot_mid_left", shelf="top", slot="left", item_type="aluminum", block_id=0,
-        pose=Pose3D(x=-0.550, y=0.895, z=0.1485, yaw=0.0000)
-    ),
-    "pallet_cpu_rack_bot_mid_left_t_right": Pallet(
-        name="pallet_cpu_rack_bot_mid_left_t_right",
-        rack="rack_bot_mid_left", shelf="top", slot="right", item_type="cpu", block_id=1,
-        pose=Pose3D(x=-0.430, y=0.895, z=0.1485, yaw=0.0000)
+    "green": DropOffStation(
+        name="dropoff_green",
+        color="green",
+        station_pose=Pose2D(x=-1.20, y=0.00, yaw=-1.5708),
+        approach_pose=Pose2D(x=-0.80, y=0.00, yaw=3.1416),
+        insert_pose=Pose2D(x=-1.08, y=0.00, yaw=3.1416),
+        lift_height_place=0.000,
     ),
 }
 
 
 # ==============================================================================
-# 4. CENTRAL DROP-OFF ZONES (5 Colored Zones at center divider: X < 0)
+# 4. QUERY FUNCTIONS
 # ==============================================================================
-DROPOFF_ZONES: Dict[str, DropOffZone] = {
-    "zone_1_blue": DropOffZone(
-        name="zone_1_blue", index=1, color="blue", description="Ô số 1 (Viền Xanh dương)",
-        center_pose=Pose3D(x=-0.1271, y=0.6417, z=0.0025, yaw=0.0),
-        bounds=(-0.255, 0.000, 0.513, 0.771),
-        approach_pose=Pose2D(x=-0.420, y=0.642, yaw=0.0000)
-    ),
-    "zone_2_green": DropOffZone(
-        name="zone_2_green", index=2, color="green", description="Ô số 2 (Viền Xanh lá)",
-        center_pose=Pose3D(x=-0.1271, y=0.3138, z=0.0025, yaw=0.0),
-        bounds=(-0.255, 0.000, 0.185, 0.443),
-        approach_pose=Pose2D(x=-0.420, y=0.314, yaw=0.0000)
-    ),
-    "zone_3_white": DropOffZone(
-        name="zone_3_white", index=3, color="white", description="Ô số 3 (Viền Trắng - Trung tâm)",
-        center_pose=Pose3D(x=-0.1271, y=-0.0047, z=0.0025, yaw=0.0),
-        bounds=(-0.255, 0.000, -0.134, 0.124),
-        approach_pose=Pose2D(x=-0.420, y=0.000, yaw=0.0000)
-    ),
-    "zone_4_yellow": DropOffZone(
-        name="zone_4_yellow", index=4, color="yellow", description="Ô số 4 (Viền Vàng)",
-        center_pose=Pose3D(x=-0.1271, y=-0.3208, z=0.0025, yaw=0.0),
-        bounds=(-0.255, 0.000, -0.450, -0.192),
-        approach_pose=Pose2D(x=-0.420, y=-0.321, yaw=0.0000)
-    ),
-    "zone_5_red": DropOffZone(
-        name="zone_5_red", index=5, color="red", description="Ô số 5 (Viền Đỏ)",
-        center_pose=Pose3D(x=-0.1271, y=-0.6487, z=0.0025, yaw=0.0),
-        bounds=(-0.255, 0.000, -0.778, -0.520),
-        approach_pose=Pose2D(x=-0.420, y=-0.649, yaw=0.0000)
-    ),
-}
-
-
-# ==============================================================================
-# 5. QUERY & HELPER METHODS
-# ==============================================================================
-def get_pallets_by_type(item_type: str) -> List[Pallet]:
-    """Return all pallets matching item type ('aluminum', 'cpu', 'qr', 'chip')."""
-    return [p for p in PALLETS.values() if p.item_type.lower() == item_type.lower()]
-
-
-def get_pallets_by_rack(rack_name: str) -> List[Pallet]:
-    """Return all pallets placed on a specific rack."""
-    return [p for p in PALLETS.values() if p.rack == rack_name]
-
-
-def get_dropoff_by_color(color_name: str) -> Optional[DropOffZone]:
-    """Return dropoff zone for a color ('blue', 'green', 'white', 'yellow', 'red')."""
-    target = color_name.lower()
-    for zone in DROPOFF_ZONES.values():
-        if zone.color == target or zone.name == target:
-            return zone
+def get_slot_by_type(item_type: str) -> Optional[PalletSlot]:
+    """Find pallet slot by item type ('cpu', 'aluminum', 'chip', 'qr')."""
+    target = item_type.lower()
+    for slot in PALLET_SLOTS.values():
+        if slot.item_type.lower() == target:
+            return slot
     return None
 
 
-def get_pallet_by_location(rack: str, shelf: str, slot: str) -> Optional[Pallet]:
-    """Find specific pallet by (rack_name, shelf, slot)."""
-    for p in PALLETS.values():
-        if p.rack == rack and p.shelf == shelf and p.slot == slot:
-            return p
+def get_slot_by_shelf_and_side(shelf_level: int, slot_side: str) -> Optional[PalletSlot]:
+    """Find pallet slot by shelf level (1 or 2) and side ('left' or 'right')."""
+    target_side = slot_side.lower()
+    for slot in PALLET_SLOTS.values():
+        if slot.shelf_level == shelf_level and slot.slot_side.lower() == target_side:
+            return slot
     return None
 
+
+def get_dropoff_station(color_or_name: str) -> Optional[DropOffStation]:
+    """Find drop-off station by color ('blue', 'red', 'green') or name."""
+    target = color_or_name.lower().replace("dropoff_", "")
+    return DROPOFF_STATIONS.get(target)
+
+
+def get_default_dropoff_for_item(item_type: str) -> DropOffStation:
+    """Return default drop-off station mapped to an item type."""
+    mapping = {
+        "cpu": "blue",       # CPU -> Blue Electronics Station
+        "aluminum": "red",   # Aluminum -> Red Mechanical Station
+        "chip": "green",     # Chip -> Green Inspection Station
+        "qr": "blue",        # QR -> Blue Station
+    }
+    target_color = mapping.get(item_type.lower(), "blue")
+    return DROPOFF_STATIONS[target_color]
