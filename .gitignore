@@ -53,3 +53,6 @@ core.*
 ~*
 ~$*
 *.sw2urdf.log
+
+# Local file
+*.local*

@@ -31,7 +31,7 @@ import tf2_ros
 from ament_index_python.packages import get_package_share_directory, PackageNotFoundError
 
 from nav_msgs.msg import Odometry, OccupancyGrid
-from std_msgs.msg import Int32MultiArray, Float32MultiArray, Float32, Bool
+from std_msgs.msg import Int32MultiArray, Float32MultiArray, Float32, Bool, String
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Point
 
@@ -202,18 +202,21 @@ class LineSensorSimulatorNode(Node):
         self.pub_analog = self.create_publisher(Float32MultiArray, '/line_sensor/analog', 10)
         self.pub_error = self.create_publisher(Float32, '/line_sensor/error', 10)
         self.pub_detected = self.create_publisher(Bool, '/line_sensor/line_detected', 10)
+        self.pub_junction = self.create_publisher(String, '/line_sensor/junction', 10)
 
         # Front Array Dedicated Topics
         self.pub_front_raw = self.create_publisher(Int32MultiArray, '/line_sensor/front/raw', 10)
         self.pub_front_analog = self.create_publisher(Float32MultiArray, '/line_sensor/front/analog', 10)
         self.pub_front_error = self.create_publisher(Float32, '/line_sensor/front/error', 10)
         self.pub_front_detected = self.create_publisher(Bool, '/line_sensor/front/line_detected', 10)
+        self.pub_front_junction = self.create_publisher(String, '/line_sensor/front/junction', 10)
 
         # Rear Array Dedicated Topics
         self.pub_rear_raw = self.create_publisher(Int32MultiArray, '/line_sensor/rear/raw', 10)
         self.pub_rear_analog = self.create_publisher(Float32MultiArray, '/line_sensor/rear/analog', 10)
         self.pub_rear_error = self.create_publisher(Float32, '/line_sensor/rear/error', 10)
         self.pub_rear_detected = self.create_publisher(Bool, '/line_sensor/rear/line_detected', 10)
+        self.pub_rear_junction = self.create_publisher(String, '/line_sensor/rear/junction', 10)
 
         # Dual Array Kinematics Outputs (Heading & Lateral Deviation)
         self.pub_lateral_error = self.create_publisher(Float32, '/line_sensor/lateral_error', 10)
@@ -317,6 +320,47 @@ class LineSensorSimulatorNode(Node):
 
         return digital_readings, analog_readings, error, is_detected
 
+    def _classify_junction(self, digital_readings: list) -> str:
+        """
+        Classifies intersection / junction type based on active sensor pattern:
+          - 'LOST': No sensor sees the line.
+          - 'CROSS': Full horizontal bar across array (Intersection / Crossroad / T-bar end).
+          - 'T_LEFT': Branch turning left while tracking line.
+          - 'T_RIGHT': Branch turning right while tracking line.
+          - 'NONE': Normal single line tracking.
+        """
+        n = len(digital_readings)
+        if n == 0:
+            return "LOST"
+
+        active_count = sum(digital_readings)
+        if active_count == 0:
+            return "LOST"
+
+        mid = n // 2
+        # For N=8: left_part = [0, 1, 2], center_part = [3, 4], right_part = [5, 6, 7]
+        left_part = digital_readings[:max(1, mid - 1)]
+        center_part = digital_readings[max(1, mid - 1): min(n, mid + 1)]
+        right_part = digital_readings[min(n, mid + 1):]
+
+        left_active = sum(left_part)
+        center_active = sum(center_part)
+        right_active = sum(right_part)
+
+        # Crossroad / Horizontal bar spanning across array
+        if active_count >= 6 or (left_active >= 2 and right_active >= 2 and center_active >= 1):
+            return "CROSS"
+
+        # Branch Left (e.g. [1, 1, 1, 1, 0, 0, 0, 0] or [1, 1, 1, 1, 1, 0, 0, 0])
+        if left_active >= 2 and center_active >= 1 and right_active == 0:
+            return "T_LEFT"
+
+        # Branch Right (e.g. [0, 0, 0, 0, 1, 1, 1, 1] or [0, 0, 0, 1, 1, 1, 1, 1])
+        if right_active >= 2 and center_active >= 1 and left_active == 0:
+            return "T_RIGHT"
+
+        return "NONE"
+
     def update_line_sensor(self):
         # 1. Obtain robot pose
         rx, ry, yaw = 0.0, 0.0, 0.0
@@ -354,7 +398,21 @@ class LineSensorSimulatorNode(Node):
         else:
             r_dig, r_ana, r_err, r_det = [0] * self.n_rear, [0.0] * self.n_rear, 0.0, False
 
-        # 4. Compute Kinematic Lateral & Heading Errors
+        # 4. Classify Junction / Pattern
+        f_junction = self._classify_junction(f_dig)
+        r_junction = self._classify_junction(r_dig) if self.enable_rear else "LOST"
+
+        # Combined junction status (Front array takes precedence for forward motion)
+        if f_junction not in ("NONE", "LOST"):
+            combined_junction = f_junction
+        elif r_junction not in ("NONE", "LOST"):
+            combined_junction = r_junction
+        elif f_junction == "LOST" and r_junction == "LOST":
+            combined_junction = "LOST"
+        else:
+            combined_junction = "NONE"
+
+        # 5. Compute Kinematic Lateral & Heading Errors
         lateral_error = 0.0
         heading_error = 0.0
 
@@ -516,24 +574,53 @@ class LineSensorSimulatorNode(Node):
                 line_conn.color.r, line_conn.color.g, line_conn.color.b, line_conn.color.a = 1.0, 0.2, 0.8, 0.9  # Magenta
                 marker_array.markers.append(line_conn)
 
+        # Junction Status 3D Text Marker (Above Front Array)
+        m_txt = Marker()
+        m_txt.header.frame_id = self.base_frame
+        m_txt.header.stamp = stamp_zero
+        m_txt.ns = 'line_sensor_junction'
+        m_txt.id = 300
+        m_txt.type = Marker.TEXT_VIEW_FACING
+        if combined_junction not in ("NONE", "LOST"):
+            m_txt.action = Marker.ADD
+            m_txt.pose.position.x = self.offset_x_front
+            m_txt.pose.position.y = self.offset_y_front
+            m_txt.pose.position.z = 0.08
+            m_txt.scale.z = 0.035
+            m_txt.text = f"JUNCTION: {combined_junction}"
+            if combined_junction == "CROSS":
+                m_txt.color.r, m_txt.color.g, m_txt.color.b, m_txt.color.a = 1.0, 0.2, 0.2, 1.0  # Red
+            elif "LEFT" in combined_junction:
+                m_txt.color.r, m_txt.color.g, m_txt.color.b, m_txt.color.a = 0.2, 0.8, 1.0, 1.0  # Cyan
+            elif "RIGHT" in combined_junction:
+                m_txt.color.r, m_txt.color.g, m_txt.color.b, m_txt.color.a = 1.0, 0.8, 0.2, 1.0  # Yellow
+            else:
+                m_txt.color.r, m_txt.color.g, m_txt.color.b, m_txt.color.a = 0.0, 1.0, 0.0, 1.0
+        else:
+            m_txt.action = Marker.DELETE
+        marker_array.markers.append(m_txt)
+
         # 6. Publish All Messages
-        # Legacy
+        # Legacy / Combined
         self.pub_raw.publish(Int32MultiArray(data=f_dig))
         self.pub_analog.publish(Float32MultiArray(data=f_ana))
         self.pub_error.publish(Float32(data=float(lateral_error)))
         self.pub_detected.publish(Bool(data=line_detected_any))
+        self.pub_junction.publish(String(data=combined_junction))
 
         # Front
         self.pub_front_raw.publish(Int32MultiArray(data=f_dig))
         self.pub_front_analog.publish(Float32MultiArray(data=f_ana))
         self.pub_front_error.publish(Float32(data=float(f_err)))
         self.pub_front_detected.publish(Bool(data=f_det))
+        self.pub_front_junction.publish(String(data=f_junction))
 
         # Rear
         self.pub_rear_raw.publish(Int32MultiArray(data=r_dig))
         self.pub_rear_analog.publish(Float32MultiArray(data=r_ana))
         self.pub_rear_error.publish(Float32(data=float(r_err)))
         self.pub_rear_detected.publish(Bool(data=r_det))
+        self.pub_rear_junction.publish(String(data=r_junction))
 
         # Kinematic Errors
         self.pub_lateral_error.publish(Float32(data=float(lateral_error)))

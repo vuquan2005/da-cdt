@@ -25,12 +25,15 @@ ros2 launch robot0_navigation line_sensor.launch.py
 | :--- | :--- | :--- |
 | `/line_sensor/front/raw` | `std_msgs/msg/Int32MultiArray` | Dữ liệu nhị phân 8 mắt dải trước (0: nền, 1: line) |
 | `/line_sensor/front/error` | `std_msgs/msg/Float32` | Độ lệch tâm dải trước $e_{\text{front}}$ (mét) |
+| `/line_sensor/front/junction` | `std_msgs/msg/String` | Nhận diện giao lộ dải trước (`NONE`, `CROSS`, `T_LEFT`, `T_RIGHT`, `LOST`) |
 | `/line_sensor/rear/raw` | `std_msgs/msg/Int32MultiArray` | Dữ liệu nhị phân 8 mắt dải sau (0: nền, 1: line) |
 | `/line_sensor/rear/error` | `std_msgs/msg/Float32` | Độ lệch tâm dải sau $e_{\text{rear}}$ (mét) |
+| `/line_sensor/rear/junction` | `std_msgs/msg/String` | Nhận diện giao lộ dải sau (`NONE`, `CROSS`, `T_LEFT`, `T_RIGHT`, `LOST`) |
+| `/line_sensor/junction` | `std_msgs/msg/String` | Trạng thái giao lộ tổng hợp của robot |
 | `/line_sensor/lateral_error` | `std_msgs/msg/Float32` | Sai lệch ngang tâm xe $d_{\text{lateral}}$ (mét) |
 | `/line_sensor/heading_error` | `std_msgs/msg/Float32` | Góc lệch hướng thân xe $\theta_{\text{error}}$ (rad) |
 | `/line_sensor/line_detected` | `std_msgs/msg/Bool` | Cờ báo hiệu có phát hiện vạch line |
-| `/line_sensor/markers` | `visualization_msgs/msg/MarkerArray` | Marker 3D hiển thị mắt đọc & vector lệch trên RViz2 |
+| `/line_sensor/markers` | `visualization_msgs/msg/MarkerArray` | Marker 3D hiển thị mắt đọc, vector lệch & nhãn giao lộ trên RViz2 |
 | `/arena/map` | `nav_msgs/msg/OccupancyGrid` | Bản đồ 2D vạch kẻ sa bàn phục vụ hiển thị |
 
 ---
