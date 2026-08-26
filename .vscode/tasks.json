@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "colcon: build",
+      "label": "Build Workspace",
       "type": "shell",
       "command": "source /opt/ros/humble/setup.bash && colcon build --symlink-install",
       "group": {
@@ -16,7 +16,7 @@
       }
     },
     {
-      "label": "colcon: clean",
+      "label": "Clean Build & Cache",
       "type": "shell",
       "command": "rm -rf build install log",
       "problemMatcher": [],
@@ -26,37 +26,7 @@
       }
     },
     {
-      "label": "ROS 2: Kill All Processes",
-      "type": "shell",
-      "command": "pkill -9 -f 'gz|ign|ros_gz|rviz2|robot_state_publisher|joint_state_publisher|teleop_node|joy_node|yolo_detector|autonomous_mission' || true",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "ROS 2: Launch All (Gazebo + Vision + Teleop + RViz2)",
-      "type": "shell",
-      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_gazebo all.launch.py",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
-      "label": "ROS 2: Launch App Nodes (Vision + Teleop)",
-      "type": "shell",
-      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_gazebo nodes.launch.py",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
-      "label": "ROS 2: Gazebo Simulation",
+      "label": "Gazebo Simulation",
       "type": "shell",
       "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_gazebo gazebo.launch.py",
       "problemMatcher": [],
@@ -66,9 +36,9 @@
       }
     },
     {
-      "label": "ROS 2: Launch Autonomous Mission (Pick Pallet)",
+      "label": "Orther node",
       "type": "shell",
-      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_navigation mission.launch.py",
+      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_gazebo nodes.launch.py",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -76,29 +46,9 @@
       }
     },
     {
-      "label": "ROS 2: Launch YOLO Vision Detector",
+      "label": "All",
       "type": "shell",
-      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_vision yolo_detector.launch.py",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
-      "label": "ROS 2: Launch Joystick Teleop",
-      "type": "shell",
-      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_teleop joystick.launch.py",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
-      "label": "ROS 2: Display Robot Model (RViz2 TF Check)",
-      "type": "shell",
-      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_description display.launch.py",
+      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_gazebo all.launch.py",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
