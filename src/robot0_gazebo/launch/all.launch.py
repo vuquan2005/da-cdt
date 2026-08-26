@@ -18,7 +18,6 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration('rviz', default='true')
     use_joy = LaunchConfiguration('joy', default='true')
     use_vision = LaunchConfiguration('vision', default='true')
-    use_line_sensor = LaunchConfiguration('line_sensor', default='true')
     conf = LaunchConfiguration('conf', default='0.5')
     imgsz = LaunchConfiguration('imgsz', default='640')
 
@@ -53,12 +52,6 @@ def generate_launch_description():
         description='Launch YOLO vision detector if true'
     )
 
-    declare_use_line_sensor_cmd = DeclareLaunchArgument(
-        'line_sensor',
-        default_value='true',
-        description='Launch Dual Array Line Sensor simulator if true'
-    )
-
     declare_conf_cmd = DeclareLaunchArgument(
         'conf',
         default_value='0.5',
@@ -83,7 +76,7 @@ def generate_launch_description():
         }.items()
     )
 
-    # 2. Cụm các Node ứng dụng (Line Sensor + Joystick + Vision)
+    # 2. Cụm các Node ứng dụng (Joystick + Vision)
     nodes_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_robot0_gazebo, 'launch', 'nodes.launch.py')
@@ -92,7 +85,6 @@ def generate_launch_description():
             'use_sim_time': use_sim_time,
             'joy': use_joy,
             'vision': use_vision,
-            'line_sensor': use_line_sensor,
             'conf': conf,
             'imgsz': imgsz
         }.items()
@@ -104,7 +96,6 @@ def generate_launch_description():
         declare_use_rviz_cmd,
         declare_use_joy_cmd,
         declare_use_vision_cmd,
-        declare_use_line_sensor_cmd,
         declare_conf_cmd,
         declare_imgsz_cmd,
         gazebo_launch,

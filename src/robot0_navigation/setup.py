@@ -23,7 +23,6 @@ setup(
     entry_points={
         'console_scripts': [
             'autonomous_mission = robot0_navigation.autonomous_mission:main',
-            'line_sensor_node = robot0_navigation.line_sensor_node:main',
         ],
     },
 )

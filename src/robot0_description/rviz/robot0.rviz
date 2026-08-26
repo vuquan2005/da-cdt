@@ -177,38 +177,6 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /yolo/annotated_image
       Value: true
-    - Class: rviz_default_plugins/MarkerArray
-      Enabled: true
-      Name: Line Sensor Array
-      Namespaces:
-        {}
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /line_sensor/markers
-      Value: true
-    - Class: rviz_default_plugins/Map
-      Alpha: 0.9
-      Color Scheme: map
-      Draw Behind: true
-      Enabled: true
-      Name: Arena Floor Lines
-      Topic:
-        Depth: 5
-        Durability Policy: Transient Local
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /arena/map
-      Update Topic:
-        Depth: 5
-        Durability Policy: Transient Local
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /arena/map_updates
-      Use Timestamp: false
-      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48

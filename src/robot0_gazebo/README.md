@@ -1,6 +1,6 @@
 # robot0_gazebo
 
-Package cấu hình môi trường mô phỏng vật lý trên Gazebo Fortress (Ignition), bao gồm sa bàn sân thi đấu Robocon (`robocon_arena.sdf`), các mô hình vật thể (kệ hàng, pallet), plugin C++ điều khiển chuyển động mặt phẳng `PlanarVelocityControl`, và cấu hình cầu nối dữ liệu `ros_gz_bridge`.
+Package cấu hình môi trường mô phỏng vật lý trên Gazebo Fortress (Ignition), bao gồm thế giới mô phỏng (`robocon_arena.sdf`), các mô hình vật thể (kệ hàng, pallet), plugin C++ điều khiển chuyển động mặt phẳng `PlanarVelocityControl`, và cấu hình cầu nối dữ liệu `ros_gz_bridge`.
 
 ---
 
@@ -16,12 +16,12 @@ ros2 launch robot0_gazebo gazebo.launch.py
 
 ### 2. Khởi chạy toàn bộ hệ thống (Bringup)
 
-Khởi chạy đồng thời Gazebo + Bridge + Joy Teleop + Line Sensor + YOLO Vision:
+Khởi chạy đồng thời Gazebo + Bridge + Joy Teleop + YOLO Vision:
 
 ```bash
 ros2 launch robot0_gazebo all.launch.py
 ```
-* Tùy chọn tắt bớt node: `joy:=false`, `line_sensor:=false`, `vision:=false`, `rviz:=false`.
+* Tùy chọn tắt bớt node: `joy:=false`, `vision:=false`, `rviz:=false`.
 
 ---
 
@@ -49,9 +49,9 @@ robot0_gazebo/
 ├── config/
 │   └── ros_gz_bridge.yaml          # Cấu hình cầu nối ROS 2 <-> Gazebo Sim
 ├── worlds/
-│   ├── robocon_arena.sdf           # Thế giới sa bàn thi đấu Robocon
+│   ├── robocon_arena.sdf           # Thế giới mô phỏng kệ hàng và pallet
 │   └── empty.sdf                   # Thế giới mặt phẳng cơ bản
-├── models/                         # Mô hình SDF (arena_floor, storage_rack, pallet_*)
+├── models/                         # Mô hình SDF (storage_rack, pallet_*)
 └── launch/
     ├── gazebo.launch.py            # Launch Gazebo + Bridge + Spawner + RViz2
     └── all.launch.py               # Master launch khởi chạy toàn bộ các module

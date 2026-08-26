@@ -25,7 +25,7 @@ urdf/
 | :--- | :--- |
 | **Khung gầm** | 4 bánh Mecanum toàn hướng (Omnidirectional) |
 | **Khớp nâng (`lift_joint`)** | Khớp trượt (Prismatic), hành trình $0.0\text{ m} \to 0.18\text{ m}$ theo trục Z |
-| **Cảm biến** | Camera RGB (`camera_link`), 2 dải cảm biến dò line quang học (trước/sau) |
+| **Cảm biến** | Camera RGB (`camera_link` / `camera_optical_link`) |
 | **Gốc tọa độ** | `base_footprint` (mặt sàn) $\to$ `base_link` ($z = 0.05\text{ m}$) |
 
 ---
@@ -51,8 +51,6 @@ odom
               ├── wheel_rl_link
               ├── wheel_rr_link
               ├── camera_link
-              ├── line_sensor_front_link
-              ├── line_sensor_rear_link
-              └── lift_base_link
-                    └── lift_link (Z: 0.0 ~ 0.18m)
+              │     └── camera_optical_link
+              └── lift_arm_link (Z: 0.0 ~ 0.18m)
 ```

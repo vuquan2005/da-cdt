@@ -78,11 +78,7 @@
       </link>
     </model>
 
-    <!-- Robocon Arena Floor -->
-    <include>
-      <uri>model://arena_floor</uri>
-      <pose>0 0 0.0025 0 0 1.5707963267948966</pose>
-    </include>
+
 
     <!-- ==================== STORAGE RACKS (4 Vị trí phía bên Robot Spawn) ==================== -->
     <include>

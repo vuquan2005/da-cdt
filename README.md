@@ -1,6 +1,6 @@
 # ROS 2 Mecanum Robot Simulation (`ros-cdt`)
 
-Dự án phát triển và mô phỏng robot di động 4 bánh Mecanum tích hợp cơ cấu tay nâng (`robot0`) sử dụng ROS 2 Humble và Gazebo Fortress (GZ Sim) trong môi trường Dev Container.
+Dự án phát triển và mô phỏng robot di động 4 bánh Mecanum tích hợp cơ cấu tay nâng (`robot0`) sử dụng ROS 2 Humble và Gazebo Fortress (GZ Sim) trong môi trường Dev Container, hướng tới tự hành nhận diện hình ảnh, gắp pallet và đưa về vị trí đích (Visual Pick & Place).
 
 ---
 
@@ -13,7 +13,7 @@ flowchart TD
     end
 
     subgraph SIMULATION["robot0_gazebo"]
-        GZ["Gazebo Fortress (Robocon Arena)"]
+        GZ["Gazebo Fortress (Pallets & Racks)"]
         Bridge["ros_gz_bridge"]
         Plugin["PlanarVelocityControl (C++)"]
         GZ <--> Bridge
@@ -25,8 +25,9 @@ flowchart TD
     end
 
     subgraph NAVIGATION["robot0_navigation"]
-        LineSensor["line_sensor_node (Dual Array)"]
-        ArenaCoords["arena_coordinates"]
+        Mission["autonomous_mission (FSM Pick & Place)"]
+        Coords["arena_coordinates"]
+        Coords --> Mission
     end
 
     subgraph DESCRIPTION["robot0_description"]
@@ -37,10 +38,11 @@ flowchart TD
 
     %% Luồng điều khiển & Cảm biến
     Joy -->|"/cmd_vel<br/>/lift_joint_cmd"| Bridge
+    Mission -->|"/cmd_vel<br/>/lift_joint_cmd"| Bridge
     Bridge -->|"/camera/image_raw"| Yolo
-    Bridge -->|"/odom, /tf"| LineSensor
+    Bridge -->|"/odom, /tf"| Mission
+    Yolo -.->|"/yolo/target_center"| Mission
     RSP -->|"/tf"| SIMULATION
-    ArenaCoords -.-> LineSensor
 ```
 
 ---
@@ -50,8 +52,8 @@ flowchart TD
 | Package | Loại | Chức năng | Tài liệu chi tiết |
 | :--- | :--- | :--- | :---: |
 | **`robot0_description`** | `ament_cmake` | Mô hình 3D CAD (.stl), URDF robot, cấu hình khớp, kiểm tra TF trên RViz2 | [Xem README](src/robot0_description/README.md) |
-| **`robot0_gazebo`** | `ament_cmake` | Sa bàn Robocon, cầu nối `ros_gz_bridge`, C++ Plugin và Master Bringup | [Xem README](src/robot0_gazebo/README.md) |
-| **`robot0_navigation`** | `ament_python`| Mô phỏng cảm biến dò line kép, tọa độ sa bàn, script thử nghiệm gắp/thả pallet | [Xem README](src/robot0_navigation/README.md) |
+| **`robot0_gazebo`** | `ament_cmake` | Môi trường mô phỏng kệ & pallet, cầu nối `ros_gz_bridge`, C++ Plugin và Master Bringup | [Xem README](src/robot0_gazebo/README.md) |
+| **`robot0_navigation`** | `ament_python`| Điều khiển FSM tự hành điều hướng, gắp & đưa pallet về vị trí | [Xem README](src/robot0_navigation/README.md) |
 | **`robot0_teleop`** | `ament_python`| Điều khiển thủ công bằng Gamepad (Deadman switch, Ga mượt), Bàn phím | [Xem README](src/robot0_teleop/README.md) |
 | **`robot0_vision`** | `ament_python`| Nhận diện Pallet bằng YOLOv8 đa luồng và trích xuất tọa độ bám mục tiêu | [Xem README](src/robot0_vision/README.md) |
 
@@ -77,7 +79,7 @@ source install/setup.bash
 ```
 
 ### 2. Khởi chạy toàn bộ hệ thống (Bringup)
-Khởi động cùng lúc **Gazebo + Bridge + Teleop + Line Sensor + YOLO Vision + RViz2**:
+Khởi động cùng lúc **Gazebo + Bridge + Teleop + YOLO Vision + RViz2**:
 ```bash
 ros2 launch robot0_gazebo all.launch.py
 ```
@@ -91,13 +93,13 @@ ros2 launch robot0_gazebo all.launch.py
   ```bash
   ros2 launch robot0_teleop joystick.launch.py
   ```
-* **Mô phỏng cảm biến dò line:**
-  ```bash
-  ros2 launch robot0_navigation line_sensor.launch.py
-  ```
 * **Nhận diện hình ảnh YOLO:**
   ```bash
   ros2 launch robot0_vision yolo_detector.launch.py
+  ```
+* **Nhiệm vụ tự hành gắp & trả Pallet:**
+  ```bash
+  ros2 launch robot0_navigation mission.launch.py rack:=rack_left_bot shelf:=1 slot:=left dropoff:=blue
   ```
 * **Kiểm tra mô hình & TF tĩnh (RViz2):**
   ```bash
@@ -117,6 +119,4 @@ ros2 launch robot0_gazebo all.launch.py
 | `/camera/image_raw` | `sensor_msgs/msg/Image` | Luồng hình ảnh RGB từ camera |
 | `/yolo/annotated_image` | `sensor_msgs/msg/Image` | Ảnh kết quả đã vẽ Bounding Box & nhãn |
 | `/yolo/target_center` | `geometry_msgs/msg/PointStamped` | Tọa độ lệch chuẩn hóa $(dx, dy)$ của mục tiêu bám |
-| `/line_sensor/markers` | `visualization_msgs/msg/MarkerArray` | Hiển thị 3D mảng mắt cảm biến dò line trên RViz2 |
-| `/line_sensor/lateral_error` | `std_msgs/msg/Float32` | Sai lệch tịnh tiến ngang so với vạch line |
-| `/line_sensor/heading_error` | `std_msgs/msg/Float32` | Góc lệch hướng thân xe so với vạch line |
+| `/yolo/detections_json` | `std_msgs/msg/String` | Danh sách thông tin bounding box & class dạng JSON |
