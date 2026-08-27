@@ -10,6 +10,7 @@ from launch.substitutions import LaunchConfiguration
 def generate_launch_description():
     pkg_robot0_teleop = get_package_share_directory('robot0_teleop')
     pkg_robot0_vision = get_package_share_directory('robot0_vision')
+    pkg_robot0_navigation = get_package_share_directory('robot0_navigation')
 
     # Launch Configurations
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
@@ -56,16 +57,16 @@ def generate_launch_description():
         description='YOLO inference image size (640, 480, 320)'
     )
 
-    # 1. Cảm biến dò line (Dual Array Line Sensor Simulator)
-    # line_sensor_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         os.path.join(pkg_robot0_navigation, 'launch', 'line_sensor.launch.py')
-    #     ),
-    #     launch_arguments={
-    #         'use_sim_time': use_sim_time
-    #     }.items(),
-    #     condition=IfCondition(use_line_sensor)
-    # )
+    # 1. Cảm biến dò line (Vector Dual Array Line Sensor Simulator)
+    line_sensor_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_robot0_navigation, 'launch', 'line_sensor.launch.py')
+        ),
+        launch_arguments={
+            'use_sim_time': use_sim_time
+        }.items(),
+        condition=IfCondition(use_line_sensor)
+    )
 
     # 2. Điều khiển Joystick (joy_node + teleop_node)
     joystick_launch = IncludeLaunchDescription(
@@ -97,7 +98,7 @@ def generate_launch_description():
         declare_use_line_sensor_cmd,
         declare_conf_cmd,
         declare_imgsz_cmd,
-        # line_sensor_launch,
+        line_sensor_launch,
         joystick_launch,
         vision_launch
     ])

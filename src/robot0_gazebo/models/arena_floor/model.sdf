@@ -3,7 +3,12 @@
   <model name="arena_floor">
     <static>true</static>
     <link name="link">
-      <collision name="collision">
+
+      <!-- ==================================================================== -->
+      <!-- 1. BASE FLOOR COLLISION & MAIN SLAB                                  -->
+      <!-- ==================================================================== -->
+      <collision name="collision_floor">
+        <pose>0 0 0.001 0 0 0</pose>
         <geometry>
           <box>
             <size>4.0 2.0 0.002</size>
@@ -18,25 +23,196 @@
           </friction>
         </surface>
       </collision>
-      <visual name="visual">
+
+      <!-- Main Floor Slab Visual (Clean Bright Canvas) -->
+      <visual name="visual_floor_slab">
+        <pose>0 0 0.001 0 0 0</pose>
         <geometry>
-          <mesh>
-            <uri>model://arena_floor/meshes/floor.dae</uri>
-          </mesh>
+          <box>
+            <size>4.0 2.0 0.002</size>
+          </box>
         </geometry>
         <material>
-          <ambient>1.0 1.0 1.0 1.0</ambient>
-          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <ambient>0.93 0.93 0.95 1.0</ambient>
+          <diffuse>0.93 0.93 0.95 1.0</diffuse>
           <specular>0.1 0.1 0.1 1.0</specular>
-          <pbr>
-            <metal>
-              <albedo_map>model://arena_floor/materials/textures/floor.png</albedo_map>
-              <roughness>0.6</roughness>
-              <metalness>0.0</metalness>
-            </metal>
-          </pbr>
         </material>
       </visual>
+
+      <!-- Outer Boundary Border -->
+      <visual name="visual_border_north">
+        <pose>0 0.985 0.0022 0 0 0</pose>
+        <geometry><box><size>3.97 0.02 0.0003</size></box></geometry>
+        <material><ambient>0.7 0.7 0.75 1</ambient><diffuse>0.7 0.7 0.75 1</diffuse></material>
+      </visual>
+      <visual name="visual_border_south">
+        <pose>0 -0.985 0.0022 0 0 0</pose>
+        <geometry><box><size>3.97 0.02 0.0003</size></box></geometry>
+        <material><ambient>0.7 0.7 0.75 1</ambient><diffuse>0.7 0.7 0.75 1</diffuse></material>
+      </visual>
+      <visual name="visual_border_west">
+        <pose>-1.985 0 0.0022 0 0 0</pose>
+        <geometry><box><size>0.02 1.97 0.0003</size></box></geometry>
+        <material><ambient>0.7 0.7 0.75 1</ambient><diffuse>0.7 0.7 0.75 1</diffuse></material>
+      </visual>
+      <visual name="visual_border_east">
+        <pose>1.985 0 0.0022 0 0 0</pose>
+        <geometry><box><size>0.02 1.97 0.0003</size></box></geometry>
+        <material><ambient>0.7 0.7 0.75 1</ambient><diffuse>0.7 0.7 0.75 1</diffuse></material>
+      </visual>
+
+      <!-- ==================================================================== -->
+      <!-- 2. NAVIGATION TRACK LINES (Pure Geometric Black Boxes)                -->
+      <!-- ==================================================================== -->
+      <!-- Lane 1 (Horizontal: Y = 0.640m, from X = -1.75m to X = +0.55m) -->
+      <visual name="visual_line_lane1">
+        <pose>-0.600 0.640 0.0023 0 0 0</pose>
+        <geometry><box><size>2.300 0.025 0.0004</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- Lane 2 (Horizontal: Y = 0.000m, from X = -1.75m to X = 0.00m) -->
+      <visual name="visual_line_lane2">
+        <pose>-0.875 0.000 0.0023 0 0 0</pose>
+        <geometry><box><size>1.750 0.025 0.0004</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- Central Switch Lane (Vertical: X = -0.400m, from Y = 0.00m to Y = +0.64m) -->
+      <visual name="visual_line_switch">
+        <pose>-0.400 0.320 0.0023 0 0 0</pose>
+        <geometry><box><size>0.025 0.640 0.0004</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- Distribution Trunk (Vertical: X = 0.000m, from Y = -0.64m to Y = +0.64m) -->
+      <visual name="visual_line_dist_trunk">
+        <pose>0.000 0.000 0.0023 0 0 0</pose>
+        <geometry><box><size>0.025 1.280 0.0004</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- Branch to Drop-Off Zone 2 (CPU: Y = +0.220m, from X = 0.00m to X = +0.55m) -->
+      <visual name="visual_line_branch_z2">
+        <pose>0.275 0.220 0.0023 0 0 0</pose>
+        <geometry><box><size>0.550 0.025 0.0004</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- Branch to Drop-Off Zone 3 (QR: Y = -0.220m, from X = 0.00m to X = +0.55m) -->
+      <visual name="visual_line_branch_z3">
+        <pose>0.275 -0.220 0.0023 0 0 0</pose>
+        <geometry><box><size>0.550 0.025 0.0004</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- Branch to Drop-Off Zone 4 (Chip: Y = -0.640m, from X = 0.00m to X = +0.55m) -->
+      <visual name="visual_line_branch_z4">
+        <pose>0.275 -0.640 0.0023 0 0 0</pose>
+        <geometry><box><size>0.550 0.025 0.0004</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- ==================================================================== -->
+      <!-- 3. STOP BARS (Cross indicator lines)                                 -->
+      <!-- ==================================================================== -->
+      <!-- Stop Bar - Rack 1 -->
+      <visual name="visual_stop_rack1">
+        <pose>-1.650 0.641 0.0024 0 0 0</pose>
+        <geometry><box><size>0.025 0.150 0.0005</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- Stop Bar - Rack 2 -->
+      <visual name="visual_stop_rack2">
+        <pose>-1.650 -0.006 0.0024 0 0 0</pose>
+        <geometry><box><size>0.025 0.150 0.0005</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- Stop Bar - Drop-off Zone 1 -->
+      <visual name="visual_stop_drop1">
+        <pose>0.550 0.640 0.0024 0 0 0</pose>
+        <geometry><box><size>0.025 0.150 0.0005</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- Stop Bar - Drop-off Zone 2 -->
+      <visual name="visual_stop_drop2">
+        <pose>0.550 0.220 0.0024 0 0 0</pose>
+        <geometry><box><size>0.025 0.150 0.0005</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- Stop Bar - Drop-off Zone 3 -->
+      <visual name="visual_stop_drop3">
+        <pose>0.550 -0.220 0.0024 0 0 0</pose>
+        <geometry><box><size>0.025 0.150 0.0005</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- Stop Bar - Drop-off Zone 4 -->
+      <visual name="visual_stop_drop4">
+        <pose>0.550 -0.640 0.0024 0 0 0</pose>
+        <geometry><box><size>0.025 0.150 0.0005</size></box></geometry>
+        <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
+      </visual>
+
+      <!-- ==================================================================== -->
+      <!-- 4. RACK FOOTPRINTS & START ZONE                                      -->
+      <!-- ==================================================================== -->
+      <!-- Rack 1 Base Area -->
+      <visual name="visual_rack1_pad">
+        <pose>-1.894 0.641 0.0021 0 0 0</pose>
+        <geometry><box><size>0.15 0.27 0.0002</size></box></geometry>
+        <material><ambient>0.65 0.50 0.35 1</ambient><diffuse>0.70 0.55 0.40 1</diffuse></material>
+      </visual>
+
+      <!-- Rack 2 Base Area -->
+      <visual name="visual_rack2_pad">
+        <pose>-1.894 -0.006 0.0021 0 0 0</pose>
+        <geometry><box><size>0.15 0.27 0.0002</size></box></geometry>
+        <material><ambient>0.65 0.50 0.35 1</ambient><diffuse>0.70 0.55 0.40 1</diffuse></material>
+      </visual>
+
+      <!-- START ZONE (Green Pad at X = -0.985, Y = 0.640) -->
+      <visual name="visual_start_pad">
+        <pose>-0.985 0.640 0.0021 0 0 0</pose>
+        <geometry><box><size>0.30 0.30 0.0002</size></box></geometry>
+        <material><ambient>0.25 0.80 0.35 1</ambient><diffuse>0.30 0.85 0.40 1</diffuse></material>
+      </visual>
+
+      <!-- ==================================================================== -->
+      <!-- 5. 4 DROP-OFF ZONES                                                  -->
+      <!-- ==================================================================== -->
+      <!-- Zone 1: Aluminum (Blue: X = +0.700, Y = +0.640) -->
+      <visual name="visual_drop_zone1">
+        <pose>0.700 0.640 0.0021 0 0 0</pose>
+        <geometry><box><size>0.26 0.26 0.0002</size></box></geometry>
+        <material><ambient>0.15 0.50 0.90 1</ambient><diffuse>0.20 0.55 0.95 1</diffuse></material>
+      </visual>
+
+      <!-- Zone 2: CPU (Green: X = +0.700, Y = +0.220) -->
+      <visual name="visual_drop_zone2">
+        <pose>0.700 0.220 0.0021 0 0 0</pose>
+        <geometry><box><size>0.26 0.26 0.0002</size></box></geometry>
+        <material><ambient>0.25 0.80 0.35 1</ambient><diffuse>0.30 0.85 0.40 1</diffuse></material>
+      </visual>
+
+      <!-- Zone 3: QR Code (Yellow: X = +0.700, Y = -0.220) -->
+      <visual name="visual_drop_zone3">
+        <pose>0.700 -0.220 0.0021 0 0 0</pose>
+        <geometry><box><size>0.26 0.26 0.0002</size></box></geometry>
+        <material><ambient>0.95 0.75 0.15 1</ambient><diffuse>0.98 0.80 0.20 1</diffuse></material>
+      </visual>
+
+      <!-- Zone 4: Chip (Red: X = +0.700, Y = -0.640) -->
+      <visual name="visual_drop_zone4">
+        <pose>0.700 -0.640 0.0021 0 0 0</pose>
+        <geometry><box><size>0.26 0.26 0.0002</size></box></geometry>
+        <material><ambient>0.90 0.20 0.20 1</ambient><diffuse>0.95 0.25 0.25 1</diffuse></material>
+      </visual>
+
     </link>
   </model>
 </sdf>
