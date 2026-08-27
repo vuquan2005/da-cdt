@@ -10,7 +10,7 @@ from launch.substitutions import LaunchConfiguration
 def generate_launch_description():
     pkg_robot0_teleop = get_package_share_directory('robot0_teleop')
     pkg_robot0_vision = get_package_share_directory('robot0_vision')
-    pkg_robot0_navigation = get_package_share_directory('robot0_navigation')
+    pkg_robot0_sensors = get_package_share_directory('robot0_sensors')
 
     # Launch Configurations
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
@@ -60,7 +60,7 @@ def generate_launch_description():
     # 1. Cảm biến dò line (Vector Dual Array Line Sensor Simulator)
     line_sensor_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_robot0_navigation, 'launch', 'line_sensor.launch.py')
+            os.path.join(pkg_robot0_sensors, 'launch', 'line_sensor.launch.py')
         ),
         launch_arguments={
             'use_sim_time': use_sim_time

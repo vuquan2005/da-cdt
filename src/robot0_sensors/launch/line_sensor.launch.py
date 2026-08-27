@@ -22,7 +22,7 @@ def generate_launch_description():
     )
 
     line_sensor_node = Node(
-        package='robot0_navigation',
+        package='robot0_sensors',
         executable='line_sensor_node',
         name='line_sensor_simulator_node',
         output='screen',

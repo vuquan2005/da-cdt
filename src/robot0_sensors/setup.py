@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import find_packages, setup
 
-package_name = 'robot0_navigation'
+package_name = 'robot0_sensors'
 
 setup(
     name=package_name,
@@ -12,17 +12,16 @@ setup(
         ('share/ament_index/resource_index/packages', ['resource/' + package_name] if os.path.exists('resource/' + package_name) else []),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
-        (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='Robocon Developer',
     maintainer_email='dev@example.com',
-    description='Behavior Trees based Autonomous Navigation and Pallet Manipulation for robot0',
+    description='Sensors simulation and hardware driver package for Robot0',
     license='BSD-3-Clause',
     entry_points={
         'console_scripts': [
-            'pallet_bt_mission = robot0_navigation.pallet_bt_mission_node:main',
+            'line_sensor_node = robot0_sensors.line_sensor_node:main',
         ],
     },
 )
