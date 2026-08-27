@@ -82,7 +82,7 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     pick_seq.add_child(LogMessageAction('Log_Raise_Lift', 'Nhấc pallet lên khỏi mặt kệ...'))
     pick_seq.add_child(SetLiftHeightAction('Raise_Pallet_To_Carry', target_height='lift_carry_height', settle_time_sec=2.5))
     pick_seq.add_child(LogMessageAction('Log_Retract_Fork', 'Lùi xe rút càng mang pallet ra khỏi kệ...'))
-    pick_seq.add_child(NavigateToPoseAction('Retract_From_Rack', target_pose='staging_pose', pos_tolerance=0.020, yaw_tolerance=0.03, max_v=0.10))
+    pick_seq.add_child(NavigateToPoseAction('Retract_From_Rack', target_pose='retract_pose', pos_tolerance=0.020, yaw_tolerance=0.03, max_v=0.10))
     pick_seq.add_child(LogMessageAction('Log_Pick_Success', 'Đã lấy pallet ra khỏi kệ an toàn!'))
     root.add_child(pick_seq)
 

@@ -48,7 +48,7 @@ LINE_WIDTH = 0.025  # 25mm standard line width
 TRACK_SEGMENTS: List[Tuple[Tuple[float, float], Tuple[float, float]]] = [
     # 1. Main Horizontal Lines
     ((-1.750, 0.640), (0.550, 0.640)),    # Lane 1 (Y = 0.64m)
-    ((-1.750, -0.006), (0.000, -0.006)),  # Lane 2 (Y = 0.00m)
+    ((-1.750, 0.000), (0.000, 0.000)),    # Lane 2 (Y = 0.00m)
 
     # 2. Vertical Connector Lines
     ((-0.400, 0.000), (-0.400, 0.640)),   # Central Switch Line (X = -0.40m)
@@ -60,8 +60,8 @@ TRACK_SEGMENTS: List[Tuple[Tuple[float, float], Tuple[float, float]]] = [
     ((0.000, -0.640), (0.550, -0.640)),   # Zone 4 Branch (Chip: Y = -0.64m)
 
     # 4. Stop Bars (Cross lines: 150mm length)
-    ((-1.650, 0.641 - 0.075), (-1.650, 0.641 + 0.075)),    # Rack 1 Stop
-    ((-1.650, -0.006 - 0.075), (-1.650, -0.006 + 0.075)),  # Rack 2 Stop
+    ((-1.650, 0.640 - 0.075), (-1.650, 0.640 + 0.075)),    # Rack 1 Stop
+    ((-1.650, 0.000 - 0.075), (-1.650, 0.000 + 0.075)),    # Rack 2 Stop
     ((0.550, 0.640 - 0.075), (0.550, 0.640 + 0.075)),      # Dropoff 1 Stop
     ((0.550, 0.220 - 0.075), (0.550, 0.220 + 0.075)),      # Dropoff 2 Stop
     ((0.550, -0.220 - 0.075), (0.550, -0.220 + 0.075)),    # Dropoff 3 Stop
@@ -261,7 +261,7 @@ class VectorLineSensorNode(Node):
             grid[mask_z_border] = 85
 
         # 5. Rasterize Rack Base Footprints (40 = Light Grey)
-        for rx, ry in [(-1.894, 0.641), (-1.894, -0.006)]:
+        for rx, ry in [(-1.894, 0.640), (-1.894, 0.000)]:
             mask_rack = (grid_x >= rx - 0.075) & (grid_x <= rx + 0.075) & (grid_y >= ry - 0.135) & (grid_y <= ry + 0.135)
             grid[mask_rack] = 40
 

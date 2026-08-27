@@ -72,22 +72,23 @@ class InitializeMissionAction(ActionNode):
                 )
             return NodeStatus.FAILURE
 
-        # 2. Compute Staging and Insertion Poses
+        # 2. Compute Staging, Insertion, and Retract Poses
         # Pallet center Y - 8.27mm offset of lift arm
         y_align = pallet.pose.y - LIFT_ARM_LATERAL_OFFSET
         target_yaw = math.pi
 
-        # Safe Staging Pose (before shelf) and Insert Pose (fork fully engaged)
-        staging_pose = Pose2D(x=-1.550, y=y_align, yaw=target_yaw)
+        # Safe Staging Pose (before shelf), Insert Pose (fork fully engaged), and Retract Pose (clear of shelf)
+        staging_pose = Pose2D(x=-1.500, y=y_align, yaw=target_yaw)
         insert_pose = Pose2D(x=-1.645, y=y_align, yaw=target_yaw)
+        retract_pose = Pose2D(x=-1.400, y=y_align, yaw=target_yaw)
 
         # 3. Lift Heights
-        if pallet.shelf == 'bottom' or shelf_level == 1:
-            lift_insert_height = LIFT_HEIGHT_LEVEL1_INSERT
-            lift_carry_height = LIFT_HEIGHT_LEVEL1_CARRY
-        else:
+        if pallet.shelf == 'top':
             lift_insert_height = LIFT_HEIGHT_LEVEL2_INSERT
             lift_carry_height = LIFT_HEIGHT_LEVEL2_CARRY
+        else:
+            lift_insert_height = LIFT_HEIGHT_LEVEL1_INSERT
+            lift_carry_height = LIFT_HEIGHT_LEVEL1_CARRY
 
         # 4. Resolve Drop-off Target Pose
         if dropoff_zone_req and dropoff_zone_req in DROPOFF_ZONES:
@@ -116,6 +117,7 @@ class InitializeMissionAction(ActionNode):
         self.blackboard.set('pallet_target', pallet)
         self.blackboard.set('staging_pose', staging_pose)
         self.blackboard.set('insert_pose', insert_pose)
+        self.blackboard.set('retract_pose', retract_pose)
         self.blackboard.set('lift_insert_height', lift_insert_height)
         self.blackboard.set('lift_carry_height', lift_carry_height)
         self.blackboard.set('lift_transit_height', LIFT_HEIGHT_TRANSIT)

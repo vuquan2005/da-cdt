@@ -118,14 +118,14 @@
       <!-- ==================================================================== -->
       <!-- Stop Bar - Rack 1 -->
       <visual name="visual_stop_rack1">
-        <pose>-1.650 0.641 0.0024 0 0 0</pose>
+        <pose>-1.650 0.640 0.0024 0 0 0</pose>
         <geometry><box><size>0.025 0.150 0.0005</size></box></geometry>
         <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
       </visual>
 
       <!-- Stop Bar - Rack 2 -->
       <visual name="visual_stop_rack2">
-        <pose>-1.650 -0.006 0.0024 0 0 0</pose>
+        <pose>-1.650 0.000 0.0024 0 0 0</pose>
         <geometry><box><size>0.025 0.150 0.0005</size></box></geometry>
         <material><ambient>0.10 0.10 0.12 1</ambient><diffuse>0.10 0.10 0.12 1</diffuse></material>
       </visual>
@@ -163,14 +163,14 @@
       <!-- ==================================================================== -->
       <!-- Rack 1 Base Area -->
       <visual name="visual_rack1_pad">
-        <pose>-1.894 0.641 0.0021 0 0 0</pose>
+        <pose>-1.894 0.640 0.0021 0 0 0</pose>
         <geometry><box><size>0.15 0.27 0.0002</size></box></geometry>
         <material><ambient>0.65 0.50 0.35 1</ambient><diffuse>0.70 0.55 0.40 1</diffuse></material>
       </visual>
 
       <!-- Rack 2 Base Area -->
       <visual name="visual_rack2_pad">
-        <pose>-1.894 -0.006 0.0021 0 0 0</pose>
+        <pose>-1.894 0.000 0.0021 0 0 0</pose>
         <geometry><box><size>0.15 0.27 0.0002</size></box></geometry>
         <material><ambient>0.65 0.50 0.35 1</ambient><diffuse>0.70 0.55 0.40 1</diffuse></material>
       </visual>

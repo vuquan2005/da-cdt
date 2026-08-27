@@ -23,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'pallet_bt_mission = robot0_navigation.pallet_bt_mission_node:main',
+            'line_sensor_node = robot0_navigation.line_sensor_node:main',
         ],
     },
 )

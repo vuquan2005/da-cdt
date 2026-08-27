@@ -31,7 +31,7 @@ install(
 )
 
 install(
-  DIRECTORY config launch models worlds scripts
+  DIRECTORY config launch models worlds
   DESTINATION share/${PROJECT_NAME}
 )
 

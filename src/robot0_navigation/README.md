@@ -52,12 +52,12 @@ graph TD
 | Đối tượng | Vị trí | Tọa độ Thế giới $(X, Y, Z)$ | Tầng / Vị trí |
 | :--- | :--- | :--- | :--- |
 | **Start Base** | Xuất phát | `X = -0.985, Y = 0.640, Z = 0.080` ($Yaw = \pi$) | Sàn |
-| **Rack 1** | Kệ dưới | `X = -1.894, Y = 0.641` ($Yaw = \pi/2$) | - |
-| - *Pallet Nhôm* | Rack 1 | `X = -1.894, Y = 0.581, Z = 0.0285` | **Tầng 1 (Dưới - Trái)** |
-| - *Pallet CPU* | Rack 1 | `X = -1.894, Y = 0.701, Z = 0.1485` | **Tầng 2 (Trên - Phải)** |
-| **Rack 2** | Kệ giữa | `X = -1.894, Y = -0.006` ($Yaw = \pi/2$) | - |
-| - *Pallet QR* | Rack 2 | `X = -1.894, Y = -0.066, Z = 0.0285` | **Tầng 1 (Dưới - Trái)** |
-| - *Pallet Chip* | Rack 2 | `X = -1.894, Y = 0.054, Z = 0.1485` | **Tầng 2 (Trên - Phải)** |
+| **Rack 1** | Kệ dưới | `X = -1.894, Y = 0.640` ($Yaw = \pi/2$) | - |
+| - *Pallet Nhôm* | Rack 1 | `X = -1.894, Y = 0.580, Z = 0.0285` | **Tầng 1 (Dưới - Trái)** |
+| - *Pallet CPU* | Rack 1 | `X = -1.894, Y = 0.700, Z = 0.1485` | **Tầng 2 (Trên - Phải)** |
+| **Rack 2** | Kệ giữa | `X = -1.894, Y = 0.000` ($Yaw = \pi/2$) | - |
+| - *Pallet QR* | Rack 2 | `X = -1.894, Y = -0.060, Z = 0.0285` | **Tầng 1 (Dưới - Trái)** |
+| - *Pallet Chip* | Rack 2 | `X = -1.894, Y = 0.060, Z = 0.1485` | **Tầng 2 (Trên - Phải)** |
 | **Drop-off 1** | Vùng Nhôm | `X = 0.70, Y = 0.64` (Tiếp cận: `X = 0.55`) | Xanh lam |
 | **Drop-off 2** | Vùng CPU | `X = 0.70, Y = 0.22` (Tiếp cận: `X = 0.55`) | Xanh lá |
 | **Drop-off 3** | Vùng QR | `X = 0.70, Y = -0.22` (Tiếp cận: `X = 0.55`) | Vàng |
