@@ -6,7 +6,7 @@
       <collision name="collision">
         <geometry>
           <box>
-            <size>2.0 4.0 0.002</size>
+            <size>4.0 2.0 0.002</size>
           </box>
         </geometry>
         <surface>
@@ -20,9 +20,9 @@
       </collision>
       <visual name="visual">
         <geometry>
-          <box>
-            <size>2.0 4.0 0.002</size>
-          </box>
+          <mesh>
+            <uri>model://arena_floor/meshes/floor.dae</uri>
+          </mesh>
         </geometry>
         <material>
           <ambient>1.0 1.0 1.0 1.0</ambient>

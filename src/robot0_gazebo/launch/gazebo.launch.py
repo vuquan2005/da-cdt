@@ -18,7 +18,7 @@ def generate_launch_description():
     pkg_description_prefix = get_package_prefix('robot0_description')
 
     # Default Paths
-    default_world_path = os.path.join(pkg_robot0_gazebo, 'worlds', 'robocon_arena.sdf')
+    default_world_path = os.path.join(pkg_robot0_gazebo, 'worlds', 'simple_arena.sdf')
     default_urdf_path = os.path.join(pkg_robot0_description, 'urdf', 'robot0.urdf.xacro')
     default_bridge_config_path = os.path.join(pkg_robot0_gazebo, 'config', 'ros_gz_bridge.yaml')
     default_rviz_config_path = os.path.join(pkg_robot0_description, 'rviz', 'robot0.rviz')
@@ -27,6 +27,10 @@ def generate_launch_description():
     pkg_share_parent = os.path.dirname(pkg_robot0_gazebo)
     gazebo_models_dir = os.path.join(pkg_robot0_gazebo, 'models')
 
+    src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    src_models_dir = os.path.join(src_dir, 'models')
+    workspace_src = os.path.abspath(os.path.join(src_dir, '..'))
+
     resource_dirs = [
         pkg_share_parent,
         os.path.dirname(pkg_robot0_description),
@@ -34,12 +38,18 @@ def generate_launch_description():
         pkg_robot0_description,
         gazebo_models_dir,
         os.path.join(pkg_robot0_description, 'models'),
+        src_dir,
+        src_models_dir,
+        workspace_src,
+        os.path.join(workspace_src, 'robot0_description'),
+        os.path.join(workspace_src, 'robot0_description', 'models'),
     ]
     # Also include share paths from AMENT_PREFIX_PATH if available
     ament_prefix_path = os.environ.get('AMENT_PREFIX_PATH', '')
     for p in ament_prefix_path.split(':'):
         if p:
             resource_dirs.append(os.path.join(p, 'share'))
+            resource_dirs.append(p)
 
     resource_dirs = [d for d in dict.fromkeys(resource_dirs) if os.path.exists(d)]
     env_resource_paths = ':'.join(resource_dirs)

@@ -10,7 +10,7 @@ def generate_launch_description():
     pkg_robot0_gazebo = get_package_share_directory('robot0_gazebo')
 
     # Default Paths
-    default_world_path = os.path.join(pkg_robot0_gazebo, 'worlds', 'robocon_arena.sdf')
+    default_world_path = os.path.join(pkg_robot0_gazebo, 'worlds', 'simple_arena.sdf')
 
     # Launch Configurations
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
@@ -83,7 +83,7 @@ def generate_launch_description():
         }.items()
     )
 
-    # 2. Cụm các Node ứng dụng (Line Sensor + Joystick + Vision)
+    # 2. Cụm các Node ứng dụng
     nodes_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_robot0_gazebo, 'launch', 'nodes.launch.py')

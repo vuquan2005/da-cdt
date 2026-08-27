@@ -1,6 +1,6 @@
 # robot0_gazebo
 
-Package cấu hình môi trường mô phỏng vật lý trên Gazebo Fortress (Ignition), bao gồm sa bàn sân thi đấu Robocon (`robocon_arena.sdf`), các mô hình vật thể (kệ hàng, pallet), plugin C++ điều khiển chuyển động mặt phẳng `PlanarVelocityControl`, và cấu hình cầu nối dữ liệu `ros_gz_bridge`.
+Package cấu hình môi trường mô phỏng vật lý trên Gazebo Fortress (Ignition), bao gồm sa bàn sân thi đấu (`simple_arena.sdf`), các mô hình vật thể (kệ hàng, pallet), plugin C++ điều khiển chuyển động mặt phẳng `PlanarVelocityControl`, và cấu hình cầu nối dữ liệu `ros_gz_bridge`.
 
 ---
 
@@ -12,7 +12,7 @@ Package cấu hình môi trường mô phỏng vật lý trên Gazebo Fortress (
 ros2 launch robot0_gazebo gazebo.launch.py
 ```
 * `rviz:=false`: Tắt mở kèm RViz2.
-* `world:=<path>`: Chọn đường dẫn file world khác (mặc định: `robocon_arena.sdf`).
+* `world:=<path>`: Chọn đường dẫn file world khác (mặc định: `simple_arena.sdf`).
 
 ### 2. Khởi chạy toàn bộ hệ thống (Bringup)
 
@@ -49,7 +49,7 @@ robot0_gazebo/
 ├── config/
 │   └── ros_gz_bridge.yaml          # Cấu hình cầu nối ROS 2 <-> Gazebo Sim
 ├── worlds/
-│   ├── robocon_arena.sdf           # Thế giới sa bàn thi đấu Robocon
+│   ├── simple_arena.sdf            # Sân giản lược: 2 Kệ hàng + 4 Pallet (Nhôm, CPU, QR, Chip)
 │   └── empty.sdf                   # Thế giới mặt phẳng cơ bản
 ├── models/                         # Mô hình SDF (arena_floor, storage_rack, pallet_*)
 └── launch/

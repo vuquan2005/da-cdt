@@ -1,0 +1,6 @@
+# Material for Arena Floor
+newmtl floor_material
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.1 0.1 0.1
+map_Kd ../materials/textures/floor.png
