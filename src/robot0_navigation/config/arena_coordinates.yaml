@@ -8,7 +8,7 @@ robot_spawn:
   yaw: 3.14159265
 
 kinematics:
-  lift_arm_lateral_offset: 0.00827
+  lift_arm_lateral_offset: 0.0
   fork_reach_distance: 0.2308
   wheel_radius: 0.0487
   half_wheelbase_lx: 0.1000

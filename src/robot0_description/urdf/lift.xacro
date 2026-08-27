@@ -7,13 +7,13 @@
 
   <link name="lift_arm_link">
     <inertial>
-      <origin xyz="-0.0180613677899576 -3.0454656503736E-05 -0.0256536372783613" rpy="1.5707963267949 0 -1.5707963267948966" />
-      <mass value="0.161814335334686" />
+      <origin xyz="-0.01806 0.00000 -0.02565" rpy="${PI/2} 0 -${PI/2}" />
+      <mass value="0.16181" />
       <inertia ixx="0.00038242" ixy="-1.38e-07" ixz="-1.26e-07" iyy="0.00045993" iyz="-0.00018047" izz="0.00040656" />
     </inertial>
 
     <visual>
-      <origin xyz="0 0 0" rpy="1.5707963267949 0 -1.5707963267948966" />
+      <origin xyz="0 0 0" rpy="${PI/2} 0 -${PI/2}" />
       <geometry>
         <mesh filename="package://robot0_description/meshes/lift_arm.stl" />
       </geometry>
@@ -22,7 +22,7 @@
 
     <!-- Back Vertical Slider Carriage Collision -->
     <collision name="lift_arm_slider_collision">
-      <origin xyz="0.008 0 -0.048" rpy="0 0 0" />
+      <origin xyz="0.008 0.000 -0.048" rpy="0 0 0" />
       <geometry>
         <box size="0.051 0.149 0.136" />
       </geometry>
@@ -61,9 +61,9 @@
     </collision>
   </link>
 
-  <!-- Prismatic Joint: Moves along Z axis (UP) -->
+  <!-- Prismatic Joint: Moves along Z axis (UP), Centered on Y=0 -->
   <joint name="lift_arm_joint" type="prismatic">
-    <origin xyz="0.137279512977855 -0.008271576273727 0.0435" rpy="0 0 0" />
+    <origin xyz="${lift_joint_x} ${lift_joint_y} ${lift_joint_z}" rpy="0 0 0" />
     <parent link="base_link" />
     <child link="lift_arm_link" />
     <axis xyz="0 0 1" />

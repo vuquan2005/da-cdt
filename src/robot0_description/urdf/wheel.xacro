@@ -52,8 +52,8 @@
     parent="base_link"
     mesh_type="wheel_right"
     mesh_rpy="${PI} 0 0"
-    joint_xyz="0.109279512977855 -0.162171576273727 -0.02385"
-    joint_rpy="-1.5707963267949 -1.5707963267949 -1.5707963267948966"
+    joint_xyz="${wheelbase_lx} -${track_ly} ${wheel_z_offset}"
+    joint_rpy="-${PI/2} -${PI/2} -${PI/2}"
     axis_xyz="0 -1 0" />
 
   <!-- Front-Left Wheel -->
@@ -62,8 +62,8 @@
     parent="base_link"
     mesh_type="wheel_left"
     mesh_rpy="0 0 0"
-    joint_xyz="0.109279512977855 0.145628423726273 -0.02385"
-    joint_rpy="1.5707963267949 -1.5707963267949 -1.5707963267948966"
+    joint_xyz="${wheelbase_lx} ${track_ly} ${wheel_z_offset}"
+    joint_rpy="${PI/2} -${PI/2} -${PI/2}"
     axis_xyz="0 1 0" />
 
   <!-- Rear-Right Wheel -->
@@ -72,8 +72,8 @@
     parent="base_link"
     mesh_type="wheel_left"
     mesh_rpy="${PI} 0 ${PI}"
-    joint_xyz="-0.090720487022145 -0.162171576273727 -0.02385"
-    joint_rpy="-1.5707963267949 -1.5707963267949 -1.5707963267948966"
+    joint_xyz="-${wheelbase_lx} -${track_ly} ${wheel_z_offset}"
+    joint_rpy="-${PI/2} -${PI/2} -${PI/2}"
     axis_xyz="0 -1 0" />
 
   <!-- Rear-Left Wheel -->
@@ -82,8 +82,8 @@
     parent="base_link"
     mesh_type="wheel_right"
     mesh_rpy="0 0 ${PI}"
-    joint_xyz="-0.090720487022145 0.145628423726273 -0.02385"
-    joint_rpy="1.5707963267949 -1.5707963267949 -1.5707963267948966"
+    joint_xyz="-${wheelbase_lx} ${track_ly} ${wheel_z_offset}"
+    joint_rpy="${PI/2} -${PI/2} -${PI/2}"
     axis_xyz="0 1 0" />
 
 </robot>

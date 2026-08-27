@@ -12,9 +12,9 @@
     </inertial>
   </link>
 
-  <!-- Joint from base_link to camera_link: forward in +X, tilted down by 0.7 rad pitch -->
+  <!-- Joint from base_link to camera_link: forward in +X, tilted down by camera_pitch -->
   <joint name="camera_joint" type="fixed">
-    <origin xyz="0.1788 -0.00767 0.272" rpy="0 0.7 0" />
+    <origin xyz="${camera_joint_x} ${camera_joint_y} ${camera_joint_z}" rpy="0 ${camera_pitch} 0" />
     <parent link="base_link" />
     <child link="camera_link" />
   </joint>
@@ -23,7 +23,7 @@
   <link name="camera_optical_link" />
 
   <joint name="camera_optical_joint" type="fixed">
-    <origin xyz="0 0 0" rpy="-1.5707963267948966 0 -1.5707963267948966" />
+    <origin xyz="0 0 0" rpy="-${PI/2} 0 -${PI/2}" />
     <parent link="camera_link" />
     <child link="camera_optical_link" />
   </joint>
