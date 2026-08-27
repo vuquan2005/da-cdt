@@ -97,7 +97,7 @@ def generate_launch_description():
         declare_use_line_sensor_cmd,
         declare_conf_cmd,
         declare_imgsz_cmd,
-        line_sensor_launch,
+        # line_sensor_launch,
         joystick_launch,
         vision_launch
     ])
