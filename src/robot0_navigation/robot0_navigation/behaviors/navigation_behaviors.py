@@ -1,34 +1,32 @@
 # -*- coding: utf-8 -*-
 
-import time
-import math
+"""
+Navigation Behavior Tree Action Nodes (Skeleton / Template).
+Provides abstract/skeleton action nodes for robot navigation:
+- NavigateToPoseAction: Navigates to a 2D/3D target pose.
+- LinearDriveAction: Moves robot straight forward/backward/sideways.
+- NavigateThroughWaypointsAction: Sequentially traverses a waypoint path.
+"""
+
 from typing import Optional, Union, List
 from ..behavior_tree.node import ActionNode, NodeStatus, Blackboard
 from ..arena_coordinates import Pose2D, Pose3D
 
 
-def normalize_angle(angle: float) -> float:
-    while angle > math.pi:
-        angle -= 2.0 * math.pi
-    while angle < -math.pi:
-        angle += 2.0 * math.pi
-    return angle
-
-
 class NavigateToPoseAction(ActionNode):
     """
-    Mecanum Omnidirectional Navigation Controller towards a 2D Target Pose (x, y, yaw).
-    Smoothly drives robot with proportional position & heading control.
+    Skeleton Action Node to navigate robot to a target pose (x, y, yaw).
+    Implement your custom motion controller / planner logic in update().
     """
     def __init__(
         self,
         name: str,
         target_pose: Union[Pose2D, Pose3D, str],
-        pos_tolerance: float = 0.025,
-        yaw_tolerance: float = 0.035,
+        pos_tolerance: float = 0.05,
+        yaw_tolerance: float = 0.08,
         max_v: float = 0.25,
         max_w: float = 0.70,
-        timeout_sec: float = 25.0,
+        timeout_sec: float = 30.0,
         is_insert_mode: bool = False,
         blackboard: Optional[Blackboard] = None
     ):
@@ -41,86 +39,41 @@ class NavigateToPoseAction(ActionNode):
         self.timeout_sec = timeout_sec
         self.is_insert_mode = is_insert_mode
 
-        self.target_x = 0.0
-        self.target_y = 0.0
-        self.target_yaw = 0.0
-        self.start_time = 0.0
+        self.target_pose: Optional[Pose2D] = None
 
     def initialise(self) -> None:
-        self.start_time = time.time()
-
+        """Called once when node starts executing."""
         if isinstance(self.target_spec, str):
             pose_obj = self.blackboard.get(self.target_spec)
         else:
             pose_obj = self.target_spec
 
         if pose_obj is not None:
-            self.target_x = float(pose_obj.x)
-            self.target_y = float(pose_obj.y)
-            self.target_yaw = float(pose_obj.yaw)
+            self.target_pose = Pose2D(x=float(pose_obj.x), y=float(pose_obj.y), yaw=float(pose_obj.yaw))
         else:
-            self.target_x = 0.0
-            self.target_y = 0.0
-            self.target_yaw = 0.0
+            self.target_pose = None
 
     def update(self) -> NodeStatus:
+        """
+        Called every tree tick.
+        TODO: Implement your control algorithm here (e.g. PID, Pure Pursuit, Nav2 client).
+        Access current pose from blackboard ('current_x', 'current_y', 'current_yaw').
+        Send velocity command via blackboard.get('ros_node').publish_twist(vx, vy, wz).
+        """
+        ros_node = self.blackboard.get('ros_node')
         current_x = self.blackboard.get('current_x')
         current_y = self.blackboard.get('current_y')
         current_yaw = self.blackboard.get('current_yaw')
-        ros_node = self.blackboard.get('ros_node')
 
-        if current_x is None or ros_node is None:
+        if current_x is None or ros_node is None or self.target_pose is None:
             return NodeStatus.RUNNING
 
-        if time.time() - self.start_time > self.timeout_sec:
-            ros_node.publish_twist(0.0, 0.0, 0.0)
-            ros_node.get_logger().warn(f"[BT] NavigateToPoseAction '{self.name}' completed on timeout safeguard.")
-            return NodeStatus.SUCCESS if self.is_insert_mode else NodeStatus.FAILURE
-
-        dx_world = self.target_x - current_x
-        dy_world = self.target_y - current_y
-        dist = math.hypot(dx_world, dy_world)
-        dyaw = normalize_angle(self.target_yaw - current_yaw)
-
-        # In insert mode (facing west at yaw=pi): check if fork is sufficiently inserted
-        if self.is_insert_mode:
-            if current_x <= self.target_x + 0.015 and abs(dy_world) <= 0.035 and abs(dyaw) <= 0.06:
-                ros_node.publish_twist(0.0, 0.0, 0.0)
-                ros_node.get_logger().info(f"[BT] Insert completed at X={current_x:.3f}m, Y={current_y:.3f}m")
-                return NodeStatus.SUCCESS
-
-        # Check goal arrival
-        if dist <= self.pos_tolerance and abs(dyaw) <= self.yaw_tolerance:
-            ros_node.publish_twist(0.0, 0.0, 0.0)
-            return NodeStatus.SUCCESS
-
-        # Transform world error into robot body frame
-        cos_y = math.cos(current_yaw)
-        sin_y = math.sin(current_yaw)
-        dx_body = dx_world * cos_y + dy_world * sin_y
-        dy_body = -dx_world * sin_y + dy_world * cos_y
-
-        # Proportional controller gains
-        kp_pos = 1.35
-        kp_yaw = 1.60
-
-        vx = max(min(kp_pos * dx_body, self.max_v), -self.max_v)
-        vy = max(min(kp_pos * dy_body, self.max_v), -self.max_v)
-        wz = max(min(kp_yaw * dyaw, self.max_w), -self.max_w)
-
-        # Prevent stall with minimum creeping velocity
-        if dist > self.pos_tolerance:
-            v_mag = math.hypot(vx, vy)
-            min_v = 0.04
-            if v_mag < min_v and v_mag > 1e-4:
-                scale = min_v / v_mag
-                vx *= scale
-                vy *= scale
-
-        ros_node.publish_twist(vx, vy, wz)
-        return NodeStatus.RUNNING
+        # Skeleton placeholder: returns SUCCESS immediately for structure testing
+        ros_node.publish_twist(0.0, 0.0, 0.0)
+        return NodeStatus.SUCCESS
 
     def terminate(self, new_status: NodeStatus) -> None:
+        """Called when node finishes or is interrupted."""
         ros_node = self.blackboard.get('ros_node')
         if ros_node:
             ros_node.publish_twist(0.0, 0.0, 0.0)
@@ -128,63 +81,34 @@ class NavigateToPoseAction(ActionNode):
 
 class LinearDriveAction(ActionNode):
     """
-    Drives robot body forward/backward (along body X) or sideways (along body Y) by a relative distance.
-    Ideal for delicate fork insertion, pallet extraction, and drop-off backoff.
+    Skeleton Action Node to drive robot forward/backward or sideways by a relative distance.
     """
     def __init__(
         self,
         name: str,
         distance_meters: float,
         axis: str = 'x',
-        speed: float = 0.08,
+        speed: float = 0.10,
         blackboard: Optional[Blackboard] = None
     ):
         super().__init__(name, blackboard)
         self.distance_meters = distance_meters
         self.axis = axis.lower()
         self.speed = abs(speed)
-        self.direction = 1.0 if distance_meters >= 0 else -1.0
-        self.target_dist = abs(distance_meters)
-
-        self.start_x = 0.0
-        self.start_y = 0.0
-        self.start_time = 0.0
-        self.traveled = 0.0
 
     def initialise(self) -> None:
-        self.start_time = time.time()
-        self.traveled = 0.0
-        self.start_x = float(self.blackboard.get('current_x', 0.0))
-        self.start_y = float(self.blackboard.get('current_y', 0.0))
+        """Called once when node starts executing."""
+        pass
 
     def update(self) -> NodeStatus:
-        current_x = self.blackboard.get('current_x')
-        current_y = self.blackboard.get('current_y')
+        """
+        Called every tree tick.
+        TODO: Implement linear open-loop or closed-loop displacement control.
+        """
         ros_node = self.blackboard.get('ros_node')
-
-        if current_x is None or ros_node is None:
-            return NodeStatus.RUNNING
-
-        self.traveled = math.hypot(current_x - self.start_x, current_y - self.start_y)
-
-        # Safety timeout
-        expected_time = (self.target_dist / max(self.speed, 0.01)) * 2.5 + 2.0
-        if time.time() - self.start_time > expected_time:
+        if ros_node:
             ros_node.publish_twist(0.0, 0.0, 0.0)
-            return NodeStatus.SUCCESS
-
-        if self.traveled >= self.target_dist - 0.005:
-            ros_node.publish_twist(0.0, 0.0, 0.0)
-            return NodeStatus.SUCCESS
-
-        # Command velocity in robot frame
-        v_cmd = self.direction * self.speed
-        if self.axis == 'y':
-            ros_node.publish_twist(0.0, v_cmd, 0.0)
-        else:
-            ros_node.publish_twist(v_cmd, 0.0, 0.0)
-
-        return NodeStatus.RUNNING
+        return NodeStatus.SUCCESS
 
     def terminate(self, new_status: NodeStatus) -> None:
         ros_node = self.blackboard.get('ros_node')
@@ -194,15 +118,14 @@ class LinearDriveAction(ActionNode):
 
 class NavigateThroughWaypointsAction(ActionNode):
     """
-    Simulates Topological Line Navigation by sequentially traversing a list of
-    line intersection waypoints [Pose2D, ...] with proportional heading/position control.
+    Skeleton Action Node to navigate sequentially through a list of waypoints.
     """
     def __init__(
         self,
         name: str,
         waypoints_spec: Union[List[Pose2D], str],
-        pos_tolerance: float = 0.035,
-        yaw_tolerance: float = 0.050,
+        pos_tolerance: float = 0.05,
+        yaw_tolerance: float = 0.08,
         max_v: float = 0.25,
         max_w: float = 0.70,
         timeout_per_wp: float = 15.0,
@@ -218,98 +141,25 @@ class NavigateThroughWaypointsAction(ActionNode):
 
         self.waypoints: List[Pose2D] = []
         self.current_idx: int = 0
-        self.wp_start_time: float = 0.0
 
     def initialise(self) -> None:
+        """Called once when node starts executing."""
         self.current_idx = 0
-        self.wp_start_time = time.time()
-
         if isinstance(self.waypoints_spec, str):
             wps = self.blackboard.get(self.waypoints_spec, [])
             self.waypoints = list(wps) if wps else []
         else:
             self.waypoints = list(self.waypoints_spec)
 
+    def update(self) -> NodeStatus:
+        """
+        Called every tree tick.
+        TODO: Implement waypoint follower / trajectory tracker.
+        """
         ros_node = self.blackboard.get('ros_node')
         if ros_node:
-            ros_node.get_logger().info(
-                f"[BT Line Nav] '{self.name}': Starting route through {len(self.waypoints)} intersections."
-            )
-
-    def update(self) -> NodeStatus:
-        if not self.waypoints or self.current_idx >= len(self.waypoints):
-            ros_node = self.blackboard.get('ros_node')
-            if ros_node:
-                ros_node.publish_twist(0.0, 0.0, 0.0)
-            return NodeStatus.SUCCESS
-
-        current_x = self.blackboard.get('current_x')
-        current_y = self.blackboard.get('current_y')
-        current_yaw = self.blackboard.get('current_yaw')
-        ros_node = self.blackboard.get('ros_node')
-
-        if current_x is None or ros_node is None:
-            return NodeStatus.RUNNING
-
-        target_wp = self.waypoints[self.current_idx]
-        is_final_wp = (self.current_idx == len(self.waypoints) - 1)
-
-        # Tolerances (tighter for final goal, slightly looser for passing intersections)
-        pos_tol = self.pos_tolerance if is_final_wp else max(self.pos_tolerance, 0.050)
-        yaw_tol = self.yaw_tolerance if is_final_wp else max(self.yaw_tolerance, 0.080)
-
-        dx_world = target_wp.x - current_x
-        dy_world = target_wp.y - current_y
-        dist = math.hypot(dx_world, dy_world)
-        dyaw = normalize_angle(target_wp.yaw - current_yaw)
-
-        # Check timeout for this specific waypoint
-        if time.time() - self.wp_start_time > self.timeout_per_wp:
-            ros_node.get_logger().warn(
-                f"[BT Line Nav] Intersection #{self.current_idx + 1} timed out. Proceeding to next point."
-            )
-            self.current_idx += 1
-            self.wp_start_time = time.time()
-            return NodeStatus.RUNNING
-
-        # Waypoint reached
-        if dist <= pos_tol and (abs(dyaw) <= yaw_tol or not is_final_wp):
-            ros_node.get_logger().info(
-                f"[BT Line Nav] Line Intersection #{self.current_idx + 1}/{len(self.waypoints)} reached "
-                f"(X={target_wp.x:.3f}m, Y={target_wp.y:.3f}m)"
-            )
-            self.current_idx += 1
-            self.wp_start_time = time.time()
-
-            if self.current_idx >= len(self.waypoints):
-                ros_node.publish_twist(0.0, 0.0, 0.0)
-                return NodeStatus.SUCCESS
-            return NodeStatus.RUNNING
-
-        # Body velocity command (Mecanum omnidirectional)
-        cos_y = math.cos(current_yaw)
-        sin_y = math.sin(current_yaw)
-        dx_body = dx_world * cos_y + dy_world * sin_y
-        dy_body = -dx_world * sin_y + dy_world * cos_y
-
-        kp_pos = 1.35
-        kp_yaw = 1.60
-
-        vx = max(min(kp_pos * dx_body, self.max_v), -self.max_v)
-        vy = max(min(kp_pos * dy_body, self.max_v), -self.max_v)
-        wz = max(min(kp_yaw * dyaw, self.max_w), -self.max_w)
-
-        # Creeping velocity safeguard
-        if dist > pos_tol:
-            v_mag = math.hypot(vx, vy)
-            min_v = 0.045
-            if v_mag < min_v and v_mag > 1e-4:
-                scale = min_v / v_mag
-                vx *= scale
-                vy *= scale
-
-        ros_node.publish_twist(vx, vy, wz)
-        return NodeStatus.RUNNING
+            ros_node.publish_twist(0.0, 0.0, 0.0)
+        return NodeStatus.SUCCESS
 
     def terminate(self, new_status: NodeStatus) -> None:
         ros_node = self.blackboard.get('ros_node')
