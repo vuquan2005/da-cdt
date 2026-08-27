@@ -51,7 +51,7 @@ flowchart TD
 | :--- | :--- | :--- | :---: |
 | **`robot0_description`** | `ament_cmake` | Mô hình 3D CAD (.stl), URDF robot, cấu hình khớp, kiểm tra TF trên RViz2 | [Xem README](src/robot0_description/README.md) |
 | **`robot0_gazebo`** | `ament_cmake` | Sa bàn Robocon, cầu nối `ros_gz_bridge`, C++ Plugin và Master Bringup | [Xem README](src/robot0_gazebo/README.md) |
-| **`robot0_navigation`** | `ament_python`| Mô phỏng cảm biến dò line kép, tọa độ sa bàn, script thử nghiệm gắp/thả pallet | [Xem README](src/robot0_navigation/README.md) |
+| **`robot0_navigation`** | `ament_python`| Điều hướng tự động và gắp/thả pallet theo cây hành vi (**Behavior Trees**), tọa độ sa bàn | [Xem README](src/robot0_navigation/README.md) |
 | **`robot0_teleop`** | `ament_python`| Điều khiển thủ công bằng Gamepad (Deadman switch, Ga mượt), Bàn phím | [Xem README](src/robot0_teleop/README.md) |
 | **`robot0_vision`** | `ament_python`| Nhận diện Pallet bằng YOLOv8 đa luồng và trích xuất tọa độ bám mục tiêu | [Xem README](src/robot0_vision/README.md) |
 
@@ -83,6 +83,13 @@ ros2 launch robot0_gazebo all.launch.py
 ```
 
 ### 3. Khởi chạy các module riêng lẻ
+* **Điều khiển tự động gắp/thả Pallet bằng Behavior Tree:**
+  ```bash
+  # Tùy chọn gắp theo loại Pallet:
+  ros2 launch robot0_navigation pallet_mission_bt.launch.py pallet:=aluminum
+  # Hoặc tùy biến theo Kệ, Tầng, Vị trí trả:
+  ros2 launch robot0_navigation pallet_mission_bt.launch.py rack:=rack_1 shelf:=1 slot:=left dropoff:=dropoff_1
+  ```
 * **Mô phỏng Gazebo cơ bản:**
   ```bash
   ros2 launch robot0_gazebo gazebo.launch.py

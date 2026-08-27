@@ -1,0 +1,85 @@
+# Simplified Robocon Arena Coordinates Configuration
+# Unit: meters (x, y, z) and radians (yaw)
+
+robot_spawn:
+  x: -0.985
+  y: 0.640
+  z: 0.080
+  yaw: 3.14159265
+
+kinematics:
+  lift_arm_lateral_offset: 0.00827
+  fork_reach_distance: 0.2308
+  wheel_radius: 0.0487
+  half_wheelbase_lx: 0.1000
+  half_track_ly: 0.1539
+
+lift_heights:
+  transit: 0.0150
+  level1_insert: 0.0295
+  level1_carry: 0.0700
+  level2_insert: 0.1495
+  level2_carry: 0.1850
+  dropoff: 0.0000
+
+storage_racks:
+  rack_1:
+    description: "Kệ 1 (Hàng dưới, Y = 0.641m)"
+    pose: {x: -1.894, y: 0.641, z: 0.0025, yaw: 1.5708}
+    approach_pose: {x: -1.600, y: 0.641, yaw: 3.1416}
+  rack_2:
+    description: "Kệ 2 (Hàng giữa, Y = -0.006m)"
+    pose: {x: -1.894, y: -0.006, z: 0.0025, yaw: 1.5708}
+    approach_pose: {x: -1.600, y: -0.006, yaw: 3.1416}
+
+pallets:
+  pallet_aluminum:
+    rack: "rack_1"
+    shelf: "bottom"
+    slot: "left"
+    item_type: "aluminum"
+    block_id: 0
+    pose: {x: -1.894, y: 0.581, z: 0.0285, yaw: 1.5708}
+  pallet_cpu:
+    rack: "rack_1"
+    shelf: "top"
+    slot: "right"
+    item_type: "cpu"
+    block_id: 1
+    pose: {x: -1.894, y: 0.701, z: 0.1485, yaw: 1.5708}
+  pallet_qr:
+    rack: "rack_2"
+    shelf: "bottom"
+    slot: "left"
+    item_type: "qr"
+    block_id: 2
+    pose: {x: -1.894, y: -0.066, z: 0.0285, yaw: 1.5708}
+  pallet_chip:
+    rack: "rack_2"
+    shelf: "top"
+    slot: "right"
+    item_type: "chip"
+    block_id: 3
+    pose: {x: -1.894, y: 0.054, z: 0.1485, yaw: 1.5708}
+
+dropoff_zones:
+  dropoff_1:
+    item_type: "aluminum"
+    description: "Vùng 1: Trả Pallet Nhôm (Xanh lam, Y = 0.64m)"
+    center_pose: {x: 0.70, y: 0.64, z: 0.0, yaw: 0.0}
+    approach_pose: {x: 0.55, y: 0.64, yaw: 0.0}
+  dropoff_2:
+    item_type: "cpu"
+    description: "Vùng 2: Trả Pallet CPU (Xanh lá, Y = 0.22m)"
+    center_pose: {x: 0.70, y: 0.22, z: 0.0, yaw: 0.0}
+    approach_pose: {x: 0.55, y: 0.22, yaw: 0.0}
+  dropoff_3:
+    item_type: "qr"
+    description: "Vùng 3: Trả Pallet QR Code (Vàng, Y = -0.22m)"
+    center_pose: {x: 0.70, y: -0.22, z: 0.0, yaw: 0.0}
+    approach_pose: {x: 0.55, y: -0.22, yaw: 0.0}
+  dropoff_4:
+    item_type: "chip"
+    description: "Vùng 4: Trả Pallet Chip (Đỏ, Y = -0.64m)"
+    center_pose: {x: 0.70, y: -0.64, z: 0.0, yaw: 0.0}
+    approach_pose: {x: 0.55, y: -0.64, yaw: 0.0}
