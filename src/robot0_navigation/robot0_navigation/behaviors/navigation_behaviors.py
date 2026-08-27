@@ -2,7 +2,7 @@
 
 import time
 import math
-from typing import Optional, Union
+from typing import Optional, Union, List
 from ..behavior_tree.node import ActionNode, NodeStatus, Blackboard
 from ..arena_coordinates import Pose2D, Pose3D
 
@@ -190,3 +190,129 @@ class LinearDriveAction(ActionNode):
         ros_node = self.blackboard.get('ros_node')
         if ros_node:
             ros_node.publish_twist(0.0, 0.0, 0.0)
+
+
+class NavigateThroughWaypointsAction(ActionNode):
+    """
+    Simulates Topological Line Navigation by sequentially traversing a list of
+    line intersection waypoints [Pose2D, ...] with proportional heading/position control.
+    """
+    def __init__(
+        self,
+        name: str,
+        waypoints_spec: Union[List[Pose2D], str],
+        pos_tolerance: float = 0.035,
+        yaw_tolerance: float = 0.050,
+        max_v: float = 0.25,
+        max_w: float = 0.70,
+        timeout_per_wp: float = 15.0,
+        blackboard: Optional[Blackboard] = None
+    ):
+        super().__init__(name, blackboard)
+        self.waypoints_spec = waypoints_spec
+        self.pos_tolerance = pos_tolerance
+        self.yaw_tolerance = yaw_tolerance
+        self.max_v = max_v
+        self.max_w = max_w
+        self.timeout_per_wp = timeout_per_wp
+
+        self.waypoints: List[Pose2D] = []
+        self.current_idx: int = 0
+        self.wp_start_time: float = 0.0
+
+    def initialise(self) -> None:
+        self.current_idx = 0
+        self.wp_start_time = time.time()
+
+        if isinstance(self.waypoints_spec, str):
+            wps = self.blackboard.get(self.waypoints_spec, [])
+            self.waypoints = list(wps) if wps else []
+        else:
+            self.waypoints = list(self.waypoints_spec)
+
+        ros_node = self.blackboard.get('ros_node')
+        if ros_node:
+            ros_node.get_logger().info(
+                f"[BT Line Nav] '{self.name}': Starting route through {len(self.waypoints)} intersections."
+            )
+
+    def update(self) -> NodeStatus:
+        if not self.waypoints or self.current_idx >= len(self.waypoints):
+            ros_node = self.blackboard.get('ros_node')
+            if ros_node:
+                ros_node.publish_twist(0.0, 0.0, 0.0)
+            return NodeStatus.SUCCESS
+
+        current_x = self.blackboard.get('current_x')
+        current_y = self.blackboard.get('current_y')
+        current_yaw = self.blackboard.get('current_yaw')
+        ros_node = self.blackboard.get('ros_node')
+
+        if current_x is None or ros_node is None:
+            return NodeStatus.RUNNING
+
+        target_wp = self.waypoints[self.current_idx]
+        is_final_wp = (self.current_idx == len(self.waypoints) - 1)
+
+        # Tolerances (tighter for final goal, slightly looser for passing intersections)
+        pos_tol = self.pos_tolerance if is_final_wp else max(self.pos_tolerance, 0.050)
+        yaw_tol = self.yaw_tolerance if is_final_wp else max(self.yaw_tolerance, 0.080)
+
+        dx_world = target_wp.x - current_x
+        dy_world = target_wp.y - current_y
+        dist = math.hypot(dx_world, dy_world)
+        dyaw = normalize_angle(target_wp.yaw - current_yaw)
+
+        # Check timeout for this specific waypoint
+        if time.time() - self.wp_start_time > self.timeout_per_wp:
+            ros_node.get_logger().warn(
+                f"[BT Line Nav] Intersection #{self.current_idx + 1} timed out. Proceeding to next point."
+            )
+            self.current_idx += 1
+            self.wp_start_time = time.time()
+            return NodeStatus.RUNNING
+
+        # Waypoint reached
+        if dist <= pos_tol and (abs(dyaw) <= yaw_tol or not is_final_wp):
+            ros_node.get_logger().info(
+                f"[BT Line Nav] Line Intersection #{self.current_idx + 1}/{len(self.waypoints)} reached "
+                f"(X={target_wp.x:.3f}m, Y={target_wp.y:.3f}m)"
+            )
+            self.current_idx += 1
+            self.wp_start_time = time.time()
+
+            if self.current_idx >= len(self.waypoints):
+                ros_node.publish_twist(0.0, 0.0, 0.0)
+                return NodeStatus.SUCCESS
+            return NodeStatus.RUNNING
+
+        # Body velocity command (Mecanum omnidirectional)
+        cos_y = math.cos(current_yaw)
+        sin_y = math.sin(current_yaw)
+        dx_body = dx_world * cos_y + dy_world * sin_y
+        dy_body = -dx_world * sin_y + dy_world * cos_y
+
+        kp_pos = 1.35
+        kp_yaw = 1.60
+
+        vx = max(min(kp_pos * dx_body, self.max_v), -self.max_v)
+        vy = max(min(kp_pos * dy_body, self.max_v), -self.max_v)
+        wz = max(min(kp_yaw * dyaw, self.max_w), -self.max_w)
+
+        # Creeping velocity safeguard
+        if dist > pos_tol:
+            v_mag = math.hypot(vx, vy)
+            min_v = 0.045
+            if v_mag < min_v and v_mag > 1e-4:
+                scale = min_v / v_mag
+                vx *= scale
+                vy *= scale
+
+        ros_node.publish_twist(vx, vy, wz)
+        return NodeStatus.RUNNING
+
+    def terminate(self, new_status: NodeStatus) -> None:
+        ros_node = self.blackboard.get('ros_node')
+        if ros_node:
+            ros_node.publish_twist(0.0, 0.0, 0.0)
+

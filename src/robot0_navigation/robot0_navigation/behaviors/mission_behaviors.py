@@ -21,6 +21,9 @@ from ..arena_coordinates import (
     find_pallet_by_type,
     find_pallet_by_rack_and_slot,
     get_default_dropoff_for_pallet,
+    generate_approach_route,
+    generate_delivery_route,
+    generate_return_home_route,
 )
 
 
@@ -103,7 +106,13 @@ class InitializeMissionAction(ActionNode):
 
         home_pose = Pose2D(x=ROBOT_SPAWN.x, y=ROBOT_SPAWN.y, yaw=ROBOT_SPAWN.yaw)
 
-        # 5. Populate Blackboard
+        # 5. Generate Topological Line Routes (Simulated Line Following Intersections)
+        approach_route = generate_approach_route(pallet.rack, staging_pose)
+        delivery_route = generate_delivery_route(pallet.rack, staging_pose, dropoff_zone)
+        dropoff_y = dropoff_zone.approach_pose.y if dropoff_zone else ROBOT_SPAWN.y
+        return_home_route = generate_return_home_route(dropoff_y)
+
+        # 6. Populate Blackboard
         self.blackboard.set('pallet_target', pallet)
         self.blackboard.set('staging_pose', staging_pose)
         self.blackboard.set('insert_pose', insert_pose)
@@ -114,16 +123,20 @@ class InitializeMissionAction(ActionNode):
         self.blackboard.set('dropoff_pose', dropoff_pose)
         self.blackboard.set('dropoff_desc', dropoff_desc)
         self.blackboard.set('home_pose', home_pose)
+        self.blackboard.set('approach_route', approach_route)
+        self.blackboard.set('delivery_route', delivery_route)
+        self.blackboard.set('return_home_route', return_home_route)
 
         ros_node = self.blackboard.get('ros_node')
         if ros_node:
             ros_node.get_logger().info('================ MISSION PLAN INITIALIZED ================')
             ros_node.get_logger().info(f'  Target Pallet  : {pallet.name} ({pallet.item_type.upper()}) on {pallet.rack} [{pallet.shelf.upper()} - {pallet.slot.upper()}]')
             ros_node.get_logger().info(f'  Pallet Pose    : X={pallet.pose.x:.3f}m, Y={pallet.pose.y:.3f}m, Z={pallet.pose.z:.3f}m')
-            ros_node.get_logger().info(f'  Staging Pose   : X={staging_pose.x:.3f}m, Y={staging_pose.y:.3f}m, Yaw={math.degrees(staging_pose.yaw):.1f}°')
+            ros_node.get_logger().info(f'  Approach Line  : {len(approach_route)} intersections to Staging (X={staging_pose.x:.3f}m, Y={staging_pose.y:.3f}m)')
+            ros_node.get_logger().info(f'  Delivery Line  : {len(delivery_route)} intersections to {dropoff_desc}')
+            ros_node.get_logger().info(f'  Return Line    : {len(return_home_route)} intersections back to Home Base')
             ros_node.get_logger().info(f'  Insert Pose    : X={insert_pose.x:.3f}m, Y={insert_pose.y:.3f}m')
             ros_node.get_logger().info(f'  Lift Heights   : Insert={lift_insert_height*100:.2f}cm, Carry={lift_carry_height*100:.2f}cm')
-            ros_node.get_logger().info(f'  Destination    : {dropoff_desc} (X={dropoff_pose.x:.3f}m, Y={dropoff_pose.y:.3f}m)')
             ros_node.get_logger().info('==========================================================')
 
         return NodeStatus.SUCCESS

@@ -11,6 +11,7 @@ from .mission_behaviors import (
 )
 from .navigation_behaviors import (
     NavigateToPoseAction,
+    NavigateThroughWaypointsAction,
     LinearDriveAction,
 )
 
@@ -22,5 +23,6 @@ __all__ = [
     'InitializeMissionAction',
     'SetLiftHeightAction',
     'NavigateToPoseAction',
+    'NavigateThroughWaypointsAction',
     'LinearDriveAction',
 ]

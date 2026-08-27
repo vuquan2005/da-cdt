@@ -83,3 +83,19 @@ dropoff_zones:
     description: "Vùng 4: Trả Pallet Chip (Đỏ, Y = -0.64m)"
     center_pose: {x: 0.70, y: -0.64, z: 0.0, yaw: 0.0}
     approach_pose: {x: 0.55, y: -0.64, yaw: 0.0}
+
+line_intersections:
+  i_west_rack1: {x: -1.550, y: 0.641, yaw: 3.1416, desc: "Giao lộ trước Kệ 1"}
+  i_west_rack2: {x: -1.550, y: -0.006, yaw: 3.1416, desc: "Giao lộ trước Kệ 2"}
+  i_west_south: {x: -1.550, y: -0.640, yaw: 3.1416, desc: "Giao lộ trục Tây - Hàng dưới"}
+  i_start: {x: -0.985, y: 0.640, yaw: 3.1416, desc: "Trạm xuất phát ban đầu"}
+  i_center_north: {x: 0.000, y: 0.640, yaw: 0.0, desc: "Trục giữa - Bắc"}
+  i_center_mid_n: {x: 0.000, y: 0.220, yaw: 0.0, desc: "Trục giữa - Dropoff 2"}
+  i_center_rack2: {x: 0.000, y: -0.006, yaw: 0.0, desc: "Trục giữa - Ngang Kệ 2"}
+  i_center_mid_s: {x: 0.000, y: -0.220, yaw: 0.0, desc: "Trục giữa - Dropoff 3"}
+  i_center_south: {x: 0.000, y: -0.640, yaw: 0.0, desc: "Trục giữa - Nam"}
+  i_east_drop1: {x: 0.550, y: 0.640, yaw: 0.0, desc: "Tiếp cận Vùng 1"}
+  i_east_drop2: {x: 0.550, y: 0.220, yaw: 0.0, desc: "Tiếp cận Vùng 2"}
+  i_east_drop3: {x: 0.550, y: -0.220, yaw: 0.0, desc: "Tiếp cận Vùng 3"}
+  i_east_drop4: {x: 0.550, y: -0.640, yaw: 0.0, desc: "Tiếp cận Vùng 4"}
+

@@ -35,6 +35,7 @@ from robot0_navigation.behaviors import (
     InitializeMissionAction,
     SetLiftHeightAction,
     NavigateToPoseAction,
+    NavigateThroughWaypointsAction,
     LinearDriveAction,
 )
 
@@ -49,11 +50,11 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     """
     Builds the Complete Behavior Tree for Pallet Pick-and-Place:
     1. Initialize Blackboard & Wait for Odometry
-    2. Navigate to Staging Pose in front of Rack
+    2. Simulated Line Navigation to Staging Pose in front of Rack
     3. Align Fork Height -> Insert Fork -> Raise Lift -> Retract Fork
-    4. Navigate with Pallet to Drop-off Zone
+    4. Simulated Line Navigation with Pallet to Drop-off Zone
     5. Lower Pallet to Ground -> Backoff from Pallet
-    6. Return to Home Base & Standby
+    6. Simulated Line Navigation to Return to Home Base
     """
     root = Sequence('Pallet_Mission_Master_Tree', blackboard=blackboard)
 
@@ -64,10 +65,10 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     init_seq.add_child(SetLiftHeightAction('Set_Transit_Height', target_height='lift_transit_height', settle_time_sec=1.0))
     root.add_child(init_seq)
 
-    # ---------------- 2. APPROACH RACK ----------------
+    # ---------------- 2. APPROACH RACK (LINE FOLLOWING INTERSECTIONS) ----------------
     approach_seq = Sequence('2_Approach_Rack')
-    approach_seq.add_child(LogMessageAction('Log_Nav_Staging', 'Đang di chuyển tới vị trí chuẩn bị trước kệ...'))
-    approach_seq.add_child(NavigateToPoseAction('Nav_To_Staging_Pose', target_pose='staging_pose', pos_tolerance=0.020, yaw_tolerance=0.03, max_v=0.22))
+    approach_seq.add_child(LogMessageAction('Log_Nav_Staging', 'Đang dò line qua các điểm giao tới vị trí trước kệ...'))
+    approach_seq.add_child(NavigateThroughWaypointsAction('Line_Nav_To_Staging', waypoints_spec='approach_route', pos_tolerance=0.025, yaw_tolerance=0.035, max_v=0.22))
     approach_seq.add_child(LogMessageAction('Log_Staging_Reached', 'Đã đến vị trí chuẩn bị trước kệ!'))
     root.add_child(approach_seq)
 
@@ -85,10 +86,10 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     pick_seq.add_child(LogMessageAction('Log_Pick_Success', 'Đã lấy pallet ra khỏi kệ an toàn!'))
     root.add_child(pick_seq)
 
-    # ---------------- 4. DELIVER TO DROP-OFF ZONE ----------------
+    # ---------------- 4. DELIVER TO DROP-OFF ZONE (LINE FOLLOWING INTERSECTIONS) ----------------
     deliver_seq = Sequence('4_Deliver_To_Destination')
-    deliver_seq.add_child(LogMessageAction('Log_Nav_Delivery', 'Vận chuyển pallet tới vị trí giao hàng...'))
-    deliver_seq.add_child(NavigateToPoseAction('Nav_To_Dropoff', target_pose='dropoff_pose', pos_tolerance=0.030, yaw_tolerance=0.04, max_v=0.25))
+    deliver_seq.add_child(LogMessageAction('Log_Nav_Delivery', 'Vận chuyển pallet qua mạng lưới line tới vị trí giao hàng...'))
+    deliver_seq.add_child(NavigateThroughWaypointsAction('Line_Nav_To_Dropoff', waypoints_spec='delivery_route', pos_tolerance=0.030, yaw_tolerance=0.040, max_v=0.25))
     deliver_seq.add_child(LogMessageAction('Log_Dropoff_Arrived', 'Đã đến khu vực giao hàng!'))
     root.add_child(deliver_seq)
 
@@ -102,13 +103,15 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     place_seq.add_child(LogMessageAction('Log_Pallet_Placed', 'Pallet đã được đặt thành công!'))
     root.add_child(place_seq)
 
-    # ---------------- 6. RETURN HOME BASE ----------------
+    # ---------------- 6. RETURN HOME BASE (LINE FOLLOWING INTERSECTIONS) ----------------
     home_seq = Sequence('6_Return_Home')
-    home_seq.add_child(LogMessageAction('Log_Return_Home', 'Di chuyển về vị trí xuất phát ban đầu...'))
+    home_seq.add_child(LogMessageAction('Log_Return_Home', 'Dò line di chuyển về vị trí xuất phát ban đầu...'))
     home_seq.add_child(SetLiftHeightAction('Lift_Safe_Transit', target_height='lift_transit_height', settle_time_sec=1.0))
-    home_seq.add_child(NavigateToPoseAction('Nav_To_Home', target_pose='home_pose', pos_tolerance=0.030, yaw_tolerance=0.04, max_v=0.25))
+    home_seq.add_child(NavigateThroughWaypointsAction('Line_Nav_To_Home', waypoints_spec='return_home_route', pos_tolerance=0.030, yaw_tolerance=0.040, max_v=0.25))
     home_seq.add_child(LogMessageAction('Log_Mission_Success', '================ MISSION ACCOMPLISHED ================'))
     root.add_child(home_seq)
+
+    return BehaviorTree(root, blackboard)
 
     return BehaviorTree(root, blackboard)
 

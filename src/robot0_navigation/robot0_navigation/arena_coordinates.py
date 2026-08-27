@@ -159,7 +159,41 @@ DROPOFF_ZONES: Dict[str, DropOffZone] = {
 
 
 # ==============================================================================
-# 5. HELPER QUERY FUNCTIONS
+# 5. LINE GRID INTERSECTIONS (Topological Graph for Simulated Line Following)
+# ==============================================================================
+@dataclass(frozen=True)
+class LineIntersection:
+    name: str
+    description: str
+    pose: Pose2D
+
+
+LINE_INTERSECTIONS: Dict[str, LineIntersection] = {
+    # West vertical trunk line (X = -1.550m, in front of storage racks)
+    'I_WEST_RACK1': LineIntersection('I_WEST_RACK1', 'Giao lộ trước Kệ 1', Pose2D(x=-1.550, y=0.641, yaw=math.pi)),
+    'I_WEST_RACK2': LineIntersection('I_WEST_RACK2', 'Giao lộ trước Kệ 2', Pose2D(x=-1.550, y=-0.006, yaw=math.pi)),
+    'I_WEST_SOUTH': LineIntersection('I_WEST_SOUTH', 'Giao lộ trục Tây - Hàng dưới', Pose2D(x=-1.550, y=-0.640, yaw=math.pi)),
+
+    # Start column (X = -0.985m)
+    'I_START': LineIntersection('I_START', 'Vị trí trạm xuất phát ban đầu', Pose2D(x=-0.985, y=0.640, yaw=math.pi)),
+
+    # Center vertical trunk line (X = 0.000m, central arena axis)
+    'I_CENTER_NORTH': LineIntersection('I_CENTER_NORTH', 'Giao lộ trục giữa - Bắc (Y=0.64m)', Pose2D(x=0.000, y=0.640, yaw=0.0)),
+    'I_CENTER_MID_N': LineIntersection('I_CENTER_MID_N', 'Giao lộ trục giữa - Dropoff 2 (Y=0.22m)', Pose2D(x=0.000, y=0.220, yaw=0.0)),
+    'I_CENTER_RACK2': LineIntersection('I_CENTER_RACK2', 'Giao lộ trục giữa - Ngang Kệ 2 (Y=0.00m)', Pose2D(x=0.000, y=-0.006, yaw=0.0)),
+    'I_CENTER_MID_S': LineIntersection('I_CENTER_MID_S', 'Giao lộ trục giữa - Dropoff 3 (Y=-0.22m)', Pose2D(x=0.000, y=-0.220, yaw=0.0)),
+    'I_CENTER_SOUTH': LineIntersection('I_CENTER_SOUTH', 'Giao lộ trục giữa - Nam (Y=-0.64m)', Pose2D(x=0.000, y=-0.640, yaw=0.0)),
+
+    # East vertical trunk line (X = 0.550m, in front of Dropoff Zones)
+    'I_EAST_DROP1': LineIntersection('I_EAST_DROP1', 'Giao lộ tiếp cận Vùng 1 (Nhôm, Y=0.64m)', Pose2D(x=0.550, y=0.640, yaw=0.0)),
+    'I_EAST_DROP2': LineIntersection('I_EAST_DROP2', 'Giao lộ tiếp cận Vùng 2 (CPU, Y=0.22m)', Pose2D(x=0.550, y=0.220, yaw=0.0)),
+    'I_EAST_DROP3': LineIntersection('I_EAST_DROP3', 'Giao lộ tiếp cận Vùng 3 (QR, Y=-0.22m)', Pose2D(x=0.550, y=-0.220, yaw=0.0)),
+    'I_EAST_DROP4': LineIntersection('I_EAST_DROP4', 'Giao lộ tiếp cận Vùng 4 (Chip, Y=-0.64m)', Pose2D(x=0.550, y=-0.640, yaw=0.0)),
+}
+
+
+# ==============================================================================
+# 6. HELPER QUERY & ROUTE GENERATION FUNCTIONS
 # ==============================================================================
 def find_pallet_by_type(item_type: str) -> Optional[Pallet]:
     item_type = item_type.lower().strip()
@@ -183,3 +217,64 @@ def get_default_dropoff_for_pallet(pallet: Pallet) -> DropOffZone:
         if zone.item_type == pallet.item_type:
             return zone
     return DROPOFF_ZONES['dropoff_1']
+
+
+def generate_approach_route(target_rack: str, staging_pose: Pose2D) -> list:
+    """
+    Generates simulated line-following waypoint route from Home Spawn to Rack Staging Pose.
+    """
+    route = []
+    # 1. Drive along line towards West Trunk
+    route.append(Pose2D(x=-1.550, y=0.640, yaw=math.pi))
+
+    # 2. If Rack 2, follow vertical line down to Rack 2 Y-coordinate
+    if target_rack == 'rack_2':
+        route.append(Pose2D(x=-1.550, y=-0.006, yaw=math.pi))
+
+    # 3. Final staging alignment in front of pallet slot
+    route.append(staging_pose)
+    return route
+
+
+def generate_delivery_route(rack_name: str, staging_pose: Pose2D, dropoff_zone: Optional[DropOffZone]) -> list:
+    """
+    Generates simulated line-following waypoint route from Rack Staging Pose to Drop-off Zone.
+    """
+    route = []
+    rack_y = 0.641 if rack_name == 'rack_1' else -0.006
+    target_y = dropoff_zone.approach_pose.y if dropoff_zone else 0.640
+
+    # 1. Move to rack main intersection facing forward
+    route.append(Pose2D(x=-1.550, y=rack_y, yaw=0.0))
+
+    # 2. Move along horizontal line to central junction
+    route.append(Pose2D(x=0.000, y=rack_y, yaw=0.0))
+
+    # 3. If target Y is different from rack Y, move along central column to target row
+    if abs(target_y - rack_y) > 0.05:
+        route.append(Pose2D(x=0.000, y=target_y, yaw=0.0))
+
+    # 4. Move to Drop-off approach pose on the East line
+    if dropoff_zone:
+        route.append(dropoff_zone.approach_pose)
+    else:
+        route.append(Pose2D(x=0.550, y=0.640, yaw=0.0))
+
+    return route
+
+
+def generate_return_home_route(current_dropoff_y: float) -> list:
+    """
+    Generates simulated line-following waypoint route from Drop-off area back to Home Base.
+    """
+    route = []
+    # 1. Move from dropoff backoff to Center column
+    route.append(Pose2D(x=0.000, y=current_dropoff_y, yaw=math.pi))
+
+    # 2. If not on Row 1 (Y=0.640m), travel along Center vertical line to Row 1
+    if abs(current_dropoff_y - 0.640) > 0.05:
+        route.append(Pose2D(x=0.000, y=0.640, yaw=math.pi))
+
+    # 3. Follow horizontal line back to Robot Spawn
+    route.append(Pose2D(x=ROBOT_SPAWN.x, y=ROBOT_SPAWN.y, yaw=ROBOT_SPAWN.yaw))
+    return route

@@ -23,17 +23,17 @@ graph TD
     S1 --> SetTransitLift["Action: Set Lift to Transit Height (1.5cm)"]
 
     %% 2. Approach
-    S2 --> NavStaging["Action: Navigate to Staging Pose (-1.60m)"]
+    S2 --> NavStaging["Action: Line Nav to Staging Pose (Qua các điểm giao West Trunk)"]
 
     %% 3. Pick
     S3 --> AlignFork["Action: Align Lift Height (Level 1: 2.95cm / Level 2: 14.95cm)"]
-    S3 --> InsertFork["Action: Creep Forward & Insert Fork (-1.69m)"]
+    S3 --> InsertFork["Action: Creep Forward & Insert Fork (-1.645m)"]
     S3 --> SettleLift["Action: Settle Delay (0.5s)"]
     S3 --> RaiseLift["Action: Raise Pallet (Level 1: 7.0cm / Level 2: 18.5cm)"]
     S3 --> RetractFork["Action: Retract from Shelf to Staging"]
 
     %% 4. Deliver
-    S4 --> NavDropoff["Action: Navigate to Drop-off Zone (X=0.55m)"]
+    S4 --> NavDropoff["Action: Line Nav to Drop-off Zone (Qua mạng lưới Center/East Trunks)"]
 
     %% 5. Place
     S5 --> LowerLift["Action: Lower Lift to Ground (0.0cm)"]
@@ -42,7 +42,7 @@ graph TD
 
     %% 6. Return
     S6 --> LiftSafe["Action: Set Lift Safe Height (1.5cm)"]
-    S6 --> NavHome["Action: Navigate to Spawn Base (-0.985m, 0.64m)"]
+    S6 --> NavHome["Action: Line Nav to Spawn Base (Qua trục giữa về Home Base)"]
 ```
 
 ---
