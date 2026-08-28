@@ -22,6 +22,10 @@ lift_heights:
   level2_carry: 0.1850
   dropoff: 0.0000
 
+lift_control:
+  tolerance: 0.003
+  timeout_sec: 10.0
+
 storage_racks:
   rack_1:
     description: "Kệ 1 (Hàng dưới, Y = 0.640m)"

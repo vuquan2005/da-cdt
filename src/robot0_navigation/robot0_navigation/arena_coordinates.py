@@ -12,8 +12,11 @@ Single Source of Truth for:
 """
 
 import math
+import os
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
+
+import yaml
 
 
 @dataclass(frozen=True)
@@ -60,107 +63,6 @@ class DropOffZone:
     approach_pose: Pose2D
 
 
-# ==============================================================================
-# 1. ROBOT SPAWN POSE & CONSTANTS
-# ==============================================================================
-ROBOT_SPAWN = Pose3D(x=-0.985, y=0.640, z=0.080, yaw=math.pi)
-
-# Kinematic offsets
-LIFT_ARM_LATERAL_OFFSET = 0.00827  # 8.27mm offset of lift_arm_joint in base_link (moves robot Y)
-FORK_REACH_DISTANCE = 0.2308       # 23.08cm distance from robot center to fork tips
-
-# Lift Height settings (meters)
-LIFT_HEIGHT_TRANSIT = 0.015        # Safe ground clearance while driving
-LIFT_HEIGHT_LEVEL1_INSERT = 0.0295 # Align fork with bottom shelf pallet opening
-LIFT_HEIGHT_LEVEL1_CARRY = 0.0700  # Elevated above bottom shelf
-LIFT_HEIGHT_LEVEL2_INSERT = 0.1495 # Align fork with middle/top shelf pallet opening
-LIFT_HEIGHT_LEVEL2_CARRY = 0.1850  # Elevated above middle/top shelf
-LIFT_HEIGHT_DROPOFF = 0.0000       # Lowered completely for pallet release
-
-
-# ==============================================================================
-# 2. STORAGE RACKS (2 Racks in Simplified Arena)
-# ==============================================================================
-STORAGE_RACKS: Dict[str, StorageRack] = {
-    'rack_1': StorageRack(
-        name='rack_1',
-        description='Kệ 1 (Hàng dưới, Y = 0.640m)',
-        pose=Pose3D(x=-1.894, y=0.640, z=0.0025, yaw=1.5707963),
-        approach_pose=Pose2D(x=-1.500, y=0.640, yaw=math.pi),
-    ),
-    'rack_2': StorageRack(
-        name='rack_2',
-        description='Kệ 2 (Hàng giữa, Y = 0.000m)',
-        pose=Pose3D(x=-1.894, y=0.000, z=0.0025, yaw=1.5707963),
-        approach_pose=Pose2D(x=-1.500, y=0.000, yaw=math.pi),
-    ),
-}
-
-
-# ==============================================================================
-# 3. PALLETS (4 Pallets across 2 Racks)
-# ==============================================================================
-PALLETS: Dict[str, Pallet] = {
-    # --- RACK 1: Aluminum (Bottom-Left), CPU (Top-Right) ---
-    'pallet_aluminum': Pallet(
-        name='pallet_aluminum',
-        rack='rack_1', shelf='bottom', slot='left', item_type='aluminum', block_id=0,
-        pose=Pose3D(x=-1.894, y=0.580, z=0.0285, yaw=1.5708)
-    ),
-    'pallet_cpu': Pallet(
-        name='pallet_cpu',
-        rack='rack_1', shelf='top', slot='right', item_type='cpu', block_id=1,
-        pose=Pose3D(x=-1.894, y=0.700, z=0.1485, yaw=1.5708)
-    ),
-
-    # --- RACK 2: QR Code (Bottom-Left), Chip (Top-Right) ---
-    'pallet_qr': Pallet(
-        name='pallet_qr',
-        rack='rack_2', shelf='bottom', slot='left', item_type='qr', block_id=2,
-        pose=Pose3D(x=-1.894, y=-0.060, z=0.0285, yaw=1.5708)
-    ),
-    'pallet_chip': Pallet(
-        name='pallet_chip',
-        rack='rack_2', shelf='top', slot='right', item_type='chip', block_id=3,
-        pose=Pose3D(x=-1.894, y=0.060, z=0.1485, yaw=1.5708)
-    ),
-}
-
-
-# ==============================================================================
-# 4. 4 DROP-OFF ZONES (East side, X = 0.70m)
-# ==============================================================================
-DROPOFF_ZONES: Dict[str, DropOffZone] = {
-    'dropoff_1': DropOffZone(
-        name='dropoff_1', index=1, item_type='aluminum',
-        description='Vùng 1: Trả Pallet Nhôm (Xanh lam, Y = 0.64m)',
-        center_pose=Pose3D(x=0.70, y=0.64, z=0.0, yaw=0.0),
-        approach_pose=Pose2D(x=0.55, y=0.64, yaw=0.0),
-    ),
-    'dropoff_2': DropOffZone(
-        name='dropoff_2', index=2, item_type='cpu',
-        description='Vùng 2: Trả Pallet CPU (Xanh lá, Y = 0.22m)',
-        center_pose=Pose3D(x=0.70, y=0.22, z=0.0, yaw=0.0),
-        approach_pose=Pose2D(x=0.55, y=0.22, yaw=0.0),
-    ),
-    'dropoff_3': DropOffZone(
-        name='dropoff_3', index=3, item_type='qr',
-        description='Vùng 3: Trả Pallet QR Code (Vàng, Y = -0.22m)',
-        center_pose=Pose3D(x=0.70, y=-0.22, z=0.0, yaw=0.0),
-        approach_pose=Pose2D(x=0.55, y=-0.22, yaw=0.0),
-    ),
-    'dropoff_4': DropOffZone(
-        name='dropoff_4', index=4, item_type='chip',
-        description='Vùng 4: Trả Pallet Chip (Đỏ, Y = -0.64m)',
-        center_pose=Pose3D(x=0.70, y=-0.64, z=0.0, yaw=0.0),
-        approach_pose=Pose2D(x=0.55, y=-0.64, yaw=0.0),
-    ),
-}
-
-
-# ==============================================================================
-# 5. LINE GRID INTERSECTIONS (Topological Graph for Simulated Line Following)
-# ==============================================================================
 @dataclass(frozen=True)
 class LineIntersection:
     name: str
@@ -168,31 +70,164 @@ class LineIntersection:
     pose: Pose2D
 
 
-LINE_INTERSECTIONS: Dict[str, LineIntersection] = {
-    # West approach points (X = -1.500m, in front of storage racks)
-    'I_WEST_RACK1': LineIntersection('I_WEST_RACK1', 'Vị trí tiếp cận trước Kệ 1', Pose2D(x=-1.500, y=0.640, yaw=math.pi)),
-    'I_WEST_RACK2': LineIntersection('I_WEST_RACK2', 'Vị trí tiếp cận trước Kệ 2', Pose2D(x=-1.500, y=0.000, yaw=math.pi)),
+# ==============================================================================
+# CONFIG LOADER: YAML SINGLE SOURCE OF TRUTH
+# ==============================================================================
+def find_arena_config_path() -> str:
+    """Finds the absolute path to arena_coordinates.yaml."""
+    env_path = os.environ.get('ARENA_COORDINATES_YAML')
+    if env_path and os.path.exists(env_path):
+        return env_path
 
-    # Start column (X = -0.985m)
-    'I_START': LineIntersection('I_START', 'Vị trí trạm xuất phát ban đầu', Pose2D(x=-0.985, y=0.640, yaw=math.pi)),
+    try:
+        from ament_index_python.packages import get_package_share_directory
+        share_path = os.path.join(get_package_share_directory('robot0_navigation'), 'config', 'arena_coordinates.yaml')
+        if os.path.exists(share_path):
+            return share_path
+    except Exception:
+        pass
 
-    # Switch column (X = -0.400m, lane transition)
-    'I_SWITCH_TOP': LineIntersection('I_SWITCH_TOP', 'Ngã 3 chuyển làn trên (Y=0.64m)', Pose2D(x=-0.400, y=0.640, yaw=0.0)),
-    'I_SWITCH_BOT': LineIntersection('I_SWITCH_BOT', 'Ngã 3 chuyển làn dưới (Y=0.00m)', Pose2D(x=-0.400, y=0.000, yaw=0.0)),
+    module_dir = os.path.dirname(os.path.abspath(__file__))
+    candidate_paths = [
+        os.path.abspath(os.path.join(module_dir, '..', '..', 'config', 'arena_coordinates.yaml')),
+        os.path.abspath(os.path.join(module_dir, '..', 'config', 'arena_coordinates.yaml')),
+        os.path.abspath(os.path.join(module_dir, 'config', 'arena_coordinates.yaml')),
+        '/workspaces/ros-cdt/src/robot0_navigation/config/arena_coordinates.yaml',
+    ]
 
-    # Center vertical trunk line (X = 0.000m, central distribution axis)
-    'I_CENTER_NORTH': LineIntersection('I_CENTER_NORTH', 'Giao lộ trục giữa - Bắc (Y=0.64m)', Pose2D(x=0.000, y=0.640, yaw=0.0)),
-    'I_CENTER_MID_N': LineIntersection('I_CENTER_MID_N', 'Giao lộ trục giữa - Dropoff 2 (Y=0.22m)', Pose2D(x=0.000, y=0.220, yaw=0.0)),
-    'I_CENTER_MID': LineIntersection('I_CENTER_MID', 'Giao lộ trục giữa - Ngang Kệ 2 (Y=0.00m)', Pose2D(x=0.000, y=0.000, yaw=0.0)),
-    'I_CENTER_MID_S': LineIntersection('I_CENTER_MID_S', 'Giao lộ trục giữa - Dropoff 3 (Y=-0.22m)', Pose2D(x=0.000, y=-0.220, yaw=0.0)),
-    'I_CENTER_SOUTH': LineIntersection('I_CENTER_SOUTH', 'Giao lộ trục giữa - Nam (Y=-0.64m)', Pose2D(x=0.000, y=-0.640, yaw=0.0)),
+    for path in candidate_paths:
+        if os.path.exists(path):
+            return path
 
-    # East vertical trunk line (X = 0.550m, in front of Dropoff Zones)
-    'I_EAST_DROP1': LineIntersection('I_EAST_DROP1', 'Giao lộ tiếp cận Vùng 1 (Nhôm, Y=0.64m)', Pose2D(x=0.550, y=0.640, yaw=0.0)),
-    'I_EAST_DROP2': LineIntersection('I_EAST_DROP2', 'Giao lộ tiếp cận Vùng 2 (CPU, Y=0.22m)', Pose2D(x=0.550, y=0.220, yaw=0.0)),
-    'I_EAST_DROP3': LineIntersection('I_EAST_DROP3', 'Giao lộ tiếp cận Vùng 3 (QR, Y=-0.22m)', Pose2D(x=0.550, y=-0.220, yaw=0.0)),
-    'I_EAST_DROP4': LineIntersection('I_EAST_DROP4', 'Giao lộ tiếp cận Vùng 4 (Chip, Y=-0.64m)', Pose2D(x=0.550, y=-0.640, yaw=0.0)),
-}
+    raise FileNotFoundError("Could not locate arena_coordinates.yaml configuration file.")
+
+
+def load_arena_config(config_path: Optional[str] = None) -> Dict[str, Any]:
+    """Loads and parses arena_coordinates.yaml into raw dictionary."""
+    if config_path is None:
+        config_path = find_arena_config_path()
+
+    with open(config_path, 'r', encoding='utf-8') as f:
+        data = yaml.safe_load(f)
+    return data or {}
+
+
+# Load data from YAML
+_RAW_CONFIG = load_arena_config()
+
+# 1. Robot Spawn Pose & Kinematics
+_spawn_raw = _RAW_CONFIG.get('robot_spawn', {})
+ROBOT_SPAWN = Pose3D(
+    x=float(_spawn_raw.get('x', -0.985)),
+    y=float(_spawn_raw.get('y', 0.640)),
+    z=float(_spawn_raw.get('z', 0.080)),
+    yaw=float(_spawn_raw.get('yaw', math.pi))
+)
+
+_kinematics_raw = _RAW_CONFIG.get('kinematics', {})
+LIFT_ARM_LATERAL_OFFSET = float(_kinematics_raw.get('lift_arm_lateral_offset', 0.0))
+FORK_REACH_DISTANCE = float(_kinematics_raw.get('fork_reach_distance', 0.2308))
+WHEEL_RADIUS = float(_kinematics_raw.get('wheel_radius', 0.0487))
+HALF_WHEELBASE_LX = float(_kinematics_raw.get('half_wheelbase_lx', 0.1000))
+HALF_TRACK_LY = float(_kinematics_raw.get('half_track_ly', 0.1539))
+
+# Lift Height Settings & Control limits
+_lift_raw = _RAW_CONFIG.get('lift_heights', {})
+LIFT_HEIGHT_TRANSIT = float(_lift_raw.get('transit', 0.0150))
+LIFT_HEIGHT_LEVEL1_INSERT = float(_lift_raw.get('level1_insert', 0.0295))
+LIFT_HEIGHT_LEVEL1_CARRY = float(_lift_raw.get('level1_carry', 0.0700))
+LIFT_HEIGHT_LEVEL2_INSERT = float(_lift_raw.get('level2_insert', 0.1495))
+LIFT_HEIGHT_LEVEL2_CARRY = float(_lift_raw.get('level2_carry', 0.1850))
+LIFT_HEIGHT_DROPOFF = float(_lift_raw.get('dropoff', 0.0000))
+
+_lift_ctrl_raw = _RAW_CONFIG.get('lift_control', {})
+LIFT_HEIGHT_TOLERANCE = float(_lift_ctrl_raw.get('tolerance', 0.003))
+LIFT_TIMEOUT_SEC = float(_lift_ctrl_raw.get('timeout_sec', 10.0))
+
+# 2. Storage Racks
+STORAGE_RACKS: Dict[str, StorageRack] = {}
+for _k, _v in _RAW_CONFIG.get('storage_racks', {}).items():
+    _pose_dict = _v.get('pose', {})
+    _app_dict = _v.get('approach_pose', {})
+    STORAGE_RACKS[_k] = StorageRack(
+        name=_k,
+        description=_v.get('description', ''),
+        pose=Pose3D(
+            x=float(_pose_dict.get('x', 0.0)),
+            y=float(_pose_dict.get('y', 0.0)),
+            z=float(_pose_dict.get('z', 0.0)),
+            yaw=float(_pose_dict.get('yaw', 0.0))
+        ),
+        approach_pose=Pose2D(
+            x=float(_app_dict.get('x', 0.0)),
+            y=float(_app_dict.get('y', 0.0)),
+            yaw=float(_app_dict.get('yaw', 0.0))
+        )
+    )
+
+# 3. Pallets
+PALLETS: Dict[str, Pallet] = {}
+for _k, _v in _RAW_CONFIG.get('pallets', {}).items():
+    _pose_dict = _v.get('pose', {})
+    PALLETS[_k] = Pallet(
+        name=_k,
+        rack=_v.get('rack', ''),
+        shelf=_v.get('shelf', 'bottom'),
+        slot=_v.get('slot', 'left'),
+        item_type=_v.get('item_type', ''),
+        block_id=int(_v.get('block_id', 0)),
+        pose=Pose3D(
+            x=float(_pose_dict.get('x', 0.0)),
+            y=float(_pose_dict.get('y', 0.0)),
+            z=float(_pose_dict.get('z', 0.0)),
+            yaw=float(_pose_dict.get('yaw', 0.0))
+        )
+    )
+
+# 4. Drop-off Zones
+DROPOFF_ZONES: Dict[str, DropOffZone] = {}
+for _k, _v in _RAW_CONFIG.get('dropoff_zones', {}).items():
+    _cp_dict = _v.get('center_pose', {})
+    _ap_dict = _v.get('approach_pose', {})
+    _idx = _v.get('index')
+    if _idx is None:
+        try:
+            _idx = int(_k.split('_')[-1])
+        except Exception:
+            _idx = 0
+    DROPOFF_ZONES[_k] = DropOffZone(
+        name=_k,
+        index=int(_idx),
+        item_type=_v.get('item_type', ''),
+        description=_v.get('description', ''),
+        center_pose=Pose3D(
+            x=float(_cp_dict.get('x', 0.0)),
+            y=float(_cp_dict.get('y', 0.0)),
+            z=float(_cp_dict.get('z', 0.0)),
+            yaw=float(_cp_dict.get('yaw', 0.0))
+        ),
+        approach_pose=Pose2D(
+            x=float(_ap_dict.get('x', 0.0)),
+            y=float(_ap_dict.get('y', 0.0)),
+            yaw=float(_ap_dict.get('yaw', 0.0))
+        )
+    )
+
+# 5. Line Grid Intersections
+LINE_INTERSECTIONS: Dict[str, LineIntersection] = {}
+for _k, _v in _RAW_CONFIG.get('line_intersections', {}).items():
+    _p = Pose2D(
+        x=float(_v.get('x', 0.0)),
+        y=float(_v.get('y', 0.0)),
+        yaw=float(_v.get('yaw', 0.0))
+    )
+    _inter = LineIntersection(
+        name=_k,
+        description=_v.get('desc', ''),
+        pose=_p
+    )
+    LINE_INTERSECTIONS[_k] = _inter
+    LINE_INTERSECTIONS[_k.upper()] = _inter  # Dual indexing for uppercase and lowercase access
 
 
 # ==============================================================================
@@ -220,6 +255,21 @@ def get_default_dropoff_for_pallet(pallet: Pallet) -> DropOffZone:
         if zone.item_type == pallet.item_type:
             return zone
     return DROPOFF_ZONES['dropoff_1']
+
+
+def calculate_pallet_pick_poses(pallet: Pallet) -> Tuple[Pose2D, Pose2D, Pose2D]:
+    """
+    Calculates the 3 key interaction poses for picking a pallet:
+    1. staging_pose: Alignment pose in front of rack slot (X = -1.500m)
+    2. insert_pose: Deep insertion pose under pallet (X = -1.645m)
+    3. retract_pose: Backed out pose holding pallet (X = -1.500m)
+    Compensates for lateral lift arm offset (LIFT_ARM_LATERAL_OFFSET).
+    """
+    aligned_y = pallet.pose.y + LIFT_ARM_LATERAL_OFFSET
+    staging_pose = Pose2D(x=-1.500, y=aligned_y, yaw=math.pi)
+    insert_pose = Pose2D(x=-1.645, y=aligned_y, yaw=math.pi)
+    retract_pose = Pose2D(x=-1.500, y=aligned_y, yaw=math.pi)
+    return staging_pose, insert_pose, retract_pose
 
 
 def generate_approach_route(target_rack: str, staging_pose: Pose2D) -> list:
