@@ -463,7 +463,121 @@ class VectorLineSensorNode(Node):
                     m.color.r, m.color.g, m.color.b, m.color.a = 0.4, 0.4, 0.4, 0.5  # Grey OFF Line
                 marker_array.markers.append(m)
 
-        # 5. Publish Topics
+        # 5. Deviation Error & Heading Arrows (RViz Visualization)
+        # Front Array Lateral Error Arrow (id=200)
+        arrow_f = Marker()
+        arrow_f.header.frame_id = self.base_frame
+        arrow_f.header.stamp = stamp_now
+        arrow_f.ns = 'line_error_arrows'
+        arrow_f.id = 200
+        if f_det:
+            arrow_f.type = Marker.ARROW
+            arrow_f.action = Marker.ADD
+            arrow_f.scale.x = 0.007  # shaft diameter
+            arrow_f.scale.y = 0.016  # head diameter
+            arrow_f.scale.z = 0.022  # head length
+            arrow_f.color.r, arrow_f.color.g, arrow_f.color.b, arrow_f.color.a = 1.0, 0.25, 0.0, 1.0  # Orange-Red
+            # Avoid RViz degenerate zero-length arrow warning
+            eff_f_y = float(f_err) if abs(f_err) >= 0.003 else (0.003 if f_err >= 0 else -0.003)
+            p_start_f = Point(x=float(self.offset_x_front), y=0.0, z=0.038)
+            p_end_f = Point(x=float(self.offset_x_front), y=eff_f_y, z=0.038)
+            arrow_f.points = [p_start_f, p_end_f]
+        else:
+            arrow_f.action = Marker.DELETE
+        marker_array.markers.append(arrow_f)
+
+        # Rear Array Lateral Error Arrow (id=201)
+        if self.enable_rear:
+            arrow_r = Marker()
+            arrow_r.header.frame_id = self.base_frame
+            arrow_r.header.stamp = stamp_now
+            arrow_r.ns = 'line_error_arrows'
+            arrow_r.id = 201
+            if r_det:
+                arrow_r.type = Marker.ARROW
+                arrow_r.action = Marker.ADD
+                arrow_r.scale.x = 0.007
+                arrow_r.scale.y = 0.016
+                arrow_r.scale.z = 0.022
+                arrow_r.color.r, arrow_r.color.g, arrow_r.color.b, arrow_r.color.a = 0.0, 0.85, 1.0, 1.0  # Cyan
+                eff_r_y = float(r_err) if abs(r_err) >= 0.003 else (0.003 if r_err >= 0 else -0.003)
+                p_start_r = Point(x=float(self.offset_x_rear), y=0.0, z=0.038)
+                p_end_r = Point(x=float(self.offset_x_rear), y=eff_r_y, z=0.038)
+                arrow_r.points = [p_start_r, p_end_r]
+            else:
+                arrow_r.action = Marker.DELETE
+            marker_array.markers.append(arrow_r)
+
+        # Center Lateral Error Arrow (id=202)
+        arrow_c = Marker()
+        arrow_c.header.frame_id = self.base_frame
+        arrow_c.header.stamp = stamp_now
+        arrow_c.ns = 'line_error_arrows'
+        arrow_c.id = 202
+        if line_detected_any:
+            arrow_c.type = Marker.ARROW
+            arrow_c.action = Marker.ADD
+            arrow_c.scale.x = 0.009
+            arrow_c.scale.y = 0.020
+            arrow_c.scale.z = 0.028
+            arrow_c.color.r, arrow_c.color.g, arrow_c.color.b, arrow_c.color.a = 1.0, 0.9, 0.0, 1.0  # Bright Yellow
+            eff_lat_y = float(lateral_error) if abs(lateral_error) >= 0.003 else (0.003 if lateral_error >= 0 else -0.003)
+            p_start_c = Point(x=0.0, y=0.0, z=0.045)
+            p_end_c = Point(x=0.0, y=eff_lat_y, z=0.045)
+            arrow_c.points = [p_start_c, p_end_c]
+        else:
+            arrow_c.action = Marker.DELETE
+        marker_array.markers.append(arrow_c)
+
+        # Track Heading Alignment Arrow (id=203) - Biểu diễn vector hướng vạch line
+        arrow_h = Marker()
+        arrow_h.header.frame_id = self.base_frame
+        arrow_h.header.stamp = stamp_now
+        arrow_h.ns = 'line_error_arrows'
+        arrow_h.id = 203
+        if f_det and r_det:
+            arrow_h.type = Marker.ARROW
+            arrow_h.action = Marker.ADD
+            arrow_h.scale.x = 0.006
+            arrow_h.scale.y = 0.014
+            arrow_h.scale.z = 0.022
+            arrow_h.color.r, arrow_h.color.g, arrow_h.color.b, arrow_h.color.a = 0.2, 1.0, 0.2, 0.9  # Lime Green
+            # Vector from rear detected line point to front detected line point extended
+            p_r_line = Point(x=float(self.offset_x_rear), y=float(r_err), z=0.035)
+            # Extend forward slightly
+            ext_x = float(self.offset_x_front) + 0.08
+            ext_y = float(f_err) + (float(f_err) - float(r_err)) / self.baseline_L * 0.08
+            p_f_line = Point(x=ext_x, y=ext_y, z=0.035)
+            arrow_h.points = [p_r_line, p_f_line]
+        else:
+            arrow_h.action = Marker.DELETE
+        marker_array.markers.append(arrow_h)
+
+        # 3D Floating HUD Text Status (id=300)
+        hud_text = Marker()
+        hud_text.header.frame_id = self.base_frame
+        hud_text.header.stamp = stamp_now
+        hud_text.ns = 'line_sensor_hud'
+        hud_text.id = 300
+        hud_text.type = Marker.TEXT_VIEW_FACING
+        hud_text.action = Marker.ADD
+        hud_text.pose.position.x = 0.0
+        hud_text.pose.position.y = 0.0
+        hud_text.pose.position.z = 0.22
+        hud_text.scale.z = 0.035  # Text height: 35mm
+        if line_detected_any:
+            hud_text.color.r, hud_text.color.g, hud_text.color.b, hud_text.color.a = 1.0, 1.0, 1.0, 1.0
+            hud_text.text = (
+                f"e_lat: {lateral_error*1000:+.1f}mm | "
+                f"e_yaw: {math.degrees(heading_error):+.1f}° | "
+                f"[{combined_junction}]"
+            )
+        else:
+            hud_text.color.r, hud_text.color.g, hud_text.color.b, hud_text.color.a = 1.0, 0.3, 0.3, 1.0
+            hud_text.text = "LINE: LOST"
+        marker_array.markers.append(hud_text)
+
+        # 6. Publish Topics
         self.pub_raw.publish(Int32MultiArray(data=f_dig))
         self.pub_analog.publish(Float32MultiArray(data=f_ana))
         self.pub_error.publish(Float32(data=float(lateral_error)))
