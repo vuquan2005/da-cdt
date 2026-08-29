@@ -8,12 +8,14 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
+    pkg_robot0_controller = get_package_share_directory('robot0_controller')
     pkg_robot0_teleop = get_package_share_directory('robot0_teleop')
     pkg_robot0_vision = get_package_share_directory('robot0_vision')
     pkg_robot0_sensors = get_package_share_directory('robot0_sensors')
 
     # Launch Configurations
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+    use_controller = LaunchConfiguration('controller', default='true')
     use_joy = LaunchConfiguration('joy', default='true')
     use_vision = LaunchConfiguration('vision', default='true')
     use_line_sensor = LaunchConfiguration('line_sensor', default='true')
@@ -25,6 +27,12 @@ def generate_launch_description():
         'use_sim_time',
         default_value='true',
         description='Use simulation (Gazebo) clock if true'
+    )
+
+    declare_use_controller_cmd = DeclareLaunchArgument(
+        'controller',
+        default_value='true',
+        description='Launch Kinematics Base Controller if true'
     )
 
     declare_use_joy_cmd = DeclareLaunchArgument(
@@ -57,7 +65,18 @@ def generate_launch_description():
         description='YOLO inference image size (640, 480, 320)'
     )
 
-    # 1. Cảm biến dò line (Vector Dual Array Line Sensor Simulator)
+    # 1. Base Controller / Kinematics (kinematics_node)
+    controller_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_robot0_controller, 'launch', 'controller.launch.py')
+        ),
+        launch_arguments={
+            'use_sim_time': use_sim_time
+        }.items(),
+        condition=IfCondition(use_controller)
+    )
+
+    # 2. Cảm biến dò line (Vector Dual Array Line Sensor Simulator)
     line_sensor_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_robot0_sensors, 'launch', 'line_sensor.launch.py')
@@ -68,7 +87,7 @@ def generate_launch_description():
         condition=IfCondition(use_line_sensor)
     )
 
-    # 2. Điều khiển Joystick (joy_node + teleop_node)
+    # 3. Điều khiển Joystick (joy_node + teleop_node)
     joystick_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_robot0_teleop, 'launch', 'joystick.launch.py')
@@ -79,7 +98,7 @@ def generate_launch_description():
         condition=IfCondition(use_joy)
     )
 
-    # 3. Thị giác máy tính YOLO (yolo_detector_node)
+    # 4. Thị giác máy tính YOLO (yolo_detector_node)
     vision_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_robot0_vision, 'launch', 'yolo_detector.launch.py')
@@ -93,11 +112,13 @@ def generate_launch_description():
 
     return LaunchDescription([
         declare_use_sim_time_cmd,
+        declare_use_controller_cmd,
         declare_use_joy_cmd,
         declare_use_vision_cmd,
         declare_use_line_sensor_cmd,
         declare_conf_cmd,
         declare_imgsz_cmd,
+        controller_launch,
         line_sensor_launch,
         joystick_launch,
         vision_launch

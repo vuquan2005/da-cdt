@@ -1,0 +1,7 @@
+robot0_kinematics:
+  ros__parameters:
+    wheel_radius: 0.0487      # Radius of Mecanum wheels (m)
+    wheelbase_lx: 0.1000      # Half of wheelbase (m)
+    track_ly: 0.1539          # Half of track width (m)
+    cmd_timeout_sec: 0.5      # Timeout to stop wheels when no cmd_vel arrives (s)
+    rate_hz: 50.0             # Kinematics evaluation rate (Hz)

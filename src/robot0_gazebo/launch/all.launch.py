@@ -16,6 +16,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     world = LaunchConfiguration('world', default=default_world_path)
     use_rviz = LaunchConfiguration('rviz', default='true')
+    use_controller = LaunchConfiguration('controller', default='true')
     use_joy = LaunchConfiguration('joy', default='true')
     use_vision = LaunchConfiguration('vision', default='true')
     use_line_sensor = LaunchConfiguration('line_sensor', default='true')
@@ -39,6 +40,12 @@ def generate_launch_description():
         'rviz',
         default_value='true',
         description='Launch RViz2 if true'
+    )
+
+    declare_use_controller_cmd = DeclareLaunchArgument(
+        'controller',
+        default_value='true',
+        description='Launch Kinematics Base Controller if true'
     )
 
     declare_use_joy_cmd = DeclareLaunchArgument(
@@ -90,6 +97,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'use_sim_time': use_sim_time,
+            'controller': use_controller,
             'joy': use_joy,
             'vision': use_vision,
             'line_sensor': use_line_sensor,
@@ -102,6 +110,7 @@ def generate_launch_description():
         declare_use_sim_time_cmd,
         declare_world_cmd,
         declare_use_rviz_cmd,
+        declare_use_controller_cmd,
         declare_use_joy_cmd,
         declare_use_vision_cmd,
         declare_use_line_sensor_cmd,

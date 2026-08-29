@@ -24,21 +24,9 @@ class Robot0Teleop(Node):
         self.declare_parameter('lift_min', 0.0)
         self.declare_parameter('lift_max', 0.20)
 
-        # Mecanum Robot Geometry
-        self.wheel_radius = 0.0487  # m
-        self.lx = 0.1000            # Half wheelbase (m)
-        self.ly = 0.1539            # Half track width (m)
-        self.k_geom = self.lx + self.ly
-
         # Publishers
         self.cmd_vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.lift_pub = self.create_publisher(Float64, '/lift_joint_cmd', 10)
-
-        # Wheel velocity publishers for synchronized rotation
-        self.wheel_fl_pub = self.create_publisher(Float64, '/wheel_fl_cmd_vel', 10)
-        self.wheel_fr_pub = self.create_publisher(Float64, '/wheel_fr_cmd_vel', 10)
-        self.wheel_rl_pub = self.create_publisher(Float64, '/wheel_rl_cmd_vel', 10)
-        self.wheel_rr_pub = self.create_publisher(Float64, '/wheel_rr_cmd_vel', 10)
 
         # Subscriber to /joy and /joint_states
         self.joy_sub = self.create_subscription(Joy, '/joy', self.joy_callback, 10)
@@ -61,7 +49,7 @@ class Robot0Teleop(Node):
         initial_msg.data = 0.0
         self.lift_pub.publish(initial_msg)
 
-        self.get_logger().info('Robot0 Teleop Node started with active auto-brake, continuous lift, analog LT/RT turbo & kinematic wheel rotation.')
+        self.get_logger().info('Robot0 Teleop Node started with active auto-brake, continuous lift & analog LT/RT turbo.')
 
     def joy_callback(self, msg: Joy):
         self.latest_joy = msg
@@ -71,13 +59,6 @@ class Robot0Teleop(Node):
             idx = msg.name.index('lift_arm_joint')
             if len(msg.position) > idx:
                 self.actual_lift_pos = float(msg.position[idx])
-
-    def publish_wheels(self, w_fl: float, w_fr: float, w_rl: float, w_rr: float):
-        msg = Float64()
-        msg.data = float(w_fl); self.wheel_fl_pub.publish(msg)
-        msg.data = float(w_fr); self.wheel_fr_pub.publish(msg)
-        msg.data = float(w_rl); self.wheel_rl_pub.publish(msg)
-        msg.data = float(w_rr); self.wheel_rr_pub.publish(msg)
 
     def control_loop(self):
         if self.latest_joy is None:
@@ -146,7 +127,7 @@ class Robot0Teleop(Node):
             ang_multiplier = max(ang_multiplier, turbo_mult)
 
         # -----------------------------------------------------------------
-        # 2. Base Movement Control (/cmd_vel) & Mecanum Kinematic Wheels
+        # 2. Base Movement Control (/cmd_vel)
         # -----------------------------------------------------------------
         twist = Twist()
         is_moving_now = False
@@ -168,21 +149,14 @@ class Robot0Teleop(Node):
 
         if is_moving_now:
             self.cmd_vel_pub.publish(twist)
-            # Calculate Mecanum wheel angular velocities
-            w_fl = (twist.linear.x - twist.linear.y - self.k_geom * twist.angular.z) / self.wheel_radius
-            w_fr = (twist.linear.x + twist.linear.y + self.k_geom * twist.angular.z) / self.wheel_radius
-            w_rl = (twist.linear.x + twist.linear.y - self.k_geom * twist.angular.z) / self.wheel_radius
-            w_rr = (twist.linear.x - twist.linear.y + self.k_geom * twist.angular.z) / self.wheel_radius
-            self.publish_wheels(w_fl, w_fr, w_rl, w_rr)
             self.was_moving = True
         else:
             if self.was_moving:
                 self.cmd_vel_pub.publish(twist)
-                self.publish_wheels(0.0, 0.0, 0.0, 0.0)
                 self.was_moving = False
 
         # -----------------------------------------------------------------
-        # 2. Lift Mechanism Control (/lift_joint_cmd)
+        # 3. Lift Mechanism Control (/lift_joint_cmd)
         # -----------------------------------------------------------------
         step = lift_speed * self.timer_period
 
@@ -223,7 +197,6 @@ def main(args=None):
         try:
             stop_twist = Twist()
             node.cmd_vel_pub.publish(stop_twist)
-            node.publish_wheels(0.0, 0.0, 0.0, 0.0)
         except Exception:
             pass
         node.destroy_node()
