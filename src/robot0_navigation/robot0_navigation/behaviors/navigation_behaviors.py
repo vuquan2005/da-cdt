@@ -152,10 +152,15 @@ class NavigateToPoseAction(ActionNode):
                 scale = self.max_v / v_mag
                 vx = raw_vx * scale
                 vy = raw_vy * scale
-            elif v_mag < self.min_v and dist_error > self.pos_tolerance:
-                scale = self.min_v / max(1e-6, v_mag)
-                vx = raw_vx * scale
-                vy = raw_vy * scale
+            elif dist_error > self.pos_tolerance:
+                creep_min = 0.015 if self.pos_tolerance < 0.01 else self.min_v
+                if v_mag < creep_min:
+                    scale = creep_min / max(1e-6, v_mag)
+                    vx = raw_vx * scale
+                    vy = raw_vy * scale
+                else:
+                    vx = raw_vx
+                    vy = raw_vy
             else:
                 vx = raw_vx
                 vy = raw_vy

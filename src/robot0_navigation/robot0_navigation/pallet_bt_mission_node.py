@@ -75,7 +75,7 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     # 3. Pick Pallet from Rack (Decoupled Orthogonal Pick)
     pick_seq = Sequence('3_Pick_Pallet')
     pick_seq.add_child(LogMessageAction('Log_Shift_Slot', 'Dạt ngang 60mm vào đúng tim khay pallet...'))
-    pick_seq.add_child(NavigateToPoseAction('Shift_To_Pallet_Slot', target_pose='staging_pose', pos_tolerance=0.008))
+    pick_seq.add_child(NavigateToPoseAction('Shift_To_Pallet_Slot', target_pose='staging_pose', pos_tolerance=0.004))
     pick_seq.add_child(LogMessageAction('Log_Align_Height', 'Căn chỉnh độ cao càng nâng...'))
     pick_seq.add_child(SetLiftHeightAction('Align_Fork_To_Slot', target_height='lift_insert_height', settle_time_sec=0.8))
     pick_seq.add_child(LogMessageAction('Log_Insert_Fork', 'Tiến thẳng 14.5cm xỏ càng vào pallet...'))
