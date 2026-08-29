@@ -11,6 +11,7 @@ def generate_launch_description():
 
     # Launch Configurations
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+    use_yolo = LaunchConfiguration('yolo', default='true')
     target_rack = LaunchConfiguration('rack', default='rack_1')
     shelf_level = LaunchConfiguration('shelf', default='1')
     target_slot = LaunchConfiguration('slot', default='left')
@@ -23,6 +24,12 @@ def generate_launch_description():
         'use_sim_time',
         default_value='true',
         description='Use simulation (Gazebo) clock if true'
+    )
+
+    declare_use_yolo_cmd = DeclareLaunchArgument(
+        'yolo',
+        default_value='true',
+        description='Enable YOLO Vision scanning to identify pallet slots and types (true/false)'
     )
 
     declare_target_rack_cmd = DeclareLaunchArgument(
@@ -68,6 +75,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'use_sim_time': use_sim_time,
+            'use_yolo': use_yolo,
             'target_rack': target_rack,
             'shelf_level': shelf_level,
             'target_slot': target_slot,
@@ -80,6 +88,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         declare_use_sim_time_cmd,
+        declare_use_yolo_cmd,
         declare_target_rack_cmd,
         declare_shelf_level_cmd,
         declare_target_slot_cmd,

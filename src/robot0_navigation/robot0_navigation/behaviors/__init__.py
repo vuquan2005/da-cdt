@@ -8,6 +8,7 @@ from .common_behaviors import (
 from .mission_behaviors import (
     InitializeMissionAction,
     SetLiftHeightAction,
+    ScanRackPalletsWithYoloAction,
 )
 from .navigation_behaviors import (
     NavigateToPoseAction,
@@ -22,6 +23,7 @@ __all__ = [
     'SetBlackboardValueAction',
     'InitializeMissionAction',
     'SetLiftHeightAction',
+    'ScanRackPalletsWithYoloAction',
     'NavigateToPoseAction',
     'NavigateThroughWaypointsAction',
     'LinearDriveAction',

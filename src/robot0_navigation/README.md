@@ -12,6 +12,7 @@ Hệ thống cây hành vi được thiết kế theo cấu trúc module độc 
 graph TD
     Root["Sequence: Pallet Mission Master Tree"] --> S1["1. Sequence: Initialization"]
     Root --> S2["2. Sequence: Approach Rack"]
+    Root --> S25["2.5. Sequence: Vision Scan (YOLO)"]
     Root --> S3["3. Sequence: Pick Pallet from Rack"]
     Root --> S4["4. Sequence: Deliver to Drop-off"]
     Root --> S5["5. Sequence: Place Pallet"]
@@ -23,9 +24,13 @@ graph TD
     S1 --> SetTransitLift["Action: Set Lift to Transit Height (1.5cm)"]
 
     %% 2. Approach
-    S2 --> NavStaging["Action: Line Nav to Staging Pose (Qua các điểm giao West Trunk)"]
+    S2 --> NavStaging["Action: Line Nav to Rack Approach Line (X=-1.500m)"]
+
+    %% 2.5 Vision Scan
+    S25 --> YoloScan["Action: Scan Rack Pallets with YOLOv8 (Identify Slot & Shelf)"]
 
     %% 3. Pick
+    S3 --> ShiftSlot["Action: Shift to Detected Pallet Slot (+/- 60mm)"]
     S3 --> AlignFork["Action: Align Lift Height (Level 1: 2.95cm / Level 2: 14.95cm)"]
     S3 --> InsertFork["Action: Creep Forward & Insert Fork (-1.645m)"]
     S3 --> SettleLift["Action: Settle Delay (0.5s)"]
@@ -33,7 +38,7 @@ graph TD
     S3 --> RetractFork["Action: Retract from Shelf to Staging"]
 
     %% 4. Deliver
-    S4 --> NavDropoff["Action: Line Nav to Drop-off Zone (Qua mạng lưới Center/East Trunks)"]
+    S4 --> NavDropoff["Action: Line Nav to Dynamic Drop-off Zone (Theo loại hàng đã nhận diện)"]
 
     %% 5. Place
     S5 --> LowerLift["Action: Lower Lift to Ground (0.0cm)"]

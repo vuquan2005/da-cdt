@@ -233,3 +233,219 @@ class SetLiftHeightAction(ActionNode):
         """Được gọi khi node kết thúc (SUCCESS hoặc FAILURE)."""
         pass
 
+
+CLASS_MAP = {
+    'al': 'aluminum',
+    'aluminum': 'aluminum',
+    'samsung': 'cpu',
+    'cpu': 'cpu',
+    'qr': 'qr',
+    'chip': 'chip',
+}
+
+DROPOFF_BY_ITEM = {
+    'aluminum': 'dropoff_1',
+    'cpu': 'dropoff_2',
+    'qr': 'dropoff_3',
+    'chip': 'dropoff_4',
+}
+
+
+class ScanRackPalletsWithYoloAction(ActionNode):
+    """
+    Action Node: Quét và phân loại pallet trên kệ bằng YOLO khi robot đỗ trước kệ (X = -1.500m).
+    Phân loại vị trí 4 ô khay:
+      - Tầng (Shelf): 'top' (nếu Cy < 240) hoặc 'bottom' (nếu Cy >= 240)
+      - Ngăn (Slot): 'left' (nếu Cx < 320) hoặc 'right' (nếu Cx >= 320)
+    Khớp với loại hàng mục tiêu và tự động cập nhật:
+      1. Tọa độ dạt khay (staging_pose, insert_pose, retract_pose)
+      2. Độ cao nâng hạ (lift_insert_height, lift_carry_height)
+      3. Vùng giao hàng chính xác (target_dropoff_zone, delivery_route, return_home_route)
+    """
+    def __init__(
+        self,
+        name: str,
+        scan_duration_sec: float = 1.2,
+        timeout_sec: float = 5.0,
+        img_w: int = 640,
+        img_h: int = 480,
+        blackboard: Optional[Blackboard] = None
+    ):
+        super().__init__(name, blackboard)
+        self.scan_duration_sec = scan_duration_sec
+        self.timeout_sec = timeout_sec
+        self.img_w = img_w
+        self.img_h = img_h
+        self.cx_threshold = img_w / 2.0
+        self.cy_threshold = img_h / 2.0
+
+        self.start_time: float = 0.0
+        self.first_detection_time: Optional[float] = None
+        self.accumulated_detections: list = []
+
+    def initialise(self) -> None:
+        self.start_time = time.time()
+        self.first_detection_time = None
+        self.accumulated_detections = []
+        ros_node = self.blackboard.get('ros_node')
+        if ros_node:
+            ros_node.get_logger().info(
+                f"[BT] ScanRackPalletsWithYoloAction '{self.name}': Bắt đầu quét pallet qua camera..."
+            )
+
+    def update(self) -> NodeStatus:
+        now = time.time()
+        ros_node = self.blackboard.get('ros_node')
+
+        # Nếu use_yolo tắt, bỏ qua scan và dùng cấu hình mặc định
+        use_yolo = self.blackboard.get('param_use_yolo', True)
+        if not use_yolo:
+            if ros_node:
+                ros_node.get_logger().info(f"[BT] {self.name}: param_use_yolo is False -> Using pre-set mission coordinates.")
+            return NodeStatus.SUCCESS
+
+        # Đọc dữ liệu YOLO mới nhất từ Blackboard
+        yolo_data = self.blackboard.get('latest_yolo_detections')
+        if yolo_data and isinstance(yolo_data, dict):
+            detections = yolo_data.get('detections', [])
+            if detections:
+                if self.first_detection_time is None:
+                    self.first_detection_time = now
+                self.accumulated_detections.extend(detections)
+
+        # Kiểm tra nếu đã thu thập đủ dữ liệu quét qua thời gian scan_duration_sec
+        if self.first_detection_time is not None and (now - self.first_detection_time >= self.scan_duration_sec):
+            return self._process_detections()
+
+        # Kiểm tra Timeout
+        if now - self.start_time >= self.timeout_sec:
+            if self.accumulated_detections:
+                return self._process_detections()
+            else:
+                if ros_node:
+                    ros_node.get_logger().warn(
+                        f"[BT] {self.name}: Timeout ({self.timeout_sec}s) without YOLO detection. Falling back to default coordinates."
+                    )
+                return NodeStatus.SUCCESS
+
+        return NodeStatus.RUNNING
+
+    def _process_detections(self) -> NodeStatus:
+        ros_node = self.blackboard.get('ros_node')
+
+        # Nhóm và bình chọn detection theo (shelf, slot)
+        slot_detections = {}
+
+        for det in self.accumulated_detections:
+            raw_cls = det.get('class_name', '').lower()
+            item_type = CLASS_MAP.get(raw_cls, raw_cls)
+            conf = float(det.get('confidence', 0.5))
+            center = det.get('center', [self.img_w / 2.0, self.img_h / 2.0])
+            cx, cy = center[0], center[1]
+
+            shelf = 'top' if cy < self.cy_threshold else 'bottom'
+            slot = 'left' if cx < self.cx_threshold else 'right'
+            key = (shelf, slot)
+
+            if key not in slot_detections:
+                slot_detections[key] = {}
+            slot_detections[key][item_type] = slot_detections[key].get(item_type, 0.0) + conf
+
+        # Xác định class có điểm cao nhất ở mỗi ô
+        classified_rack = {}
+        for key, class_scores in slot_detections.items():
+            best_class = max(class_scores.items(), key=lambda x: x[1])[0]
+            classified_rack[key] = best_class
+
+        if ros_node:
+            ros_node.get_logger().info(f"[BT] YOLO Scan Results on Rack: {classified_rack}")
+
+        # Lấy thông số nhiệm vụ hiện tại
+        current_pallet = self.blackboard.get('target_pallet')
+        target_pallet_type = self.blackboard.get('param_pallet_type', '')
+        target_rack = self.blackboard.get('param_target_rack', 'rack_1')
+        if current_pallet:
+            target_rack = current_pallet.rack
+            if not target_pallet_type:
+                target_pallet_type = current_pallet.item_type
+
+        # Tìm ô chứa pallet mục tiêu
+        chosen_key = None
+        chosen_type = target_pallet_type
+
+        # Ưu tiên tìm loại hàng được yêu cầu
+        if target_pallet_type:
+            target_norm = CLASS_MAP.get(target_pallet_type.lower(), target_pallet_type.lower())
+            for key, cls in classified_rack.items():
+                if cls == target_norm:
+                    chosen_key = key
+                    chosen_type = target_norm
+                    break
+
+        # Nếu không tìm thấy loại yêu cầu hoặc chế độ tự chọn, lấy ô có độ tin cậy cao đầu tiên
+        if chosen_key is None and classified_rack:
+            chosen_key = list(classified_rack.keys())[0]
+            chosen_type = classified_rack[chosen_key]
+
+        if chosen_key is not None:
+            shelf, slot = chosen_key
+            if ros_node:
+                ros_node.get_logger().info(
+                    f"[BT] >> YOLO Selected Target: Item='{chosen_type}' at Shelf='{shelf}', Slot='{slot}' on '{target_rack}'"
+                )
+
+            # Cập nhật tọa độ thế giới chính xác cho ô này
+            if target_rack == 'rack_1':
+                y_coord = 0.580 if slot == 'left' else 0.700
+            else:
+                y_coord = -0.060 if slot == 'left' else 0.060
+            z_coord = 0.0285 if shelf == 'bottom' else 0.1485
+
+            from ..arena_coordinates import Pallet, Pose3D
+            updated_pallet = Pallet(
+                name=f"pallet_{chosen_type}_{target_rack}_{shelf}_{slot}",
+                rack=target_rack,
+                shelf=shelf,
+                slot=slot,
+                item_type=chosen_type,
+                block_id=0,
+                pose=Pose3D(x=-1.894, y=y_coord, z=z_coord, yaw=1.5708)
+            )
+
+            # Tính lại các tư thế gắp và lộ trình
+            staging_pose, insert_pose, retract_pose = calculate_pallet_pick_poses(updated_pallet)
+
+            if shelf == 'bottom':
+                lift_insert_height = LIFT_HEIGHT_LEVEL1_INSERT
+                lift_carry_height = LIFT_HEIGHT_LEVEL1_CARRY
+            else:
+                lift_insert_height = LIFT_HEIGHT_LEVEL2_INSERT
+                lift_carry_height = LIFT_HEIGHT_LEVEL2_CARRY
+
+            dropoff_key = DROPOFF_BY_ITEM.get(chosen_type, 'dropoff_1')
+            dropoff_zone = DROPOFF_ZONES.get(dropoff_key, DROPOFF_ZONES['dropoff_1'])
+            delivery_route = generate_delivery_route(target_rack, dropoff_zone)
+            return_home_route = generate_return_home_route(dropoff_zone.approach_pose.y)
+
+            # Cập nhật Blackboard
+            self.blackboard.set('target_pallet', updated_pallet)
+            self.blackboard.set('target_dropoff_zone', dropoff_zone)
+            self.blackboard.set('staging_pose', staging_pose)
+            self.blackboard.set('insert_pose', insert_pose)
+            self.blackboard.set('retract_pose', retract_pose)
+            self.blackboard.set('lift_insert_height', lift_insert_height)
+            self.blackboard.set('lift_carry_height', lift_carry_height)
+            self.blackboard.set('delivery_route', delivery_route)
+            self.blackboard.set('return_home_route', return_home_route)
+
+            if ros_node:
+                ros_node.get_logger().info(
+                    f"[BT] >> Dynamic Blackboard Updated: Dropoff='{dropoff_zone.name}' (Y={dropoff_zone.center_pose.y:.2f}m), "
+                    f"Pick Staging Y={staging_pose.y:.3f}m, Lift Height={lift_insert_height:.4f}m"
+                )
+
+        return NodeStatus.SUCCESS
+
+    def terminate(self, new_status: NodeStatus) -> None:
+        pass
+

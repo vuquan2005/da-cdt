@@ -7,6 +7,7 @@ Coordinates autonomous pallet retrieval from warehouse racks to designated drop-
 using a modular Behavior Tree architecture.
 """
 
+import json
 import math
 import time
 from typing import Optional
@@ -16,7 +17,7 @@ from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, String
 
 from robot0_navigation.behavior_tree import (
     BehaviorTree,
@@ -34,6 +35,7 @@ from robot0_navigation.behaviors import (
     WaitForOdometryCondition,
     InitializeMissionAction,
     SetLiftHeightAction,
+    ScanRackPalletsWithYoloAction,
     NavigateToPoseAction,
     NavigateThroughWaypointsAction,
     LinearDriveAction,
@@ -51,8 +53,9 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     Builds the Pallet Pick-and-Place Behavior Tree Skeleton:
     1. Initialization: Prepare coordinates, wait for odom, transit height.
     2. Approach Rack: Navigate to staging pose before rack.
+    2.5 Vision Scan: Scan rack with YOLO, classify pallets & slots dynamically.
     3. Pick Pallet: Align height, insert fork, lift pallet, retract.
-    4. Deliver: Navigate to drop-off destination.
+    4. Deliver: Navigate to drop-off destination according to detected pallet type.
     5. Place Pallet: Lower pallet, back off.
     6. Return Home: Navigate back to home spawn base.
     """
@@ -72,9 +75,16 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     approach_seq.add_child(LogMessageAction('Log_Rack_Reached', 'Đã đến vị trí trước kệ trên trục chính!'))
     root.add_child(approach_seq)
 
+    # 2.5 Vision Scan (YOLO dynamic rack scanning & classification)
+    scan_seq = Sequence('2_5_Vision_Scan')
+    scan_seq.add_child(LogMessageAction('Log_Scan_Rack', 'Bắt đầu quét và nhận diện các pallet trên kệ bằng YOLO...'))
+    scan_seq.add_child(ScanRackPalletsWithYoloAction('Scan_Rack_With_Yolo', scan_duration_sec=1.5, timeout_sec=6.0))
+    scan_seq.add_child(LogMessageAction('Log_Scan_Done', 'Đã xác định chính xác vị trí và phân loại hàng!'))
+    root.add_child(scan_seq)
+
     # 3. Pick Pallet from Rack (Decoupled Orthogonal Pick)
     pick_seq = Sequence('3_Pick_Pallet')
-    pick_seq.add_child(LogMessageAction('Log_Shift_Slot', 'Dạt ngang 60mm vào đúng tim khay pallet...'))
+    pick_seq.add_child(LogMessageAction('Log_Shift_Slot', 'Dạt ngang vào đúng tim khay pallet...'))
     pick_seq.add_child(NavigateToPoseAction('Shift_To_Pallet_Slot', target_pose='staging_pose', pos_tolerance=0.004))
     pick_seq.add_child(LogMessageAction('Log_Align_Height', 'Căn chỉnh độ cao càng nâng...'))
     pick_seq.add_child(SetLiftHeightAction('Align_Fork_To_Slot', target_height='lift_insert_height', settle_time_sec=0.8))
@@ -85,7 +95,7 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     pick_seq.add_child(SetLiftHeightAction('Raise_Pallet_To_Carry', target_height='lift_carry_height', settle_time_sec=0.8))
     pick_seq.add_child(LogMessageAction('Log_Retract_Fork', 'Lùi thẳng 14.5cm mang pallet ra khỏi kệ...'))
     pick_seq.add_child(LinearDriveAction('Retract_From_Rack_Straight', distance_meters=-0.145, axis='x', speed=0.06, tolerance=0.006))
-    pick_seq.add_child(LogMessageAction('Log_Shift_Back', 'Dạt ngang 60mm trở lại tim đường chính...'))
+    pick_seq.add_child(LogMessageAction('Log_Shift_Back', 'Dạt ngang trở lại tim đường chính...'))
     pick_seq.add_child(NavigateToPoseAction('Shift_Back_To_Main_Line', target_pose='rack_approach_pose', pos_tolerance=0.015))
     pick_seq.add_child(LogMessageAction('Log_Pick_Success', 'Đã lấy pallet ra khỏi kệ thành công!'))
     root.add_child(pick_seq)
@@ -124,6 +134,7 @@ class PalletBTMissionNode(Node):
         super().__init__('pallet_bt_mission_node')
 
         # Parameters
+        self.declare_parameter('use_yolo', True)
         self.declare_parameter('target_rack', 'rack_1')
         self.declare_parameter('shelf_level', 1)
         self.declare_parameter('target_slot', 'left')
@@ -139,6 +150,7 @@ class PalletBTMissionNode(Node):
         # Standard ROS 2 Subscribers
         self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
         self.joint_sub = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
+        self.yolo_sub = self.create_subscription(String, '/yolo/detections_json', self.yolo_callback, 10)
 
         # State
         self.target_lift_pos = 0.015
@@ -147,6 +159,7 @@ class PalletBTMissionNode(Node):
         # Behavior Tree & Blackboard Setup
         self.blackboard = Blackboard()
         self.blackboard.set('ros_node', self)
+        self.blackboard.set('param_use_yolo', bool(self.get_parameter('use_yolo').value))
         self.blackboard.set('param_target_rack', self.get_parameter('target_rack').value)
         self.blackboard.set('param_shelf_level', self.get_parameter('shelf_level').value)
         self.blackboard.set('param_target_slot', self.get_parameter('target_slot').value)
@@ -162,7 +175,14 @@ class PalletBTMissionNode(Node):
         self.print_tree_interval = float(self.get_parameter('print_tree_interval_sec').value)
         self.last_print_time = time.time()
 
-        self.get_logger().info('Pallet Mission Behavior Tree Node Started.')
+        self.get_logger().info('Pallet Mission Behavior Tree Node Started (YOLO Integration Active).')
+
+    def yolo_callback(self, msg: String):
+        try:
+            data = json.loads(msg.data)
+            self.blackboard.set('latest_yolo_detections', data)
+        except Exception as e:
+            self.get_logger().warn(f"Failed to parse YOLO detections JSON: {e}")
 
     def odom_callback(self, msg: Odometry):
         pos = msg.pose.pose.position
