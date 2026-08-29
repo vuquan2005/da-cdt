@@ -88,8 +88,8 @@ class InitializeMissionAction(ActionNode):
         staging_pose, insert_pose, retract_pose = calculate_pallet_pick_poses(pallet)
 
         # 5. Sinh các lộ trình di chuyển
-        approach_route = generate_approach_route(pallet.rack, staging_pose)
-        delivery_route = generate_delivery_route(pallet.rack, retract_pose, dropoff_zone)
+        approach_route = generate_approach_route(pallet.rack)
+        delivery_route = generate_delivery_route(pallet.rack, dropoff_zone)
         return_home_route = generate_return_home_route(dropoff_zone.approach_pose.y)
 
         # 6. Xác định độ cao càng nâng theo tầng kệ của Pallet
@@ -103,8 +103,10 @@ class InitializeMissionAction(ActionNode):
         lift_dropoff_height = LIFT_HEIGHT_DROPOFF
 
         # 7. Nạp toàn bộ thông số lên Blackboard
+        rack_approach = STORAGE_RACKS[pallet.rack].approach_pose
         self.blackboard.set('target_pallet', pallet)
         self.blackboard.set('target_dropoff_zone', dropoff_zone)
+        self.blackboard.set('rack_approach_pose', rack_approach)
         self.blackboard.set('staging_pose', staging_pose)
         self.blackboard.set('insert_pose', insert_pose)
         self.blackboard.set('retract_pose', retract_pose)

@@ -67,23 +67,27 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
 
     # 2. Approach Rack
     approach_seq = Sequence('2_Approach_Rack')
-    approach_seq.add_child(LogMessageAction('Log_Nav_Staging', 'Tiếp cận vị trí chuẩn bị trước kệ...'))
-    approach_seq.add_child(NavigateThroughWaypointsAction('Line_Nav_To_Staging', waypoints_spec='approach_route'))
-    approach_seq.add_child(LogMessageAction('Log_Staging_Reached', 'Đã đến vị trí chuẩn bị trước kệ!'))
+    approach_seq.add_child(LogMessageAction('Log_Nav_Rack_Line', 'Tiếp cận vị trí trước kệ trên trục chính...'))
+    approach_seq.add_child(NavigateThroughWaypointsAction('Line_Nav_To_Rack', waypoints_spec='approach_route', pos_tolerance=0.015, transit_radius=0.06))
+    approach_seq.add_child(LogMessageAction('Log_Rack_Reached', 'Đã đến vị trí trước kệ trên trục chính!'))
     root.add_child(approach_seq)
 
-    # 3. Pick Pallet from Rack
+    # 3. Pick Pallet from Rack (Decoupled Orthogonal Pick)
     pick_seq = Sequence('3_Pick_Pallet')
+    pick_seq.add_child(LogMessageAction('Log_Shift_Slot', 'Dạt ngang 60mm vào đúng tim khay pallet...'))
+    pick_seq.add_child(NavigateToPoseAction('Shift_To_Pallet_Slot', target_pose='staging_pose', pos_tolerance=0.008))
     pick_seq.add_child(LogMessageAction('Log_Align_Height', 'Căn chỉnh độ cao càng nâng...'))
     pick_seq.add_child(SetLiftHeightAction('Align_Fork_To_Slot', target_height='lift_insert_height', settle_time_sec=0.8))
-    pick_seq.add_child(LogMessageAction('Log_Insert_Fork', 'Tiến càng vào pallet...'))
-    pick_seq.add_child(NavigateToPoseAction('Insert_Fork', target_pose='insert_pose', is_insert_mode=True))
+    pick_seq.add_child(LogMessageAction('Log_Insert_Fork', 'Tiến thẳng 14.5cm xỏ càng vào pallet...'))
+    pick_seq.add_child(LinearDriveAction('Insert_Fork_Straight', distance_meters=0.145, axis='x', speed=0.06, tolerance=0.006))
     pick_seq.add_child(WaitAction('Settle_Before_Lift', 0.5))
     pick_seq.add_child(LogMessageAction('Log_Raise_Lift', 'Nhấc pallet lên khỏi mặt kệ...'))
     pick_seq.add_child(SetLiftHeightAction('Raise_Pallet_To_Carry', target_height='lift_carry_height', settle_time_sec=0.8))
-    pick_seq.add_child(LogMessageAction('Log_Retract_Fork', 'Lùi xe rút càng mang pallet ra khỏi kệ...'))
-    pick_seq.add_child(NavigateToPoseAction('Retract_From_Rack', target_pose='retract_pose'))
-    pick_seq.add_child(LogMessageAction('Log_Pick_Success', 'Đã lấy pallet ra khỏi kệ!'))
+    pick_seq.add_child(LogMessageAction('Log_Retract_Fork', 'Lùi thẳng 14.5cm mang pallet ra khỏi kệ...'))
+    pick_seq.add_child(LinearDriveAction('Retract_From_Rack_Straight', distance_meters=-0.145, axis='x', speed=0.06, tolerance=0.006))
+    pick_seq.add_child(LogMessageAction('Log_Shift_Back', 'Dạt ngang 60mm trở lại tim đường chính...'))
+    pick_seq.add_child(NavigateToPoseAction('Shift_Back_To_Main_Line', target_pose='rack_approach_pose', pos_tolerance=0.015))
+    pick_seq.add_child(LogMessageAction('Log_Pick_Success', 'Đã lấy pallet ra khỏi kệ thành công!'))
     root.add_child(pick_seq)
 
     # 4. Deliver to Destination

@@ -272,9 +272,9 @@ def calculate_pallet_pick_poses(pallet: Pallet) -> Tuple[Pose2D, Pose2D, Pose2D]
     return staging_pose, insert_pose, retract_pose
 
 
-def generate_approach_route(target_rack: str, staging_pose: Pose2D) -> list:
+def generate_approach_route(target_rack: str) -> list:
     """
-    Generates strictly orthogonal waypoint route from Home Spawn to Rack Staging Pose.
+    Generates strictly orthogonal waypoint route from Home Spawn to Rack Main-Line Intersection.
     Maintains constant heading (Yaw = pi) without unwanted rotational drift.
     """
     route = []
@@ -289,15 +289,13 @@ def generate_approach_route(target_rack: str, staging_pose: Pose2D) -> list:
         # Start (X=-0.985, Y=0.640, Yaw=pi) -> Rack 1 West Line (X=-1.500, Y=0.640, Yaw=pi)
         route.append(Pose2D(x=-1.500, y=0.640, yaw=math.pi))
 
-    # Final lateral slot alignment (X=-1.500, Y=slot_y, Yaw=pi)
-    route.append(staging_pose)
     return route
 
 
-def generate_delivery_route(rack_name: str, staging_pose: Pose2D, dropoff_zone: Optional[DropOffZone]) -> list:
+def generate_delivery_route(rack_name: str, dropoff_zone: Optional[DropOffZone]) -> list:
     """
     Generates strictly orthogonal delivery route:
-    1. Backs out linearly to safe track (X=-1.350m, Yaw=pi)
+    1. Backs out linearly from Rack Line to safe clearance track (X=-1.350m, Yaw=pi)
     2. Cleanly rotates in-place to Yaw = 0.0 (facing East)
     3. Travels pure orthogonal lines along horizontal and vertical trunks to Drop-off Zone.
     """
