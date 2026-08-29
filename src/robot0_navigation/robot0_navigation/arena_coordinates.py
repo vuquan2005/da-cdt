@@ -386,3 +386,43 @@ def generate_return_home_route(current_dropoff_y: float) -> list:
     route.append(Pose2D(x=-0.400, y=0.640, yaw=math.pi))
     route.append(Pose2D(x=ROBOT_SPAWN.x, y=ROBOT_SPAWN.y, yaw=math.pi))
     return route
+
+
+def generate_rack_to_rack_route(from_rack: str, to_rack: str) -> list:
+    """
+    Generates orthogonal route between Rack 1 and Rack 2 via the West Switch lane.
+    """
+    route = []
+    if from_rack == 'rack_1' and to_rack == 'rack_2':
+        # Rack 1 (X=-1.500, Y=0.640) -> Switch Top (X=-0.400, Y=0.640)
+        route.append(Pose2D(x=-0.400, y=0.640, yaw=math.pi))
+        # -> Switch Bot (X=-0.400, Y=0.000)
+        route.append(Pose2D(x=-0.400, y=0.000, yaw=math.pi))
+        # -> Rack 2 (X=-1.500, Y=0.000)
+        route.append(Pose2D(x=-1.500, y=0.000, yaw=math.pi))
+    elif from_rack == 'rack_2' and to_rack == 'rack_1':
+        # Rack 2 (X=-1.500, Y=0.000) -> Switch Bot (X=-0.400, Y=0.000)
+        route.append(Pose2D(x=-0.400, y=0.000, yaw=math.pi))
+        # -> Switch Top (X=-0.400, Y=0.640)
+        route.append(Pose2D(x=-0.400, y=0.640, yaw=math.pi))
+        # -> Rack 1 (X=-1.500, Y=0.640)
+        route.append(Pose2D(x=-1.500, y=0.640, yaw=math.pi))
+    return route
+
+
+def generate_return_home_from_rack_route(rack_name: str) -> list:
+    """
+    Generates route from Rack 1 or Rack 2 back to Start Base when aborting/not found.
+    """
+    route = []
+    if rack_name == 'rack_2':
+        # Rack 2 (X=-1.500, Y=0.000) -> Switch Bot (X=-0.400, Y=0.000)
+        route.append(Pose2D(x=-0.400, y=0.000, yaw=math.pi))
+        # -> Switch Top (X=-0.400, Y=0.640)
+        route.append(Pose2D(x=-0.400, y=0.640, yaw=math.pi))
+        # -> Home (X=-0.985, Y=0.640)
+        route.append(Pose2D(x=ROBOT_SPAWN.x, y=ROBOT_SPAWN.y, yaw=math.pi))
+    else:
+        # Rack 1 (X=-1.500, Y=0.640) -> Home (X=-0.985, Y=0.640)
+        route.append(Pose2D(x=ROBOT_SPAWN.x, y=ROBOT_SPAWN.y, yaw=math.pi))
+    return route

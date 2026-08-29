@@ -48,82 +48,113 @@ def quat_to_yaw(qx: float, qy: float, qz: float, qw: float) -> float:
     return math.atan2(siny_cosp, cosy_cosp)
 
 
+def _build_pick_and_deliver_subsequence(prefix: str, rack_name: str) -> Sequence:
+    """
+    Subsequence: Gắp pallet từ kệ -> Vận chuyển đến Dropoff Zone -> Đặt pallet -> Trở về Home Base.
+    """
+    seq = Sequence(f'{prefix}_Pick_Deliver_Return')
+
+    # 1. Pick Pallet from Rack
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Shift', f'Dạt ngang vào đúng tim khay pallet tại {rack_name}...'))
+    seq.add_child(NavigateToPoseAction(f'{prefix}_Shift_To_Slot', target_pose='staging_pose', pos_tolerance=0.004))
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Align_Lift', 'Căn chỉnh độ cao càng nâng...'))
+    seq.add_child(SetLiftHeightAction(f'{prefix}_Align_Fork', target_height='lift_insert_height', settle_time_sec=0.8))
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Insert', 'Tiến thẳng 14.5cm xỏ càng vào pallet...'))
+    seq.add_child(LinearDriveAction(f'{prefix}_Insert_Fork', distance_meters=0.145, axis='x', speed=0.06, tolerance=0.006))
+    seq.add_child(WaitAction(f'{prefix}_Settle_Lift', 0.5))
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Raise', 'Nhấc pallet lên khỏi mặt kệ...'))
+    seq.add_child(SetLiftHeightAction(f'{prefix}_Raise_Pallet', target_height='lift_carry_height', settle_time_sec=0.8))
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Retract', 'Lùi thẳng 14.5cm mang pallet ra khỏi kệ...'))
+    seq.add_child(LinearDriveAction(f'{prefix}_Retract_Fork', distance_meters=-0.145, axis='x', speed=0.06, tolerance=0.006))
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Shift_Back', 'Dạt ngang trở lại tim đường chính...'))
+    seq.add_child(NavigateToPoseAction(f'{prefix}_Shift_Back_To_Main', target_pose='rack_approach_pose', pos_tolerance=0.015))
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Pick_Done', f'Đã lấy pallet ra khỏi {rack_name} thành công!'))
+
+    # 2. Deliver to Destination
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Deliver', 'Vận chuyển pallet tới đúng vị trí giao hàng theo loại hàng...'))
+    seq.add_child(NavigateThroughWaypointsAction(f'{prefix}_Nav_Dropoff', waypoints_spec='delivery_route'))
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Dropoff_Arrived', 'Đã đến khu vực giao hàng!'))
+
+    # 3. Place Pallet
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Lower', 'Hạ càng đặt pallet...'))
+    seq.add_child(SetLiftHeightAction(f'{prefix}_Lower_Pallet', target_height='lift_dropoff_height', settle_time_sec=0.8))
+    seq.add_child(WaitAction(f'{prefix}_Settle_Drop', 0.5))
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Backoff', 'Lùi xe ra khỏi pallet...'))
+    seq.add_child(LinearDriveAction(f'{prefix}_Backoff_Pallet', distance_meters=-0.25, speed=0.10))
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Placed', 'Pallet đã được đặt thành công!'))
+
+    # 4. Return Home
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Return_Home', 'Di chuyển về vị trí xuất phát...'))
+    seq.add_child(SetLiftHeightAction(f'{prefix}_Lift_Transit', target_height='lift_transit_height', settle_time_sec=1.0))
+    seq.add_child(NavigateThroughWaypointsAction(f'{prefix}_Nav_Home', waypoints_spec='return_home_route'))
+    seq.add_child(LogMessageAction(f'Log_{prefix}_Success', f'================ MISSION COMPLETED VIA {rack_name.upper()} ================'))
+
+    return seq
+
+
 def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     """
-    Builds the Pallet Pick-and-Place Behavior Tree Skeleton:
-    1. Initialization: Prepare coordinates, wait for odom, transit height.
-    2. Approach Rack: Navigate to staging pose before rack.
-    2.5 Vision Scan: Scan rack with YOLO, classify pallets & slots dynamically.
-    3. Pick Pallet: Align height, insert fork, lift pallet, retract.
-    4. Deliver: Navigate to drop-off destination according to detected pallet type.
-    5. Place Pallet: Lower pallet, back off.
-    6. Return Home: Navigate back to home spawn base.
+    Builds the Dynamic Multi-Rack Pallet Search & Retrieval Behavior Tree:
+    - Root: Selector
+      ├── Branch 1 (Sequence): Search & Retrieve Execution
+      │     ├── 1_Initialization (Init Blackboard, Wait for Odometry, Transit Lift)
+      │     └── 2_Search_Racks_Selector (Selector)
+      │           ├── 2A_Try_Rack_1 (Nav to Rack 1 -> YOLO Scan Rack 1 -> Pick & Deliver & Return Home)
+      │           └── 2B_Try_Rack_2 (Nav to Rack 2 -> YOLO Scan Rack 2 -> Pick & Deliver & Return Home)
+      └── Branch 2 (Sequence): Abort Return Home (When pallet not found on BOTH racks)
+            ├── Log Warning ("Không tìm thấy pallet ở cả 2 kệ...")
+            ├── Set Lift Safe Transit
+            └── Navigate Waypoints from Rack 2 back to Home Base
     """
-    root = Sequence('Pallet_Mission_Master_Tree', blackboard=blackboard)
+    root = Selector('Master_Pallet_Search_And_Retrieve_Mission', blackboard=blackboard)
 
-    # 1. Initialization
-    init_seq = Sequence('1_Initialization')
-    init_seq.add_child(InitializeMissionAction('Init_Mission_Coordinates'))
+    # =========================================================================
+    # Branch 1: Search & Retrieve Execution
+    # =========================================================================
+    search_exec_seq = Sequence('1_Search_And_Retrieve_Flow')
+
+    # Step 1: Initialization
+    init_seq = Sequence('1A_Initialization')
+    init_seq.add_child(InitializeMissionAction('Init_Mission_Parameters'))
     init_seq.add_child(WaitForOdometryCondition('Wait_For_Odometry'))
     init_seq.add_child(SetLiftHeightAction('Set_Transit_Height', target_height='lift_transit_height', settle_time_sec=1.0))
-    root.add_child(init_seq)
+    search_exec_seq.add_child(init_seq)
 
-    # 2. Approach Rack
-    approach_seq = Sequence('2_Approach_Rack')
-    approach_seq.add_child(LogMessageAction('Log_Nav_Rack_Line', 'Tiếp cận vị trí trước kệ trên trục chính...'))
-    approach_seq.add_child(NavigateThroughWaypointsAction('Line_Nav_To_Rack', waypoints_spec='approach_route', pos_tolerance=0.015, transit_radius=0.06))
-    approach_seq.add_child(LogMessageAction('Log_Rack_Reached', 'Đã đến vị trí trước kệ trên trục chính!'))
-    root.add_child(approach_seq)
+    # Step 2: Search Racks Selector (Try Rack 1 first, if not found then Try Rack 2)
+    search_racks_sel = Selector('1B_Search_Racks_Selector')
 
-    # 2.5 Vision Scan (YOLO dynamic rack scanning & classification)
-    scan_seq = Sequence('2_5_Vision_Scan')
-    scan_seq.add_child(LogMessageAction('Log_Scan_Rack', 'Bắt đầu quét và nhận diện các pallet trên kệ bằng YOLO...'))
-    scan_seq.add_child(ScanRackPalletsWithYoloAction('Scan_Rack_With_Yolo', scan_duration_sec=1.5, timeout_sec=6.0))
-    scan_seq.add_child(LogMessageAction('Log_Scan_Done', 'Đã xác định chính xác vị trí và phân loại hàng!'))
-    root.add_child(scan_seq)
+    # --- 2A: Try Rack 1 ---
+    try_rack1_seq = Sequence('Try_Rack_1_Flow')
+    try_rack1_seq.add_child(LogMessageAction('Log_Nav_Rack1', 'Tiếp cận Kệ 1 để tìm kiếm pallet...'))
+    try_rack1_seq.add_child(NavigateThroughWaypointsAction('Nav_To_Rack_1', waypoints_spec='approach_route_rack1', pos_tolerance=0.015, transit_radius=0.06))
+    try_rack1_seq.add_child(LogMessageAction('Log_Scan_Rack1', 'Đang quét và nhận diện các pallet tại Kệ 1 bằng YOLO...'))
+    try_rack1_seq.add_child(ScanRackPalletsWithYoloAction('Scan_Rack_1', current_rack='rack_1', scan_duration_sec=1.5, timeout_sec=4.0))
+    try_rack1_seq.add_child(LogMessageAction('Log_Found_Rack1', '✅ Đã tìm thấy Pallet tại Kệ 1! Bắt đầu gắp hàng...'))
+    try_rack1_seq.add_child(_build_pick_and_deliver_subsequence('R1', 'rack_1'))
+    search_racks_sel.add_child(try_rack1_seq)
 
-    # 3. Pick Pallet from Rack (Decoupled Orthogonal Pick)
-    pick_seq = Sequence('3_Pick_Pallet')
-    pick_seq.add_child(LogMessageAction('Log_Shift_Slot', 'Dạt ngang vào đúng tim khay pallet...'))
-    pick_seq.add_child(NavigateToPoseAction('Shift_To_Pallet_Slot', target_pose='staging_pose', pos_tolerance=0.004))
-    pick_seq.add_child(LogMessageAction('Log_Align_Height', 'Căn chỉnh độ cao càng nâng...'))
-    pick_seq.add_child(SetLiftHeightAction('Align_Fork_To_Slot', target_height='lift_insert_height', settle_time_sec=0.8))
-    pick_seq.add_child(LogMessageAction('Log_Insert_Fork', 'Tiến thẳng 14.5cm xỏ càng vào pallet...'))
-    pick_seq.add_child(LinearDriveAction('Insert_Fork_Straight', distance_meters=0.145, axis='x', speed=0.06, tolerance=0.006))
-    pick_seq.add_child(WaitAction('Settle_Before_Lift', 0.5))
-    pick_seq.add_child(LogMessageAction('Log_Raise_Lift', 'Nhấc pallet lên khỏi mặt kệ...'))
-    pick_seq.add_child(SetLiftHeightAction('Raise_Pallet_To_Carry', target_height='lift_carry_height', settle_time_sec=0.8))
-    pick_seq.add_child(LogMessageAction('Log_Retract_Fork', 'Lùi thẳng 14.5cm mang pallet ra khỏi kệ...'))
-    pick_seq.add_child(LinearDriveAction('Retract_From_Rack_Straight', distance_meters=-0.145, axis='x', speed=0.06, tolerance=0.006))
-    pick_seq.add_child(LogMessageAction('Log_Shift_Back', 'Dạt ngang trở lại tim đường chính...'))
-    pick_seq.add_child(NavigateToPoseAction('Shift_Back_To_Main_Line', target_pose='rack_approach_pose', pos_tolerance=0.015))
-    pick_seq.add_child(LogMessageAction('Log_Pick_Success', 'Đã lấy pallet ra khỏi kệ thành công!'))
-    root.add_child(pick_seq)
+    # --- 2B: Try Rack 2 ---
+    try_rack2_seq = Sequence('Try_Rack_2_Flow')
+    try_rack2_seq.add_child(LogMessageAction('Log_Nav_Rack2', 'Không thấy ở Kệ 1 -> Di chuyển sang Kệ 2 để tìm kiếm...'))
+    try_rack2_seq.add_child(NavigateThroughWaypointsAction('Nav_Rack1_To_Rack2', waypoints_spec='route_rack1_to_rack2', pos_tolerance=0.015, transit_radius=0.06))
+    try_rack2_seq.add_child(LogMessageAction('Log_Scan_Rack2', 'Đang quét và nhận diện các pallet tại Kệ 2 bằng YOLO...'))
+    try_rack2_seq.add_child(ScanRackPalletsWithYoloAction('Scan_Rack_2', current_rack='rack_2', scan_duration_sec=1.5, timeout_sec=4.0))
+    try_rack2_seq.add_child(LogMessageAction('Log_Found_Rack2', '✅ Đã tìm thấy Pallet tại Kệ 2! Bắt đầu gắp hàng...'))
+    try_rack2_seq.add_child(_build_pick_and_deliver_subsequence('R2', 'rack_2'))
+    search_racks_sel.add_child(try_rack2_seq)
 
-    # 4. Deliver to Destination
-    deliver_seq = Sequence('4_Deliver_To_Destination')
-    deliver_seq.add_child(LogMessageAction('Log_Nav_Delivery', 'Vận chuyển pallet tới vị trí giao hàng...'))
-    deliver_seq.add_child(NavigateThroughWaypointsAction('Line_Nav_To_Dropoff', waypoints_spec='delivery_route'))
-    deliver_seq.add_child(LogMessageAction('Log_Dropoff_Arrived', 'Đã đến khu vực giao hàng!'))
-    root.add_child(deliver_seq)
+    search_exec_seq.add_child(search_racks_sel)
+    root.add_child(search_exec_seq)
 
-    # 5. Place Pallet
-    place_seq = Sequence('5_Place_Pallet')
-    place_seq.add_child(LogMessageAction('Log_Lower_Pallet', 'Hạ càng đặt pallet...'))
-    place_seq.add_child(SetLiftHeightAction('Lower_Pallet_To_Ground', target_height='lift_dropoff_height', settle_time_sec=0.8))
-    place_seq.add_child(WaitAction('Settle_After_Drop', 0.5))
-    place_seq.add_child(LogMessageAction('Log_Backoff', 'Lùi xe ra khỏi pallet...'))
-    place_seq.add_child(LinearDriveAction('Backoff_From_Pallet', distance_meters=-0.25, speed=0.10))
-    place_seq.add_child(LogMessageAction('Log_Pallet_Placed', 'Pallet đã được đặt thành công!'))
-    root.add_child(place_seq)
-
-    # 6. Return Home
-    home_seq = Sequence('6_Return_Home')
-    home_seq.add_child(LogMessageAction('Log_Return_Home', 'Di chuyển về vị trí xuất phát...'))
-    home_seq.add_child(SetLiftHeightAction('Lift_Safe_Transit', target_height='lift_transit_height', settle_time_sec=1.0))
-    home_seq.add_child(NavigateThroughWaypointsAction('Line_Nav_To_Home', waypoints_spec='return_home_route'))
-    home_seq.add_child(LogMessageAction('Log_Mission_Success', '================ MISSION COMPLETED ================'))
-    root.add_child(home_seq)
+    # =========================================================================
+    # Branch 2: Fallback Abort (If pallet was NOT found at both Rack 1 and Rack 2)
+    # =========================================================================
+    abort_seq = Sequence('2_Abort_Return_Home_When_Not_Found')
+    abort_seq.add_child(LogMessageAction('Log_Not_Found_Both', '⚠️ KHÔNG TÌM THẤY PALLET Ở CẢ 2 KỆ! Rút lui an toàn về Home Base...'))
+    abort_seq.add_child(SetLiftHeightAction('Lift_Transit_Abort', target_height='lift_transit_height', settle_time_sec=0.5))
+    abort_seq.add_child(NavigateThroughWaypointsAction('Nav_Home_From_Rack2', waypoints_spec='route_rack2_to_home', pos_tolerance=0.015, transit_radius=0.06))
+    abort_seq.add_child(LogMessageAction('Log_Mission_Aborted', '================ PALLET NOT FOUND - RETURNED HOME SAFELY ================'))
+    root.add_child(abort_seq)
 
     return BehaviorTree(root, blackboard)
 

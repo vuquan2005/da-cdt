@@ -10,44 +10,34 @@ Hệ thống cây hành vi được thiết kế theo cấu trúc module độc 
 
 ```mermaid
 graph TD
-    Root["Sequence: Pallet Mission Master Tree"] --> S1["1. Sequence: Initialization"]
-    Root --> S2["2. Sequence: Approach Rack"]
-    Root --> S25["2.5. Sequence: Vision Scan (YOLO)"]
-    Root --> S3["3. Sequence: Pick Pallet from Rack"]
-    Root --> S4["4. Sequence: Deliver to Drop-off"]
-    Root --> S5["5. Sequence: Place Pallet"]
-    Root --> S6["6. Sequence: Return Home Base"]
+    Master["Selector: Master Search & Retrieve Mission"] --> Flow["1. Sequence: Search & Retrieve Flow"]
+    Master --> Abort["2. Sequence: Abort & Return Home (Nếu không thấy ở cả 2 kệ)"]
 
-    %% 1. Init
-    S1 --> InitCoord["Action: Init Mission Coordinates"]
-    S1 --> CheckOdom["Condition: Wait for Odometry"]
-    S1 --> SetTransitLift["Action: Set Lift to Transit Height (1.5cm)"]
+    %% Flow branches
+    Flow --> Init["1A. Sequence: Initialization (Odom + Transit Lift)"]
+    Flow --> SearchSel["1B. Selector: Search Racks Selector"]
 
-    %% 2. Approach
-    S2 --> NavStaging["Action: Line Nav to Rack Approach Line (X=-1.500m)"]
+    %% Try Rack 1
+    SearchSel --> TryR1["Sequence: Try Rack 1"]
+    TryR1 --> NavR1["Nav to Rack 1 (X=-1.500m)"]
+    TryR1 --> ScanR1{"YOLO Scan Rack 1<br/>(Tìm loại hàng mục tiêu)"}
+    ScanR1 -->|Found| PickR1["Pick Pallet (Shift slot + Lift + Insert + Retract)"]
+    PickR1 --> DeliverR1["Deliver to Dynamic Drop-off Zone (Theo loại hàng)"]
+    DeliverR1 --> PlaceR1["Place Pallet & Backoff"]
+    PlaceR1 --> ReturnR1["Return to Home Base"]
 
-    %% 2.5 Vision Scan
-    S25 --> YoloScan["Action: Scan Rack Pallets with YOLOv8 (Identify Slot & Shelf)"]
+    %% Try Rack 2 (Fallback if not found at Rack 1)
+    SearchSel --> TryR2["Sequence: Try Rack 2 (Nếu Rack 1 không có)"]
+    TryR2 --> NavR2["Nav from Rack 1 to Rack 2 (Qua nhánh rẽ X=-0.400m)"]
+    TryR2 --> ScanR2{"YOLO Scan Rack 2<br/>(Tìm loại hàng mục tiêu)"}
+    ScanR2 -->|Found| PickR2["Pick Pallet (Shift slot + Lift + Insert + Retract)"]
+    PickR2 --> DeliverR2["Deliver to Dynamic Drop-off Zone (Theo loại hàng)"]
+    DeliverR2 --> PlaceR2["Place Pallet & Backoff"]
+    PlaceR2 --> ReturnR2["Return to Home Base"]
 
-    %% 3. Pick
-    S3 --> ShiftSlot["Action: Shift to Detected Pallet Slot (+/- 60mm)"]
-    S3 --> AlignFork["Action: Align Lift Height (Level 1: 2.95cm / Level 2: 14.95cm)"]
-    S3 --> InsertFork["Action: Creep Forward & Insert Fork (-1.645m)"]
-    S3 --> SettleLift["Action: Settle Delay (0.5s)"]
-    S3 --> RaiseLift["Action: Raise Pallet (Level 1: 7.0cm / Level 2: 18.5cm)"]
-    S3 --> RetractFork["Action: Retract from Shelf to Staging"]
-
-    %% 4. Deliver
-    S4 --> NavDropoff["Action: Line Nav to Dynamic Drop-off Zone (Theo loại hàng đã nhận diện)"]
-
-    %% 5. Place
-    S5 --> LowerLift["Action: Lower Lift to Ground (0.0cm)"]
-    S5 --> SettleDrop["Action: Settle Delay (0.5s)"]
-    S5 --> Backoff["Action: Linear Drive Back (-0.25m)"]
-
-    %% 6. Return
-    S6 --> LiftSafe["Action: Set Lift Safe Height (1.5cm)"]
-    S6 --> NavHome["Action: Line Nav to Spawn Base (Qua trục giữa về Home Base)"]
+    %% Abort flow
+    Abort --> AbortLog["Log: Không tìm thấy pallet ở cả 2 kệ!"]
+    Abort --> AbortNav["Nav Home from Rack 2 (Trở về vạch xuất phát an toàn)"]
 ```
 
 ---

@@ -20,29 +20,26 @@ from ..arena_coordinates import (
     generate_approach_route,
     generate_delivery_route,
     generate_return_home_route,
+    generate_rack_to_rack_route,
+    generate_return_home_from_rack_route,
 )
 
 
 class InitializeMissionAction(ActionNode):
     """
-    Action Node: Khởi tạo thông số nhiệm vụ lên Blackboard.
-    Phân tích tham số, tra cứu Pallet, DropOffZone, tính toán các mốc độ cao
-    và tọa độ di chuyển cần thiết cho toàn bộ cây hành vi.
+    Action Node: Khởi tạo thông số nhiệm vụ tìm kiếm & gắp hàng lên Blackboard.
+    Thiết lập các lộ trình tiếp cận giữa các kệ và lộ trình rút lui về Home.
     """
     def __init__(
         self,
         name: str,
         target_rack: str = 'rack_1',
-        shelf_level: int = 1,
-        target_slot: str = 'left',
         pallet_type: str = '',
         dropoff_zone: str = '',
         blackboard: Optional[Blackboard] = None
     ):
         super().__init__(name, blackboard)
         self.target_rack = target_rack
-        self.shelf_level = shelf_level
-        self.target_slot = target_slot
         self.pallet_type = pallet_type
         self.dropoff_zone = dropoff_zone
 
@@ -52,87 +49,47 @@ class InitializeMissionAction(ActionNode):
 
     def update(self) -> NodeStatus:
         """
-        Thực thi mỗi chu kỳ tick: Phân tích tham số nhiệm vụ và thiết lập lên Blackboard.
+        Thực thi mỗi chu kỳ tick: Nạp các thông số tìm kiếm và đường đi lên Blackboard.
         """
         ros_node = self.blackboard.get('ros_node')
 
-        # 1. Đọc tham số từ Blackboard nếu có (ưu tiên tham số truyền vào launch), hoặc dùng default
+        # 1. Đọc tham số nhiệm vụ
         pallet_type_param = self.blackboard.get('param_pallet_type', self.pallet_type)
         target_rack_param = self.blackboard.get('param_target_rack', self.target_rack)
-        shelf_level_param = int(self.blackboard.get('param_shelf_level', self.shelf_level))
-        target_slot_param = self.blackboard.get('param_target_slot', self.target_slot)
         dropoff_zone_param = self.blackboard.get('param_dropoff_zone', self.dropoff_zone)
 
-        # 2. Xác định Pallet mục tiêu
-        pallet = None
-        if pallet_type_param:
-            pallet = find_pallet_by_type(pallet_type_param)
-        if pallet is None:
-            pallet = find_pallet_by_rack_and_slot(target_rack_param, shelf_level_param, target_slot_param)
-        if pallet is None:
-            pallet = PALLETS['pallet_aluminum']
-            if ros_node:
-                ros_node.get_logger().warn(
-                    f"[BT] Could not resolve pallet ({pallet_type_param} / {target_rack_param}-{shelf_level_param}-{target_slot_param}). "
-                    f"Defaulting to '{pallet.name}'."
-                )
+        # 2. Sinh các lộ trình di chuyển tìm kiếm giữa các kệ
+        approach_route_rack1 = generate_approach_route('rack_1')
+        approach_route_rack2 = generate_approach_route('rack_2')
+        route_rack1_to_rack2 = generate_rack_to_rack_route('rack_1', 'rack_2')
+        route_rack2_to_rack1 = generate_rack_to_rack_route('rack_2', 'rack_1')
+        route_rack1_to_home = generate_return_home_from_rack_route('rack_1')
+        route_rack2_to_home = generate_return_home_from_rack_route('rack_2')
 
-        # 3. Xác định Vùng giao hàng (Drop-off Zone)
-        dropoff_zone = None
-        if dropoff_zone_param and dropoff_zone_param in DROPOFF_ZONES:
-            dropoff_zone = DROPOFF_ZONES[dropoff_zone_param]
-        else:
-            dropoff_zone = get_default_dropoff_for_pallet(pallet)
+        # 3. Nạp thông số chung lên Blackboard
+        self.blackboard.set('lift_transit_height', LIFT_HEIGHT_TRANSIT)
+        self.blackboard.set('lift_dropoff_height', LIFT_HEIGHT_DROPOFF)
+        self.blackboard.set('approach_route_rack1', approach_route_rack1)
+        self.blackboard.set('approach_route_rack2', approach_route_rack2)
+        self.blackboard.set('route_rack1_to_rack2', route_rack1_to_rack2)
+        self.blackboard.set('route_rack2_to_rack1', route_rack2_to_rack1)
+        self.blackboard.set('route_rack1_to_home', route_rack1_to_home)
+        self.blackboard.set('route_rack2_to_home', route_rack2_to_home)
 
-        # 4. Tính toán bộ 3 tọa độ tiếp cận / xỏ càng / lùi rút
-        staging_pose, insert_pose, retract_pose = calculate_pallet_pick_poses(pallet)
-
-        # 5. Sinh các lộ trình di chuyển
-        approach_route = generate_approach_route(pallet.rack)
-        delivery_route = generate_delivery_route(pallet.rack, dropoff_zone)
-        return_home_route = generate_return_home_route(dropoff_zone.approach_pose.y)
-
-        # 6. Xác định độ cao càng nâng theo tầng kệ của Pallet
-        lift_transit_height = LIFT_HEIGHT_TRANSIT
-        if pallet.shelf == 'bottom':
-            lift_insert_height = LIFT_HEIGHT_LEVEL1_INSERT
-            lift_carry_height = LIFT_HEIGHT_LEVEL1_CARRY
-        else:
-            lift_insert_height = LIFT_HEIGHT_LEVEL2_INSERT
-            lift_carry_height = LIFT_HEIGHT_LEVEL2_CARRY
-        lift_dropoff_height = LIFT_HEIGHT_DROPOFF
-
-        # 7. Nạp toàn bộ thông số lên Blackboard
-        rack_approach = STORAGE_RACKS[pallet.rack].approach_pose
-        self.blackboard.set('target_pallet', pallet)
-        self.blackboard.set('target_dropoff_zone', dropoff_zone)
-        self.blackboard.set('rack_approach_pose', rack_approach)
-        self.blackboard.set('staging_pose', staging_pose)
-        self.blackboard.set('insert_pose', insert_pose)
-        self.blackboard.set('retract_pose', retract_pose)
-        self.blackboard.set('approach_route', approach_route)
-        self.blackboard.set('delivery_route', delivery_route)
-        self.blackboard.set('return_home_route', return_home_route)
-
-        self.blackboard.set('lift_transit_height', lift_transit_height)
-        self.blackboard.set('lift_insert_height', lift_insert_height)
-        self.blackboard.set('lift_carry_height', lift_carry_height)
-        self.blackboard.set('lift_dropoff_height', lift_dropoff_height)
+        self.blackboard.set('rack_1_approach_pose', STORAGE_RACKS['rack_1'].approach_pose)
+        self.blackboard.set('rack_2_approach_pose', STORAGE_RACKS['rack_2'].approach_pose)
+        self.blackboard.set('rack_approach_pose', STORAGE_RACKS['rack_1'].approach_pose)
 
         if ros_node:
             ros_node.get_logger().info(
-                f"[BT] Mission Initialized: Target '{pallet.name}' (Rack: {pallet.rack}, Shelf: {pallet.shelf}, Slot: {pallet.slot}) "
-                f"-> Destination '{dropoff_zone.name}'"
-            )
-            ros_node.get_logger().info(
-                f"[BT] Lift Heights: Transit={lift_transit_height:.4f}m, Insert={lift_insert_height:.4f}m, "
-                f"Carry={lift_carry_height:.4f}m, Dropoff={lift_dropoff_height:.4f}m"
+                f"[BT] Mission Initialized for Dynamic Search: Target Item='{pallet_type_param or 'ANY'}' | "
+                f"Starting Search at '{target_rack_param}'"
             )
 
         return NodeStatus.SUCCESS
 
     def terminate(self, new_status: NodeStatus) -> None:
-        """Được gọi khi node kết thúc (SUCCESS hoặc FAILURE)."""
+        """Được gọi khi node kết thúc."""
         pass
 
 
@@ -253,25 +210,26 @@ DROPOFF_BY_ITEM = {
 
 class ScanRackPalletsWithYoloAction(ActionNode):
     """
-    Action Node: Quét và phân loại pallet trên kệ bằng YOLO khi robot đỗ trước kệ (X = -1.500m).
-    Phân loại vị trí 4 ô khay:
-      - Tầng (Shelf): 'top' (nếu Cy < 240) hoặc 'bottom' (nếu Cy >= 240)
-      - Ngăn (Slot): 'left' (nếu Cx < 320) hoặc 'right' (nếu Cx >= 320)
-    Khớp với loại hàng mục tiêu và tự động cập nhật:
-      1. Tọa độ dạt khay (staging_pose, insert_pose, retract_pose)
-      2. Độ cao nâng hạ (lift_insert_height, lift_carry_height)
-      3. Vùng giao hàng chính xác (target_dropoff_zone, delivery_route, return_home_route)
+    Action Node: Quét và nhận diện pallet tại kệ (current_rack) bằng YOLOv8.
+    Nếu tìm thấy loại pallet mục tiêu (target_pallet_type):
+      - Cập nhật Blackboard (target_pallet, staging_pose, insert_pose, retract_pose,
+        lift_insert_height, lift_carry_height, target_dropoff_zone, delivery_route, return_home_route).
+      - Trả về NodeStatus.SUCCESS.
+    Nếu KHÔNG tìm thấy trên kệ này (hoặc timeout):
+      - Trả về NodeStatus.FAILURE để Behavior Tree Selector chuyển sang tìm kiếm tại kệ tiếp theo!
     """
     def __init__(
         self,
         name: str,
+        current_rack: str = 'rack_1',
         scan_duration_sec: float = 1.2,
-        timeout_sec: float = 5.0,
+        timeout_sec: float = 4.0,
         img_w: int = 640,
         img_h: int = 480,
         blackboard: Optional[Blackboard] = None
     ):
         super().__init__(name, blackboard)
+        self.current_rack = current_rack
         self.scan_duration_sec = scan_duration_sec
         self.timeout_sec = timeout_sec
         self.img_w = img_w
@@ -287,22 +245,19 @@ class ScanRackPalletsWithYoloAction(ActionNode):
         self.start_time = time.time()
         self.first_detection_time = None
         self.accumulated_detections = []
+        # Clear any stale detection from previous rack
+        self.blackboard.set('latest_yolo_detections', None)
         ros_node = self.blackboard.get('ros_node')
         if ros_node:
+            target_type = self.blackboard.get('param_pallet_type', '')
             ros_node.get_logger().info(
-                f"[BT] ScanRackPalletsWithYoloAction '{self.name}': Bắt đầu quét pallet qua camera..."
+                f"[BT] ScanRackPalletsWithYoloAction '{self.name}': Bắt đầu quét pallet tại '{self.current_rack}' "
+                f"cho mục tiêu '{target_type or 'ANY'}'..."
             )
 
     def update(self) -> NodeStatus:
         now = time.time()
         ros_node = self.blackboard.get('ros_node')
-
-        # Nếu use_yolo tắt, bỏ qua scan và dùng cấu hình mặc định
-        use_yolo = self.blackboard.get('param_use_yolo', True)
-        if not use_yolo:
-            if ros_node:
-                ros_node.get_logger().info(f"[BT] {self.name}: param_use_yolo is False -> Using pre-set mission coordinates.")
-            return NodeStatus.SUCCESS
 
         # Đọc dữ liệu YOLO mới nhất từ Blackboard
         yolo_data = self.blackboard.get('latest_yolo_detections')
@@ -324,9 +279,9 @@ class ScanRackPalletsWithYoloAction(ActionNode):
             else:
                 if ros_node:
                     ros_node.get_logger().warn(
-                        f"[BT] {self.name}: Timeout ({self.timeout_sec}s) without YOLO detection. Falling back to default coordinates."
+                        f"[BT] {self.name}: Timeout ({self.timeout_sec}s) without YOLO detection on '{self.current_rack}'."
                     )
-                return NodeStatus.SUCCESS
+                return NodeStatus.FAILURE
 
         return NodeStatus.RUNNING
 
@@ -358,22 +313,15 @@ class ScanRackPalletsWithYoloAction(ActionNode):
             classified_rack[key] = best_class
 
         if ros_node:
-            ros_node.get_logger().info(f"[BT] YOLO Scan Results on Rack: {classified_rack}")
+            ros_node.get_logger().info(f"[BT] YOLO Scan Results on '{self.current_rack}': {classified_rack}")
 
-        # Lấy thông số nhiệm vụ hiện tại
-        current_pallet = self.blackboard.get('target_pallet')
+        # Lấy loại hàng mục tiêu
         target_pallet_type = self.blackboard.get('param_pallet_type', '')
-        target_rack = self.blackboard.get('param_target_rack', 'rack_1')
-        if current_pallet:
-            target_rack = current_pallet.rack
-            if not target_pallet_type:
-                target_pallet_type = current_pallet.item_type
 
-        # Tìm ô chứa pallet mục tiêu
         chosen_key = None
         chosen_type = target_pallet_type
 
-        # Ưu tiên tìm loại hàng được yêu cầu
+        # 1. Nếu có chỉ định loại hàng mục tiêu:
         if target_pallet_type:
             target_norm = CLASS_MAP.get(target_pallet_type.lower(), target_pallet_type.lower())
             for key, cls in classified_rack.items():
@@ -382,67 +330,82 @@ class ScanRackPalletsWithYoloAction(ActionNode):
                     chosen_type = target_norm
                     break
 
-        # Nếu không tìm thấy loại yêu cầu hoặc chế độ tự chọn, lấy ô có độ tin cậy cao đầu tiên
-        if chosen_key is None and classified_rack:
-            chosen_key = list(classified_rack.keys())[0]
-            chosen_type = classified_rack[chosen_key]
+            if chosen_key is None:
+                if ros_node:
+                    ros_node.get_logger().warn(
+                        f"[BT] ❌ Target '{target_norm}' NOT found on '{self.current_rack}'. "
+                        f"Detected: {list(classified_rack.values())}."
+                    )
+                return NodeStatus.FAILURE
 
-        if chosen_key is not None:
-            shelf, slot = chosen_key
-            if ros_node:
-                ros_node.get_logger().info(
-                    f"[BT] >> YOLO Selected Target: Item='{chosen_type}' at Shelf='{shelf}', Slot='{slot}' on '{target_rack}'"
-                )
-
-            # Cập nhật tọa độ thế giới chính xác cho ô này
-            if target_rack == 'rack_1':
-                y_coord = 0.580 if slot == 'left' else 0.700
+        # 2. Nếu chế độ tự động (ANY): lấy ô đầu tiên phát hiện được
+        else:
+            if classified_rack:
+                chosen_key = list(classified_rack.keys())[0]
+                chosen_type = classified_rack[chosen_key]
             else:
-                y_coord = -0.060 if slot == 'left' else 0.060
-            z_coord = 0.0285 if shelf == 'bottom' else 0.1485
+                if ros_node:
+                    ros_node.get_logger().warn(f"[BT] ❌ No pallets detected on '{self.current_rack}'.")
+                return NodeStatus.FAILURE
 
-            from ..arena_coordinates import Pallet, Pose3D
-            updated_pallet = Pallet(
-                name=f"pallet_{chosen_type}_{target_rack}_{shelf}_{slot}",
-                rack=target_rack,
-                shelf=shelf,
-                slot=slot,
-                item_type=chosen_type,
-                block_id=0,
-                pose=Pose3D(x=-1.894, y=y_coord, z=z_coord, yaw=1.5708)
+        # 3. Khi đã tìm thấy mục tiêu trên kệ này -> Cấu hình động toàn bộ thông số
+        shelf, slot = chosen_key
+        target_rack = self.current_rack
+        if ros_node:
+            ros_node.get_logger().info(
+                f"[BT] ✅ FOUND Target '{chosen_type}' on '{target_rack}' at Shelf='{shelf}', Slot='{slot}'!"
             )
 
-            # Tính lại các tư thế gắp và lộ trình
-            staging_pose, insert_pose, retract_pose = calculate_pallet_pick_poses(updated_pallet)
+        # Tọa độ thế giới chính xác cho ô này
+        if target_rack == 'rack_1':
+            y_coord = 0.580 if slot == 'left' else 0.700
+        else:
+            y_coord = -0.060 if slot == 'left' else 0.060
+        z_coord = 0.0285 if shelf == 'bottom' else 0.1485
 
-            if shelf == 'bottom':
-                lift_insert_height = LIFT_HEIGHT_LEVEL1_INSERT
-                lift_carry_height = LIFT_HEIGHT_LEVEL1_CARRY
-            else:
-                lift_insert_height = LIFT_HEIGHT_LEVEL2_INSERT
-                lift_carry_height = LIFT_HEIGHT_LEVEL2_CARRY
+        from ..arena_coordinates import Pallet, Pose3D
+        updated_pallet = Pallet(
+            name=f"pallet_{chosen_type}_{target_rack}_{shelf}_{slot}",
+            rack=target_rack,
+            shelf=shelf,
+            slot=slot,
+            item_type=chosen_type,
+            block_id=0,
+            pose=Pose3D(x=-1.894, y=y_coord, z=z_coord, yaw=1.5708)
+        )
 
-            dropoff_key = DROPOFF_BY_ITEM.get(chosen_type, 'dropoff_1')
-            dropoff_zone = DROPOFF_ZONES.get(dropoff_key, DROPOFF_ZONES['dropoff_1'])
-            delivery_route = generate_delivery_route(target_rack, dropoff_zone)
-            return_home_route = generate_return_home_route(dropoff_zone.approach_pose.y)
+        staging_pose, insert_pose, retract_pose = calculate_pallet_pick_poses(updated_pallet)
 
-            # Cập nhật Blackboard
-            self.blackboard.set('target_pallet', updated_pallet)
-            self.blackboard.set('target_dropoff_zone', dropoff_zone)
-            self.blackboard.set('staging_pose', staging_pose)
-            self.blackboard.set('insert_pose', insert_pose)
-            self.blackboard.set('retract_pose', retract_pose)
-            self.blackboard.set('lift_insert_height', lift_insert_height)
-            self.blackboard.set('lift_carry_height', lift_carry_height)
-            self.blackboard.set('delivery_route', delivery_route)
-            self.blackboard.set('return_home_route', return_home_route)
+        if shelf == 'bottom':
+            lift_insert_height = LIFT_HEIGHT_LEVEL1_INSERT
+            lift_carry_height = LIFT_HEIGHT_LEVEL1_CARRY
+        else:
+            lift_insert_height = LIFT_HEIGHT_LEVEL2_INSERT
+            lift_carry_height = LIFT_HEIGHT_LEVEL2_CARRY
 
-            if ros_node:
-                ros_node.get_logger().info(
-                    f"[BT] >> Dynamic Blackboard Updated: Dropoff='{dropoff_zone.name}' (Y={dropoff_zone.center_pose.y:.2f}m), "
-                    f"Pick Staging Y={staging_pose.y:.3f}m, Lift Height={lift_insert_height:.4f}m"
-                )
+        dropoff_key = DROPOFF_BY_ITEM.get(chosen_type, 'dropoff_1')
+        dropoff_zone = DROPOFF_ZONES.get(dropoff_key, DROPOFF_ZONES['dropoff_1'])
+        delivery_route = generate_delivery_route(target_rack, dropoff_zone)
+        return_home_route = generate_return_home_route(dropoff_zone.approach_pose.y)
+        rack_approach = STORAGE_RACKS[target_rack].approach_pose
+
+        # Cập nhật Blackboard
+        self.blackboard.set('target_pallet', updated_pallet)
+        self.blackboard.set('target_dropoff_zone', dropoff_zone)
+        self.blackboard.set('rack_approach_pose', rack_approach)
+        self.blackboard.set('staging_pose', staging_pose)
+        self.blackboard.set('insert_pose', insert_pose)
+        self.blackboard.set('retract_pose', retract_pose)
+        self.blackboard.set('lift_insert_height', lift_insert_height)
+        self.blackboard.set('lift_carry_height', lift_carry_height)
+        self.blackboard.set('delivery_route', delivery_route)
+        self.blackboard.set('return_home_route', return_home_route)
+
+        if ros_node:
+            ros_node.get_logger().info(
+                f"[BT] >> Dynamic Target Configured: Dropoff='{dropoff_zone.name}' (Y={dropoff_zone.center_pose.y:.2f}m), "
+                f"Pick Staging Y={staging_pose.y:.3f}m, Lift Height={lift_insert_height:.4f}m"
+            )
 
         return NodeStatus.SUCCESS
 
