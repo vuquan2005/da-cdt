@@ -16,7 +16,7 @@
     # --- Detection & Tracking Settings ---
     confidence_threshold: 0.5             # Ngưỡng tin cậy (0.0 -> 1.0)
     iou_threshold: 0.45                   # Ngưỡng NMS IoU
-    target_class: ""                      # Để trống để nhận diện tất cả, hoặc chỉ định tên class (ví dụ: "chip", "qr", "al", "samsung")
+    target_class: ""                      # Để trống để nhận diện tất cả, hoặc chỉ định tên class (ví dụ: "chip", "qr", "aluminum", "cpu")
     enable_tracking: false                # true để bật ByteTrack object tracking
 
     # --- Performance & Queue Settings ---

@@ -191,15 +191,6 @@ class SetLiftHeightAction(ActionNode):
         pass
 
 
-CLASS_MAP = {
-    'al': 'aluminum',
-    'aluminum': 'aluminum',
-    'samsung': 'cpu',
-    'cpu': 'cpu',
-    'qr': 'qr',
-    'chip': 'chip',
-}
-
 DROPOFF_BY_ITEM = {
     'aluminum': 'dropoff_1',
     'cpu': 'dropoff_2',
@@ -292,8 +283,7 @@ class ScanRackPalletsWithYoloAction(ActionNode):
         slot_detections = {}
 
         for det in self.accumulated_detections:
-            raw_cls = det.get('class_name', '').lower()
-            item_type = CLASS_MAP.get(raw_cls, raw_cls)
+            item_type = det.get('class_name', '').lower().strip()
             conf = float(det.get('confidence', 0.5))
             center = det.get('center', [self.img_w / 2.0, self.img_h / 2.0])
             cx, cy = center[0], center[1]
@@ -323,7 +313,7 @@ class ScanRackPalletsWithYoloAction(ActionNode):
 
         # 1. Nếu có chỉ định loại hàng mục tiêu:
         if target_pallet_type:
-            target_norm = CLASS_MAP.get(target_pallet_type.lower(), target_pallet_type.lower())
+            target_norm = target_pallet_type.lower().strip()
             for key, cls in classified_rack.items():
                 if cls == target_norm:
                     chosen_key = key
