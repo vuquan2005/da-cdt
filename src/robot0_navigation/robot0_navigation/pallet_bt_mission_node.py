@@ -75,12 +75,12 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     # 3. Pick Pallet from Rack
     pick_seq = Sequence('3_Pick_Pallet')
     pick_seq.add_child(LogMessageAction('Log_Align_Height', 'Căn chỉnh độ cao càng nâng...'))
-    pick_seq.add_child(SetLiftHeightAction('Align_Fork_To_Slot', target_height='lift_insert_height', settle_time_sec=2.5))
+    pick_seq.add_child(SetLiftHeightAction('Align_Fork_To_Slot', target_height='lift_insert_height', settle_time_sec=0.8))
     pick_seq.add_child(LogMessageAction('Log_Insert_Fork', 'Tiến càng vào pallet...'))
     pick_seq.add_child(NavigateToPoseAction('Insert_Fork', target_pose='insert_pose', is_insert_mode=True))
     pick_seq.add_child(WaitAction('Settle_Before_Lift', 0.5))
     pick_seq.add_child(LogMessageAction('Log_Raise_Lift', 'Nhấc pallet lên khỏi mặt kệ...'))
-    pick_seq.add_child(SetLiftHeightAction('Raise_Pallet_To_Carry', target_height='lift_carry_height', settle_time_sec=2.5))
+    pick_seq.add_child(SetLiftHeightAction('Raise_Pallet_To_Carry', target_height='lift_carry_height', settle_time_sec=0.8))
     pick_seq.add_child(LogMessageAction('Log_Retract_Fork', 'Lùi xe rút càng mang pallet ra khỏi kệ...'))
     pick_seq.add_child(NavigateToPoseAction('Retract_From_Rack', target_pose='retract_pose'))
     pick_seq.add_child(LogMessageAction('Log_Pick_Success', 'Đã lấy pallet ra khỏi kệ!'))
@@ -96,7 +96,7 @@ def build_pallet_mission_tree(blackboard: Blackboard) -> BehaviorTree:
     # 5. Place Pallet
     place_seq = Sequence('5_Place_Pallet')
     place_seq.add_child(LogMessageAction('Log_Lower_Pallet', 'Hạ càng đặt pallet...'))
-    place_seq.add_child(SetLiftHeightAction('Lower_Pallet_To_Ground', target_height='lift_dropoff_height', settle_time_sec=2.0))
+    place_seq.add_child(SetLiftHeightAction('Lower_Pallet_To_Ground', target_height='lift_dropoff_height', settle_time_sec=0.8))
     place_seq.add_child(WaitAction('Settle_After_Drop', 0.5))
     place_seq.add_child(LogMessageAction('Log_Backoff', 'Lùi xe ra khỏi pallet...'))
     place_seq.add_child(LinearDriveAction('Backoff_From_Pallet', distance_meters=-0.25, speed=0.10))

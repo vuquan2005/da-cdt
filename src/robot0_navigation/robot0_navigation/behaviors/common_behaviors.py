@@ -43,11 +43,26 @@ class WaitAction(ActionNode):
         return NodeStatus.RUNNING
 
 
-class WaitForOdometryCondition(ConditionNode):
-    """Checks whether valid Odometry has been received by the robot."""
-    def check(self) -> bool:
+class WaitForOdometryCondition(ActionNode):
+    """Waits asynchronously until valid Odometry is received by the robot."""
+    def __init__(self, name: str, timeout_sec: float = 10.0, blackboard: Optional[Blackboard] = None):
+        super().__init__(name, blackboard)
+        self.timeout_sec = timeout_sec
+        self.start_time = 0.0
+
+    def initialise(self) -> None:
+        self.start_time = time.time()
+
+    def update(self) -> NodeStatus:
         current_x = self.blackboard.get('current_x')
-        return current_x is not None
+        if current_x is not None:
+            return NodeStatus.SUCCESS
+        if time.time() - self.start_time > self.timeout_sec:
+            ros_node = self.blackboard.get('ros_node')
+            if ros_node:
+                ros_node.get_logger().error(f"[BT] WaitForOdometry '{self.name}': TIMEOUT waiting for /odom!")
+            return NodeStatus.FAILURE
+        return NodeStatus.RUNNING
 
 
 class SetBlackboardValueAction(ActionNode):

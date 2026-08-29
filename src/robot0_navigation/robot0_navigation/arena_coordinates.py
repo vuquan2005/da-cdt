@@ -274,43 +274,50 @@ def calculate_pallet_pick_poses(pallet: Pallet) -> Tuple[Pose2D, Pose2D, Pose2D]
 
 def generate_approach_route(target_rack: str, staging_pose: Pose2D) -> list:
     """
-    Generates simulated line-following waypoint route from Home Spawn to Rack Staging Pose.
-    Explicitly visits all intermediate line intersections.
+    Generates strictly orthogonal waypoint route from Home Spawn to Rack Staging Pose.
+    Maintains constant heading (Yaw = pi) without unwanted rotational drift.
     """
     route = []
     if target_rack == 'rack_2':
-        # Start (X=-0.985, Y=0.64) -> Switch Top (X=-0.400, Y=0.64) -> Switch Bot (X=-0.400, Y=0.00) -> Rack 2 Approach (X=-1.500, Y=0.00)
-        route.append(LINE_INTERSECTIONS['I_SWITCH_TOP'].pose)
-        route.append(LINE_INTERSECTIONS['I_SWITCH_BOT'].pose)
-        route.append(LINE_INTERSECTIONS['I_WEST_RACK2'].pose)
+        # Start (X=-0.985, Y=0.640, Yaw=pi) -> Switch Top (X=-0.400, Y=0.640, Yaw=pi)
+        route.append(Pose2D(x=-0.400, y=0.640, yaw=math.pi))
+        # -> Switch Bot (X=-0.400, Y=0.000, Yaw=pi)
+        route.append(Pose2D(x=-0.400, y=0.000, yaw=math.pi))
+        # -> Rack 2 West Line (X=-1.500, Y=0.000, Yaw=pi)
+        route.append(Pose2D(x=-1.500, y=0.000, yaw=math.pi))
     else:
-        # Start (X=-0.985, Y=0.64) -> Rack 1 Approach (X=-1.500, Y=0.64)
-        route.append(LINE_INTERSECTIONS['I_WEST_RACK1'].pose)
+        # Start (X=-0.985, Y=0.640, Yaw=pi) -> Rack 1 West Line (X=-1.500, Y=0.640, Yaw=pi)
+        route.append(Pose2D(x=-1.500, y=0.640, yaw=math.pi))
 
-    # Final staging alignment in front of pallet slot
+    # Final lateral slot alignment (X=-1.500, Y=slot_y, Yaw=pi)
     route.append(staging_pose)
     return route
 
 
 def generate_delivery_route(rack_name: str, staging_pose: Pose2D, dropoff_zone: Optional[DropOffZone]) -> list:
     """
-    Generates simulated line-following waypoint route from Rack Retract Pose to Drop-off Zone.
-    Safely backs out to X = -1.350m before rotating, avoiding any collision with storage racks.
+    Generates strictly orthogonal delivery route:
+    1. Backs out linearly to safe track (X=-1.350m, Yaw=pi)
+    2. Cleanly rotates in-place to Yaw = 0.0 (facing East)
+    3. Travels pure orthogonal lines along horizontal and vertical trunks to Drop-off Zone.
     """
     route = []
+    rack_y = 0.640 if rack_name == 'rack_1' else 0.000
     target_y = dropoff_zone.approach_pose.y if dropoff_zone else 0.640
 
+    # 1. Back out straight West-facing to safe clearance track line
+    route.append(Pose2D(x=-1.350, y=rack_y, yaw=math.pi))
+
+    # 2. Rotate in-place cleanly to face East (Yaw = 0.0) at open track
+    route.append(Pose2D(x=-1.350, y=rack_y, yaw=0.0))
+
     if rack_name == 'rack_1':
-        # 1. Back out cleanly to safe open track line (X=-1.350m, Y=0.640m) facing East
-        route.append(Pose2D(x=-1.350, y=0.640, yaw=0.0))
-        # 2. Pass through Start Intersection
+        # 3. Travel East along Row 1
         route.append(Pose2D(x=-0.985, y=0.640, yaw=0.0))
-        # 3. Pass through Switch Top Intersection
         route.append(Pose2D(x=-0.400, y=0.640, yaw=0.0))
-        # 4. Arrive at Central Distribution Top
         route.append(Pose2D(x=0.000, y=0.640, yaw=0.0))
 
-        # 5. Travel down Central Distribution Column if needed
+        # 4. Travel down Central Distribution Trunk (Orthogonal Y movement)
         if abs(target_y - 0.220) < 0.05:
             route.append(Pose2D(x=0.000, y=0.220, yaw=0.0))
         elif abs(target_y - (-0.220)) < 0.05:
@@ -324,14 +331,11 @@ def generate_delivery_route(rack_name: str, staging_pose: Pose2D, dropoff_zone: 
             route.append(Pose2D(x=0.000, y=-0.640, yaw=0.0))
 
     else:  # rack_2 (Y = 0.000m)
-        # 1. Back out cleanly to safe open track line (X=-1.350m, Y=0.000m) facing East
-        route.append(Pose2D(x=-1.350, y=0.000, yaw=0.0))
-        # 2. Pass through Switch Bot Intersection
+        # 3. Travel East along Row 2
         route.append(Pose2D(x=-0.400, y=0.000, yaw=0.0))
-        # 3. Arrive at Central Distribution Mid
         route.append(Pose2D(x=0.000, y=0.000, yaw=0.0))
 
-        # 4. Travel up/down Central Distribution Column
+        # 4. Travel up/down Central Distribution Trunk
         if abs(target_y - 0.640) < 0.05:
             route.append(Pose2D(x=0.000, y=0.220, yaw=0.0))
             route.append(Pose2D(x=0.000, y=0.640, yaw=0.0))
@@ -343,9 +347,9 @@ def generate_delivery_route(rack_name: str, staging_pose: Pose2D, dropoff_zone: 
             route.append(Pose2D(x=0.000, y=-0.220, yaw=0.0))
             route.append(Pose2D(x=0.000, y=-0.640, yaw=0.0))
 
-    # 6. Branch out East to target Drop-off Zone
+    # 5. Branch out East directly into target Drop-off Zone
     if dropoff_zone:
-        route.append(dropoff_zone.approach_pose)
+        route.append(Pose2D(x=dropoff_zone.approach_pose.x, y=dropoff_zone.approach_pose.y, yaw=0.0))
     else:
         route.append(Pose2D(x=0.550, y=0.640, yaw=0.0))
 
@@ -354,27 +358,33 @@ def generate_delivery_route(rack_name: str, staging_pose: Pose2D, dropoff_zone: 
 
 def generate_return_home_route(current_dropoff_y: float) -> list:
     """
-    Generates simulated line-following waypoint route from Drop-off area back to Home Base.
-    Explicitly visits all intermediate line intersections.
+    Generates strictly orthogonal waypoint route from Drop-off area back to Home Base:
+    1. Backs out straight to Central Trunk (Yaw=0.0)
+    2. Moves along Central Trunk to North intersection (Y=0.640m, Yaw=0.0)
+    3. Cleanly rotates in-place to Yaw = pi (facing West)
+    4. Travels straight West along Row 1 back into Home Base.
     """
     route = []
-    # 1. Back out from Drop-off to Central Column
-    route.append(Pose2D(x=0.000, y=current_dropoff_y, yaw=math.pi))
+    # 1. Back out West to Central Trunk
+    route.append(Pose2D(x=0.000, y=current_dropoff_y, yaw=0.0))
 
-    # 2. Travel up Central Column to North Intersection (Y=0.640m)
+    # 2. Travel up Central Trunk to North Intersection (Y=0.640m)
     if abs(current_dropoff_y - (-0.640)) < 0.05:
-        route.append(Pose2D(x=0.000, y=-0.220, yaw=math.pi))
-        route.append(Pose2D(x=0.000, y=0.000, yaw=math.pi))
-        route.append(Pose2D(x=0.000, y=0.220, yaw=math.pi))
-        route.append(Pose2D(x=0.000, y=0.640, yaw=math.pi))
+        route.append(Pose2D(x=0.000, y=-0.220, yaw=0.0))
+        route.append(Pose2D(x=0.000, y=0.000, yaw=0.0))
+        route.append(Pose2D(x=0.000, y=0.220, yaw=0.0))
+        route.append(Pose2D(x=0.000, y=0.640, yaw=0.0))
     elif abs(current_dropoff_y - (-0.220)) < 0.05:
-        route.append(Pose2D(x=0.000, y=0.000, yaw=math.pi))
-        route.append(Pose2D(x=0.000, y=0.220, yaw=math.pi))
-        route.append(Pose2D(x=0.000, y=0.640, yaw=math.pi))
+        route.append(Pose2D(x=0.000, y=0.000, yaw=0.0))
+        route.append(Pose2D(x=0.000, y=0.220, yaw=0.0))
+        route.append(Pose2D(x=0.000, y=0.640, yaw=0.0))
     elif abs(current_dropoff_y - 0.220) < 0.05:
-        route.append(Pose2D(x=0.000, y=0.640, yaw=math.pi))
+        route.append(Pose2D(x=0.000, y=0.640, yaw=0.0))
 
-    # 3. Travel West along Row 1 through Switch Top back to Start
+    # 3. Rotate in-place to face West (Yaw = pi) at North Intersection
+    route.append(Pose2D(x=0.000, y=0.640, yaw=math.pi))
+
+    # 4. Travel straight West along Row 1 back to Start
     route.append(Pose2D(x=-0.400, y=0.640, yaw=math.pi))
-    route.append(Pose2D(x=ROBOT_SPAWN.x, y=ROBOT_SPAWN.y, yaw=ROBOT_SPAWN.yaw))
+    route.append(Pose2D(x=ROBOT_SPAWN.x, y=ROBOT_SPAWN.y, yaw=math.pi))
     return route

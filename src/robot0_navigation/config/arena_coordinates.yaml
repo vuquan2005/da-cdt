@@ -23,8 +23,8 @@ lift_heights:
   dropoff: 0.0000
 
 lift_control:
-  tolerance: 0.003
-  timeout_sec: 10.0
+  tolerance: 0.005
+  timeout_sec: 15.0
 
 storage_racks:
   rack_1:
