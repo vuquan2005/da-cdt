@@ -20,7 +20,8 @@
   "mounts": [
     "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind",
     "source=/dev,target=/dev,type=bind",
-    "source=/run/udev,target=/run/udev,type=bind,readonly"
+    "source=/run/udev,target=/run/udev,type=bind,readonly",
+    "source=vscode-commandhistory,target=/commandhistory,type=volume"
   ],
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
@@ -39,13 +40,15 @@
         "ms-vscode.cmake-tools"
       ],
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.defaultProfile.linux": "zsh",
         "files.associations": {
           "*.xacro": "xml",
-          "*.world": "xml"
+          "*.world": "xml",
+          "*.urdf": "xml",
+          "*.sdf": "xml"
         }
       }
     }
   },
-  "postCreateCommand": "rosdep update && rosdep install --from-paths src --ignore-src -r -y || true"
+  "postCreateCommand": "bash .devcontainer/setup-dev-env.sh"
 }

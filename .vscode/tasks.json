@@ -4,7 +4,7 @@
     {
       "label": "colcon: build",
       "type": "shell",
-      "command": "source /opt/ros/humble/setup.bash && colcon build --symlink-install",
+      "command": "source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
       "group": {
         "kind": "build",
         "isDefault": true

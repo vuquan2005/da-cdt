@@ -1,6 +1,6 @@
 {
   "recommendations": [
-    "ms-iot.vscode-ros",
+    "ranch-hand-robotics.rde-pack",
     "ms-vscode.cpptools",
     "ms-python.python",
     "dotjoshjohnson.xml",
