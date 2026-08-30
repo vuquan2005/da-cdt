@@ -6,7 +6,7 @@ Package cấu hình môi trường mô phỏng vật lý trên Gazebo Fortress (
 
 ## Khởi chạy mô phỏng
 
-### 1. Khởi chạy Gazebo cơ bản
+### 1. Khởi chạy Gazebo cơ bản (Simulation + Bridge + RViz)
 
 ```bash
 ros2 launch robot0_gazebo gazebo.launch.py
@@ -14,14 +14,12 @@ ros2 launch robot0_gazebo gazebo.launch.py
 * `rviz:=false`: Tắt mở kèm RViz2.
 * `world:=<path>`: Chọn đường dẫn file world khác (mặc định: `simple_arena.sdf`).
 
-### 2. Khởi chạy toàn bộ hệ thống (Bringup)
-
-Khởi chạy đồng thời Gazebo + Bridge + Joy Teleop + Line Sensor + YOLO Vision:
+### 2. Khởi chạy toàn bộ hệ thống (Simulation + Nodes)
+Để khởi chạy toàn bộ hệ thống kèm các node ứng dụng (Controller, Teleop, Line Sensor, Vision), sử dụng package `robot0_bringup`:
 
 ```bash
-ros2 launch robot0_gazebo all.launch.py
+ros2 launch robot0_bringup bringup.launch.py
 ```
-* Tùy chọn tắt bớt node: `joy:=false`, `line_sensor:=false`, `vision:=false`, `rviz:=false`.
 
 ---
 
@@ -53,6 +51,5 @@ robot0_gazebo/
 │   └── empty.sdf                   # Thế giới mặt phẳng cơ bản
 ├── models/                         # Mô hình SDF (arena_floor, storage_rack, pallet_*)
 └── launch/
-    ├── gazebo.launch.py            # Launch Gazebo + Bridge + Spawner + RViz2
-    └── all.launch.py               # Master launch khởi chạy toàn bộ các module
+    └── gazebo.launch.py            # Launch Gazebo + Bridge + Spawner + RViz2
 ```

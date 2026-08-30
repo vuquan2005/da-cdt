@@ -49,9 +49,12 @@ flowchart TD
 
 | Package | Loại | Chức năng | Tài liệu chi tiết |
 | :--- | :--- | :--- | :---: |
+| **`robot0_bringup`** | `ament_cmake` | Package khởi chạy tổng thể (Master Bringup), gom cụm node và điều phối hệ thống | [Xem README](src/robot0_bringup/README.md) |
+| **`robot0_controller`** | `ament_python`| Bộ tính toán động học nghịch Mecanum (Kinematics Node) cho 4 bánh | [Xem README](src/robot0_controller/README.md) |
 | **`robot0_description`** | `ament_cmake` | Mô hình 3D CAD (.stl), URDF robot, cấu hình khớp, kiểm tra TF trên RViz2 | [Xem README](src/robot0_description/README.md) |
-| **`robot0_gazebo`** | `ament_cmake` | Sa bàn Robocon, cầu nối `ros_gz_bridge`, C++ Plugin và Master Bringup | [Xem README](src/robot0_gazebo/README.md) |
-| **`robot0_navigation`** | `ament_python`| Điều hướng tự động và gắp/thả pallet theo cây hành vi (**Behavior Trees**), tọa độ sa bàn | [Xem README](src/robot0_navigation/README.md) |
+| **`robot0_gazebo`** | `ament_cmake` | Sa bàn Robocon, cầu nối `ros_gz_bridge`, C++ Plugin mô phỏng Gazebo | [Xem README](src/robot0_gazebo/README.md) |
+| **`robot0_sensors`** | `ament_python`| Cảm biến dò line hình học Vector Quad Array (Front/Rear/Left/Right) | [Xem README](src/robot0_sensors/README.md) |
+| **`robot0_navigation`** | `ament_python`| Điều hướng tự động và gắp/thả pallet theo cây hành vi (**Behavior Trees**) | [Xem README](src/robot0_navigation/README.md) |
 | **`robot0_teleop`** | `ament_python`| Điều khiển thủ công bằng Gamepad (Deadman switch, Ga mượt), Bàn phím | [Xem README](src/robot0_teleop/README.md) |
 | **`robot0_vision`** | `ament_python`| Nhận diện Pallet bằng YOLOv8 đa luồng và trích xuất tọa độ bám mục tiêu | [Xem README](src/robot0_vision/README.md) |
 
@@ -77,12 +80,16 @@ source install/setup.bash
 ```
 
 ### 2. Khởi chạy toàn bộ hệ thống (Bringup)
-Khởi động cùng lúc **Gazebo + Bridge + Teleop + Line Sensor + YOLO Vision + RViz2**:
+Khởi động cùng lúc **Gazebo + Bridge + Kinematics Controller + Line Sensor + Teleop + YOLO Vision + RViz2**:
 ```bash
-ros2 launch robot0_gazebo all.launch.py
+ros2 launch robot0_bringup bringup.launch.py
 ```
 
 ### 3. Khởi chạy các module riêng lẻ
+* **Khởi chạy cụm các Node ứng dụng (không kèm Gazebo):**
+  ```bash
+  ros2 launch robot0_bringup nodes.launch.py
+  ```
 * **Điều khiển tự động gắp/thả Pallet bằng Behavior Tree:**
   ```bash
   # Tùy chọn gắp theo loại Pallet:
@@ -94,13 +101,17 @@ ros2 launch robot0_gazebo all.launch.py
   ```bash
   ros2 launch robot0_gazebo gazebo.launch.py
   ```
+* **Bộ tính toán động học Mecanum:**
+  ```bash
+  ros2 launch robot0_controller controller.launch.py
+  ```
 * **Điều khiển tay cầm Gamepad:**
   ```bash
   ros2 launch robot0_teleop joystick.launch.py
   ```
-* **Mô phỏng cảm biến dò line:**
+* **Mô phỏng cảm biến dò line Vector Quad Array:**
   ```bash
-  ros2 launch robot0_navigation line_sensor.launch.py
+  ros2 launch robot0_sensors line_sensor.launch.py
   ```
 * **Nhận diện hình ảnh YOLO:**
   ```bash

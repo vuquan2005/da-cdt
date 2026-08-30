@@ -5,13 +5,15 @@
   <version>1.0.0</version>
   <description>YOLO object detection and vision processing node for robot0</description>
   <maintainer email="66623851+vuquan2005@users.noreply.github.com">vuquan</maintainer>
-  <license>MIT</license>
+  <license>BSD-3-Clause</license>
 
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
   <depend>cv_bridge</depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

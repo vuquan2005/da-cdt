@@ -38,7 +38,7 @@
     {
       "label": "ROS 2: Launch All",
       "type": "shell",
-      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_gazebo all.launch.py",
+      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_bringup bringup.launch.py",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -48,7 +48,7 @@
     {
       "label": "ROS 2: Launch App Nodes",
       "type": "shell",
-      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_gazebo nodes.launch.py",
+      "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_bringup nodes.launch.py",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -66,7 +66,7 @@
       }
     },
     {
-      "label": "ROS 2: Display Robot Model",
+      "label": "ROS 2: Display Robot Model (RVIZ only)",
       "type": "shell",
       "command": "source /opt/ros/humble/setup.bash && if [ -f install/setup.bash ]; then source install/setup.bash; fi && ros2 launch robot0_description display.launch.py",
       "problemMatcher": [],

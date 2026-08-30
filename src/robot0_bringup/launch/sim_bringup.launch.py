@@ -8,6 +8,7 @@ from launch.substitutions import LaunchConfiguration
 
 def generate_launch_description():
     pkg_robot0_gazebo = get_package_share_directory('robot0_gazebo')
+    pkg_robot0_bringup = get_package_share_directory('robot0_bringup')
 
     # Default Paths
     default_world_path = os.path.join(pkg_robot0_gazebo, 'worlds', 'simple_arena.sdf')
@@ -20,6 +21,7 @@ def generate_launch_description():
     use_joy = LaunchConfiguration('joy', default='true')
     use_vision = LaunchConfiguration('vision', default='true')
     use_line_sensor = LaunchConfiguration('line_sensor', default='true')
+    use_mission = LaunchConfiguration('mission', default='false')
     conf = LaunchConfiguration('conf', default='0.5')
     imgsz = LaunchConfiguration('imgsz', default='640')
 
@@ -66,6 +68,12 @@ def generate_launch_description():
         description='Launch Dual Array Line Sensor simulator if true'
     )
 
+    declare_use_mission_cmd = DeclareLaunchArgument(
+        'mission',
+        default_value='false',
+        description='Launch Behavior Tree autonomous pallet mission if true'
+    )
+
     declare_conf_cmd = DeclareLaunchArgument(
         'conf',
         default_value='0.5',
@@ -78,7 +86,7 @@ def generate_launch_description():
         description='YOLO inference image size (640, 480, 320)'
     )
 
-    # 1. Mô phỏng Gazebo (Gazebo Fortress + Bridge + Robot State Publisher + RViz2)
+    # 1. Gazebo Simulation & Environment (Gazebo Fortress + Bridge + Robot State Publisher + RViz2)
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_robot0_gazebo, 'launch', 'gazebo.launch.py')
@@ -90,10 +98,10 @@ def generate_launch_description():
         }.items()
     )
 
-    # 2. Cụm các Node ứng dụng
+    # 2. Application Subsystem Nodes
     nodes_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_robot0_gazebo, 'launch', 'nodes.launch.py')
+            os.path.join(pkg_robot0_bringup, 'launch', 'nodes.launch.py')
         ),
         launch_arguments={
             'use_sim_time': use_sim_time,
@@ -101,6 +109,7 @@ def generate_launch_description():
             'joy': use_joy,
             'vision': use_vision,
             'line_sensor': use_line_sensor,
+            'mission': use_mission,
             'conf': conf,
             'imgsz': imgsz
         }.items()
@@ -114,10 +123,9 @@ def generate_launch_description():
         declare_use_joy_cmd,
         declare_use_vision_cmd,
         declare_use_line_sensor_cmd,
+        declare_use_mission_cmd,
         declare_conf_cmd,
         declare_imgsz_cmd,
         gazebo_launch,
         nodes_launch
     ])
-
-
