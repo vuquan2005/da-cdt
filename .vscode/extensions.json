@@ -4,6 +4,7 @@
     "ms-vscode.cpptools",
     "ms-python.python",
     "dotjoshjohnson.xml",
-    "redhat.vscode-yaml"
+    "redhat.vscode-yaml",
+    "esbenp.prettier-vscode"
   ]
 }

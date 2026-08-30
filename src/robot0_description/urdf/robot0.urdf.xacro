@@ -17,7 +17,7 @@
   <!-- Lift Arm Mechanism -->
   <xacro:include filename="$(find robot0_description)/urdf/lift.xacro" />
 
-  <!-- Intel RealSense Camera Sensor -->
+  <!-- Camera Sensor -->
   <xacro:include filename="$(find robot0_description)/urdf/camera.xacro" />
 
   <!-- Gazebo Fortress Simulation Plugins -->

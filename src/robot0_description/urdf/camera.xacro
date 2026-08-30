@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- ========================================== -->
-  <!-- Camera Sensor (Intel RealSense on base_link)-->
+  <!-- Camera Sensor -->
   <!-- ========================================== -->
   <link name="camera_link">
     <inertial>
