@@ -34,10 +34,13 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-iot.vscode-ros",
+        "ranch-hand-robotics.rde-pack",
         "ms-vscode.cpptools",
         "ms-python.python",
-        "ms-vscode.cmake-tools"
+        "ms-vscode.cmake-tools",
+        "dotjoshjohnson.xml",
+        "redhat.vscode-yaml",
+        "esbenp.prettier-vscode"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "zsh",

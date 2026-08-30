@@ -2,6 +2,9 @@
 
 Dự án phát triển, mô phỏng vật lý và tự động hóa điều khiển robot di động 4 bánh Mecanum tích hợp cơ cấu tay nâng hàng dạng trượt (**Robot0**) sử dụng **ROS 2 Humble** và **Gazebo Fortress (GZ Sim)** trong môi trường **Docker Dev Container**.
 
+> 📖 **Bạn mới bắt đầu với ROS 2 hoặc muốn tự xây dựng dự án tương tự?**
+> Hãy tham khảo ngay bộ **[Cẩm Nang Toàn Diện Về ROS 2 & Lộ Trình Xây Dựng Dự Án Robot Từ Số 0 (docs/)](docs/README.md)** với các hướng dẫn nền tảng, giải phẫu cấu trúc package/node, và quy trình 10 bước phát triển robot!
+
 ---
 
 ## 🏗️ Kiến trúc Tổng thể Hệ thống
