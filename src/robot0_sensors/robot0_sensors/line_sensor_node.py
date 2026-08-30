@@ -2,19 +2,20 @@
 # -*- coding: utf-8 -*-
 
 """
-Vector Geometric Dual Array Line Sensor Simulator Node for Robot0.
+Vector Geometric Quad Array Line Sensor Simulator Node for Robot0.
 
-Simulates two N-channel optical/IR reflectance sensor arrays mounted at the
-front (+X) and rear (-X) of the robot using pure mathematical vector geometry
-(Zero GPU/Image dependency, ultra-fast 100Hz+ loop, sub-millimeter precision).
+Simulates four N-channel optical/IR reflectance sensor arrays mounted at the
+front (+X), rear (-X), left (+Y), and right (-Y) of the robot using pure
+mathematical vector geometry (Zero GPU/Image dependency, ultra-fast 100Hz+ loop,
+sub-millimeter precision).
 
 Features:
 - Pure Geometric Line Segment Distance sampling (No floor image required)
-- Dual Array (Front + Rear) with configurable eye count and spacing
+- Quad Array (Front + Rear + Left + Right) with configurable eye count and spacing
 - Continuous Smooth Analog & Binary Digital outputs
-- Lateral deviation error & heading angle error
-- Real-time Junction classification (CROSS, T_LEFT, T_RIGHT, NONE, LOST)
-- Full RViz2 3D Sensor Markers & Status visualization
+- Lateral & longitudinal deviation errors & heading angle error
+- Real-time Junction classification (CROSS, T_LEFT, T_RIGHT, T_FRONT, T_REAR, NONE, LOST)
+- Full RViz2 3D Sensor Markers & Status visualization (Clean display, no HUD text overlay)
 """
 
 import math
@@ -25,14 +26,9 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import (
     QoSProfile,
-    QoSDurabilityPolicy,
-    QoSReliabilityPolicy,
-    QoSHistoryPolicy,
     DurabilityPolicy,
     ReliabilityPolicy,
-    HistoryPolicy
 )
-import tf2_ros
 from nav_msgs.msg import Odometry, OccupancyGrid
 from std_msgs.msg import Int32MultiArray, Float32MultiArray, Float32, Bool, String
 from visualization_msgs.msg import Marker, MarkerArray
@@ -107,51 +103,104 @@ class VectorLineSensorNode(Node):
         # Parameters
         if not self.has_parameter('use_sim_time'):
             self.declare_parameter('use_sim_time', True)
-        self.declare_parameter('enable_rear_array', True)
+
+        # Front Array Parameters
+        self.declare_parameter('enable_front_array', True)
         self.declare_parameter('num_sensors_front', 8)
         self.declare_parameter('sensor_spacing_front', 0.018)  # 18mm
         self.declare_parameter('offset_x_front', 0.18)         # +180mm
         self.declare_parameter('offset_y_front', 0.0)
 
+        # Rear Array Parameters
+        self.declare_parameter('enable_rear_array', True)
         self.declare_parameter('num_sensors_rear', 8)
         self.declare_parameter('sensor_spacing_rear', 0.018)   # 18mm
         self.declare_parameter('offset_x_rear', -0.18)         # -180mm
         self.declare_parameter('offset_y_rear', 0.0)
 
+        # Left Side Array Parameters (+Y side, oriented along X)
+        self.declare_parameter('enable_left_array', True)
+        self.declare_parameter('num_sensors_left', 8)
+        self.declare_parameter('sensor_spacing_left', 0.018)   # 18mm
+        self.declare_parameter('offset_x_left', 0.0)
+        self.declare_parameter('offset_y_left', 0.18)          # +180mm
+
+        # Right Side Array Parameters (-Y side, oriented along X)
+        self.declare_parameter('enable_right_array', True)
+        self.declare_parameter('num_sensors_right', 8)
+        self.declare_parameter('sensor_spacing_right', 0.018)  # 18mm
+        self.declare_parameter('offset_x_right', 0.0)
+        self.declare_parameter('offset_y_right', -0.18)        # -180mm
+
+        # General Parameters
         self.declare_parameter('line_width', LINE_WIDTH)
         self.declare_parameter('update_rate', 50.0)            # 50 Hz
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('world_frame', 'odom')
 
         # Read Parameters
-        self.enable_rear = bool(self.get_parameter('enable_rear_array').value)
+        self.enable_front = bool(self.get_parameter('enable_front_array').value)
         self.n_front = int(self.get_parameter('num_sensors_front').value)
         self.spacing_front = float(self.get_parameter('sensor_spacing_front').value)
         self.offset_x_front = float(self.get_parameter('offset_x_front').value)
         self.offset_y_front = float(self.get_parameter('offset_y_front').value)
 
+        self.enable_rear = bool(self.get_parameter('enable_rear_array').value)
         self.n_rear = int(self.get_parameter('num_sensors_rear').value)
         self.spacing_rear = float(self.get_parameter('sensor_spacing_rear').value)
         self.offset_x_rear = float(self.get_parameter('offset_x_rear').value)
         self.offset_y_rear = float(self.get_parameter('offset_y_rear').value)
+
+        self.enable_left = bool(self.get_parameter('enable_left_array').value)
+        self.n_left = int(self.get_parameter('num_sensors_left').value)
+        self.spacing_left = float(self.get_parameter('sensor_spacing_left').value)
+        self.offset_x_left = float(self.get_parameter('offset_x_left').value)
+        self.offset_y_left = float(self.get_parameter('offset_y_left').value)
+
+        self.enable_right = bool(self.get_parameter('enable_right_array').value)
+        self.n_right = int(self.get_parameter('num_sensors_right').value)
+        self.spacing_right = float(self.get_parameter('sensor_spacing_right').value)
+        self.offset_x_right = float(self.get_parameter('offset_x_right').value)
+        self.offset_y_right = float(self.get_parameter('offset_y_right').value)
 
         self.line_w = float(self.get_parameter('line_width').value)
         self.rate = float(self.get_parameter('update_rate').value)
         self.base_frame = self.get_parameter('base_frame').value
         self.world_frame = self.get_parameter('world_frame').value
 
-        self.baseline_L = abs(self.offset_x_front - self.offset_x_rear)
-        if self.baseline_L < 1e-4:
-            self.baseline_L = 0.36
+        # Baselines
+        self.baseline_x = abs(self.offset_x_front - self.offset_x_rear)
+        if self.baseline_x < 1e-4:
+            self.baseline_x = 0.36
 
-        # Sensor eye local offsets (Ordered from Left +Y to Right -Y)
+        self.baseline_y = abs(self.offset_y_left - self.offset_y_right)
+        if self.baseline_y < 1e-4:
+            self.baseline_y = 0.36
+
+        # Sensor eye local offsets
+        # Front Array (Oriented along Y, ordered Left +Y to Right -Y)
         half_span_front = (self.n_front - 1) * self.spacing_front / 2.0
-        self.front_local_y = np.linspace(half_span_front, -half_span_front, self.n_front) + self.offset_y_front
+        self.front_rel_y = np.linspace(half_span_front, -half_span_front, self.n_front)
+        self.front_local_y = self.front_rel_y + self.offset_y_front
         self.front_local_x = np.full(self.n_front, self.offset_x_front)
 
+        # Rear Array (Oriented along Y, ordered Left +Y to Right -Y)
         half_span_rear = (self.n_rear - 1) * self.spacing_rear / 2.0
-        self.rear_local_y = np.linspace(half_span_rear, -half_span_rear, self.n_rear) + self.offset_y_rear
+        self.rear_rel_y = np.linspace(half_span_rear, -half_span_rear, self.n_rear)
+        self.rear_local_y = self.rear_rel_y + self.offset_y_rear
         self.rear_local_x = np.full(self.n_rear, self.offset_x_rear)
+
+        # Left Array (Oriented along X, ordered Front +X to Rear -X)
+        half_span_left = (self.n_left - 1) * self.spacing_left / 2.0
+        self.left_rel_x = np.linspace(half_span_left, -half_span_left, self.n_left)
+        self.left_local_x = self.left_rel_x + self.offset_x_left
+        self.left_local_y = np.full(self.n_left, self.offset_y_left)
+
+        # Right Array (Oriented along X, ordered Front +X to Rear -X)
+        half_span_right = (self.n_right - 1) * self.spacing_right / 2.0
+        self.right_rel_x = np.linspace(half_span_right, -half_span_right, self.n_right)
+        self.right_local_x = self.right_rel_x + self.offset_x_right
+        self.right_local_y = np.full(self.n_right, self.offset_y_right)
 
         # Pose cache
         self.latest_pose = None
@@ -159,26 +208,44 @@ class VectorLineSensorNode(Node):
         # Subscribers
         self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
 
-        # Publishers
+        # Publishers - Primary / Combined
         self.pub_raw = self.create_publisher(Int32MultiArray, '/line_sensor/raw', 10)
         self.pub_analog = self.create_publisher(Float32MultiArray, '/line_sensor/analog', 10)
         self.pub_error = self.create_publisher(Float32, '/line_sensor/error', 10)
         self.pub_detected = self.create_publisher(Bool, '/line_sensor/line_detected', 10)
         self.pub_junction = self.create_publisher(String, '/line_sensor/junction', 10)
 
+        # Front Array Publishers
         self.pub_front_raw = self.create_publisher(Int32MultiArray, '/line_sensor/front/raw', 10)
         self.pub_front_analog = self.create_publisher(Float32MultiArray, '/line_sensor/front/analog', 10)
         self.pub_front_error = self.create_publisher(Float32, '/line_sensor/front/error', 10)
         self.pub_front_detected = self.create_publisher(Bool, '/line_sensor/front/line_detected', 10)
         self.pub_front_junction = self.create_publisher(String, '/line_sensor/front/junction', 10)
 
+        # Rear Array Publishers
         self.pub_rear_raw = self.create_publisher(Int32MultiArray, '/line_sensor/rear/raw', 10)
         self.pub_rear_analog = self.create_publisher(Float32MultiArray, '/line_sensor/rear/analog', 10)
         self.pub_rear_error = self.create_publisher(Float32, '/line_sensor/rear/error', 10)
         self.pub_rear_detected = self.create_publisher(Bool, '/line_sensor/rear/line_detected', 10)
         self.pub_rear_junction = self.create_publisher(String, '/line_sensor/rear/junction', 10)
 
+        # Left Side Array Publishers
+        self.pub_left_raw = self.create_publisher(Int32MultiArray, '/line_sensor/left/raw', 10)
+        self.pub_left_analog = self.create_publisher(Float32MultiArray, '/line_sensor/left/analog', 10)
+        self.pub_left_error = self.create_publisher(Float32, '/line_sensor/left/error', 10)
+        self.pub_left_detected = self.create_publisher(Bool, '/line_sensor/left/line_detected', 10)
+        self.pub_left_junction = self.create_publisher(String, '/line_sensor/left/junction', 10)
+
+        # Right Side Array Publishers
+        self.pub_right_raw = self.create_publisher(Int32MultiArray, '/line_sensor/right/raw', 10)
+        self.pub_right_analog = self.create_publisher(Float32MultiArray, '/line_sensor/right/analog', 10)
+        self.pub_right_error = self.create_publisher(Float32, '/line_sensor/right/error', 10)
+        self.pub_right_detected = self.create_publisher(Bool, '/line_sensor/right/line_detected', 10)
+        self.pub_right_junction = self.create_publisher(String, '/line_sensor/right/junction', 10)
+
+        # Tracking Errors and RViz Markers
         self.pub_lateral_error = self.create_publisher(Float32, '/line_sensor/lateral_error', 10)
+        self.pub_longitudinal_error = self.create_publisher(Float32, '/line_sensor/longitudinal_error', 10)
         self.pub_heading_error = self.create_publisher(Float32, '/line_sensor/heading_error', 10)
         self.pub_markers = self.create_publisher(MarkerArray, '/line_sensor/markers', 10)
 
@@ -198,8 +265,10 @@ class VectorLineSensorNode(Node):
         self.timer = self.create_timer(timer_period, self.update_line_sensor)
 
         self.get_logger().info(
-            f'Vector Line Sensor Running: Front={self.n_front} eyes (+{self.offset_x_front*1000:.0f}mm), '
-            f'Rear={self.n_rear} eyes ({self.offset_x_rear*1000:.0f}mm), Pure Vector Mode (No images required)'
+            f'Vector Quad Line Sensor Running: Front={self.n_front} eyes (+{self.offset_x_front*1000:.0f}mm), '
+            f'Rear={self.n_rear} eyes ({self.offset_x_rear*1000:.0f}mm), '
+            f'Left={self.n_left} eyes (+{self.offset_y_left*1000:.0f}mm), '
+            f'Right={self.n_right} eyes ({self.offset_y_right*1000:.0f}mm)'
         )
 
     def _build_occupancy_grid(self) -> OccupancyGrid:
@@ -290,7 +359,7 @@ class VectorLineSensorNode(Node):
         yaw = math.atan2(siny_cosp, cosy_cosp)
         self.latest_pose = (p.x, p.y, yaw)
 
-    def _sample_array(self, sensor_x, sensor_y, rx, ry, cos_yaw, sin_yaw, has_pose):
+    def _sample_array(self, sensor_x, sensor_y, rx, ry, cos_yaw, sin_yaw, has_pose, error_axis_coords):
         """Samples sensor array against vector line segments."""
         digital_readings = []
         analog_readings = []
@@ -327,11 +396,12 @@ class VectorLineSensorNode(Node):
         is_detected = active_count > 0
         error = 0.0
         if is_detected:
-            error = float(np.sum(np.array(digital_readings) * sensor_y) / active_count)
+            error = float(np.sum(np.array(digital_readings) * error_axis_coords) / active_count)
 
         return digital_readings, analog_readings, error, is_detected
 
-    def _classify_junction(self, digital_readings: list) -> str:
+    def _classify_junction_fb(self, digital_readings: list) -> str:
+        """Classifies front/rear array junctions (Left / Right branches)."""
         active_count = sum(digital_readings)
         n = len(digital_readings)
 
@@ -350,6 +420,26 @@ class VectorLineSensorNode(Node):
 
         return 'NONE'
 
+    def _classify_junction_side(self, digital_readings: list) -> str:
+        """Classifies side array junctions (Front / Rear branches)."""
+        active_count = sum(digital_readings)
+        n = len(digital_readings)
+
+        if active_count == 0:
+            return 'LOST'
+        if active_count >= 5:
+            return 'CROSS'
+
+        front_half = sum(digital_readings[:n // 2])
+        rear_half = sum(digital_readings[n // 2:])
+
+        if front_half >= 3 and rear_half == 0:
+            return 'T_FRONT'
+        if rear_half >= 3 and front_half == 0:
+            return 'T_REAR'
+
+        return 'NONE'
+
     def update_line_sensor(self):
         has_pose = self.latest_pose is not None
         rx, ry, yaw = self.latest_pose if has_pose else (0.0, 0.0, 0.0)
@@ -357,22 +447,48 @@ class VectorLineSensorNode(Node):
         sin_yaw = math.sin(yaw)
 
         # 1. Front Array
-        f_dig, f_ana, f_err, f_det = self._sample_array(
-            self.front_local_x, self.front_local_y, rx, ry, cos_yaw, sin_yaw, has_pose
-        )
-        f_junction = self._classify_junction(f_dig)
+        if self.enable_front:
+            f_dig, f_ana, f_err, f_det = self._sample_array(
+                self.front_local_x, self.front_local_y, rx, ry, cos_yaw, sin_yaw, has_pose, self.front_rel_y
+            )
+            f_junction = self._classify_junction_fb(f_dig)
+        else:
+            f_dig, f_ana, f_err, f_det, f_junction = [0]*self.n_front, [0.0]*self.n_front, 0.0, False, 'LOST'
 
         # 2. Rear Array
-        r_dig, r_ana, r_err, r_det = self._sample_array(
-            self.rear_local_x, self.rear_local_y, rx, ry, cos_yaw, sin_yaw, has_pose
-        )
-        r_junction = self._classify_junction(r_dig)
+        if self.enable_rear:
+            r_dig, r_ana, r_err, r_det = self._sample_array(
+                self.rear_local_x, self.rear_local_y, rx, ry, cos_yaw, sin_yaw, has_pose, self.rear_rel_y
+            )
+            r_junction = self._classify_junction_fb(r_dig)
+        else:
+            r_dig, r_ana, r_err, r_det, r_junction = [0]*self.n_rear, [0.0]*self.n_rear, 0.0, False, 'LOST'
 
-        # 3. Combined Dual Array Errors
-        line_detected_any = f_det or r_det
+        # 3. Left Side Array (+Y)
+        if self.enable_left:
+            l_dig, l_ana, l_err, l_det = self._sample_array(
+                self.left_local_x, self.left_local_y, rx, ry, cos_yaw, sin_yaw, has_pose, self.left_rel_x
+            )
+            l_junction = self._classify_junction_side(l_dig)
+        else:
+            l_dig, l_ana, l_err, l_det, l_junction = [0]*self.n_left, [0.0]*self.n_left, 0.0, False, 'LOST'
+
+        # 4. Right Side Array (-Y)
+        if self.enable_right:
+            rt_dig, rt_ana, rt_err, rt_det = self._sample_array(
+                self.right_local_x, self.right_local_y, rx, ry, cos_yaw, sin_yaw, has_pose, self.right_rel_x
+            )
+            rt_junction = self._classify_junction_side(rt_dig)
+        else:
+            rt_dig, rt_ana, rt_err, rt_det, rt_junction = [0]*self.n_right, [0.0]*self.n_right, 0.0, False, 'LOST'
+
+        # 5. Combined Multi-Array Errors
+        line_detected_any = f_det or r_det or l_det or rt_det
+
+        # Lateral Error (deviation across Y axis)
         if f_det and r_det:
             lateral_error = (f_err + r_err) / 2.0
-            heading_error = math.atan2(f_err - r_err, self.baseline_L)
+            heading_error = math.atan2(f_err - r_err, self.baseline_x)
         elif f_det:
             lateral_error = f_err
             heading_error = 0.0
@@ -383,48 +499,76 @@ class VectorLineSensorNode(Node):
             lateral_error = 0.0
             heading_error = 0.0
 
-        combined_junction = f_junction if f_junction != 'NONE' else r_junction
+        # Longitudinal Error (deviation along X axis from side arrays)
+        if l_det and rt_det:
+            longitudinal_error = (l_err + rt_err) / 2.0
+            # If front/rear not detecting, heading error can be derived from side arrays
+            if not (f_det and r_det):
+                heading_error = math.atan2(-(l_err - rt_err), self.baseline_y)
+        elif l_det:
+            longitudinal_error = l_err
+        elif rt_det:
+            longitudinal_error = rt_err
+        else:
+            longitudinal_error = 0.0
 
-        # 4. RViz 3D Markers
+        # Combined Junction Classification
+        junction_candidates = [f_junction, r_junction, l_junction, rt_junction]
+        if 'CROSS' in junction_candidates:
+            combined_junction = 'CROSS'
+        elif 'T_LEFT' in junction_candidates:
+            combined_junction = 'T_LEFT'
+        elif 'T_RIGHT' in junction_candidates:
+            combined_junction = 'T_RIGHT'
+        elif 'T_FRONT' in junction_candidates:
+            combined_junction = 'T_FRONT'
+        elif 'T_REAR' in junction_candidates:
+            combined_junction = 'T_REAR'
+        elif any(j == 'NONE' for j in junction_candidates):
+            combined_junction = 'NONE'
+        else:
+            combined_junction = 'LOST'
+
+        # 6. RViz 3D Markers (Clean visualization, HUD Text Marker removed)
         marker_array = MarkerArray()
         stamp_now = self.get_clock().now().to_msg()
 
-        # Front Mounting Bar
-        bar_f = Marker()
-        bar_f.header.frame_id = self.base_frame
-        bar_f.header.stamp = stamp_now
-        bar_f.ns = 'line_sensor_bars'
-        bar_f.id = 100
-        bar_f.type = Marker.CUBE
-        bar_f.action = Marker.ADD
-        bar_f.pose.position.x = self.offset_x_front
-        bar_f.pose.position.y = self.offset_y_front
-        bar_f.pose.position.z = 0.02
-        bar_f.scale.x = 0.015
-        bar_f.scale.y = (self.n_front - 1) * self.spacing_front + 0.03
-        bar_f.scale.z = 0.008
-        bar_f.color.r, bar_f.color.g, bar_f.color.b, bar_f.color.a = 0.15, 0.15, 0.15, 0.95
-        marker_array.markers.append(bar_f)
+        # Front Mounting Bar & Eyes
+        if self.enable_front:
+            bar_f = Marker()
+            bar_f.header.frame_id = self.base_frame
+            bar_f.header.stamp = stamp_now
+            bar_f.ns = 'line_sensor_bars'
+            bar_f.id = 100
+            bar_f.type = Marker.CUBE
+            bar_f.action = Marker.ADD
+            bar_f.pose.position.x = self.offset_x_front
+            bar_f.pose.position.y = self.offset_y_front
+            bar_f.pose.position.z = 0.02
+            bar_f.scale.x = 0.015
+            bar_f.scale.y = (self.n_front - 1) * self.spacing_front + 0.03
+            bar_f.scale.z = 0.008
+            bar_f.color.r, bar_f.color.g, bar_f.color.b, bar_f.color.a = 0.15, 0.15, 0.15, 0.95
+            marker_array.markers.append(bar_f)
 
-        # Front Sensor Eyes
-        for i in range(self.n_front):
-            m = Marker()
-            m.header.frame_id = self.base_frame
-            m.header.stamp = stamp_now
-            m.ns = 'front_sensor_dots'
-            m.id = i
-            m.type = Marker.SPHERE
-            m.action = Marker.ADD
-            m.pose.position.x = float(self.front_local_x[i])
-            m.pose.position.y = float(self.front_local_y[i])
-            m.pose.position.z = 0.025
-            m.scale.x, m.scale.y, m.scale.z = 0.016, 0.016, 0.016
+            for i in range(self.n_front):
+                m = Marker()
+                m.header.frame_id = self.base_frame
+                m.header.stamp = stamp_now
+                m.ns = 'front_sensor_dots'
+                m.id = i
+                m.type = Marker.SPHERE
+                m.action = Marker.ADD
+                m.pose.position.x = float(self.front_local_x[i])
+                m.pose.position.y = float(self.front_local_y[i])
+                m.pose.position.z = 0.025
+                m.scale.x, m.scale.y, m.scale.z = 0.016, 0.016, 0.016
 
-            if f_dig[i] == 1:
-                m.color.r, m.color.g, m.color.b, m.color.a = 0.0, 1.0, 0.0, 1.0  # Green ON Line
-            else:
-                m.color.r, m.color.g, m.color.b, m.color.a = 0.4, 0.4, 0.4, 0.5  # Grey OFF Line
-            marker_array.markers.append(m)
+                if f_dig[i] == 1:
+                    m.color.r, m.color.g, m.color.b, m.color.a = 0.0, 1.0, 0.0, 1.0  # Green ON Line
+                else:
+                    m.color.r, m.color.g, m.color.b, m.color.a = 0.4, 0.4, 0.4, 0.5  # Grey OFF Line
+                marker_array.markers.append(m)
 
         # Rear Array Markers
         if self.enable_rear:
@@ -463,7 +607,81 @@ class VectorLineSensorNode(Node):
                     m.color.r, m.color.g, m.color.b, m.color.a = 0.4, 0.4, 0.4, 0.5  # Grey OFF Line
                 marker_array.markers.append(m)
 
-        # 5. Deviation Error & Heading Arrows (RViz Visualization)
+        # Left Side Array Markers (+Y)
+        if self.enable_left:
+            bar_l = Marker()
+            bar_l.header.frame_id = self.base_frame
+            bar_l.header.stamp = stamp_now
+            bar_l.ns = 'line_sensor_bars'
+            bar_l.id = 102
+            bar_l.type = Marker.CUBE
+            bar_l.action = Marker.ADD
+            bar_l.pose.position.x = self.offset_x_left
+            bar_l.pose.position.y = self.offset_y_left
+            bar_l.pose.position.z = 0.02
+            bar_l.scale.x = (self.n_left - 1) * self.spacing_left + 0.03
+            bar_l.scale.y = 0.015
+            bar_l.scale.z = 0.008
+            bar_l.color.r, bar_l.color.g, bar_l.color.b, bar_l.color.a = 0.15, 0.15, 0.15, 0.95
+            marker_array.markers.append(bar_l)
+
+            for i in range(self.n_left):
+                m = Marker()
+                m.header.frame_id = self.base_frame
+                m.header.stamp = stamp_now
+                m.ns = 'left_sensor_dots'
+                m.id = 20 + i
+                m.type = Marker.SPHERE
+                m.action = Marker.ADD
+                m.pose.position.x = float(self.left_local_x[i])
+                m.pose.position.y = float(self.left_local_y[i])
+                m.pose.position.z = 0.025
+                m.scale.x, m.scale.y, m.scale.z = 0.016, 0.016, 0.016
+
+                if l_dig[i] == 1:
+                    m.color.r, m.color.g, m.color.b, m.color.a = 1.0, 0.8, 0.0, 1.0  # Amber ON Line
+                else:
+                    m.color.r, m.color.g, m.color.b, m.color.a = 0.4, 0.4, 0.4, 0.5  # Grey OFF Line
+                marker_array.markers.append(m)
+
+        # Right Side Array Markers (-Y)
+        if self.enable_right:
+            bar_rt = Marker()
+            bar_rt.header.frame_id = self.base_frame
+            bar_rt.header.stamp = stamp_now
+            bar_rt.ns = 'line_sensor_bars'
+            bar_rt.id = 103
+            bar_rt.type = Marker.CUBE
+            bar_rt.action = Marker.ADD
+            bar_rt.pose.position.x = self.offset_x_right
+            bar_rt.pose.position.y = self.offset_y_right
+            bar_rt.pose.position.z = 0.02
+            bar_rt.scale.x = (self.n_right - 1) * self.spacing_right + 0.03
+            bar_rt.scale.y = 0.015
+            bar_rt.scale.z = 0.008
+            bar_rt.color.r, bar_rt.color.g, bar_rt.color.b, bar_rt.color.a = 0.15, 0.15, 0.15, 0.95
+            marker_array.markers.append(bar_rt)
+
+            for i in range(self.n_right):
+                m = Marker()
+                m.header.frame_id = self.base_frame
+                m.header.stamp = stamp_now
+                m.ns = 'right_sensor_dots'
+                m.id = 30 + i
+                m.type = Marker.SPHERE
+                m.action = Marker.ADD
+                m.pose.position.x = float(self.right_local_x[i])
+                m.pose.position.y = float(self.right_local_y[i])
+                m.pose.position.z = 0.025
+                m.scale.x, m.scale.y, m.scale.z = 0.016, 0.016, 0.016
+
+                if rt_dig[i] == 1:
+                    m.color.r, m.color.g, m.color.b, m.color.a = 1.0, 0.0, 0.8, 1.0  # Magenta ON Line
+                else:
+                    m.color.r, m.color.g, m.color.b, m.color.a = 0.4, 0.4, 0.4, 0.5  # Grey OFF Line
+                marker_array.markers.append(m)
+
+        # 7. Error & Heading Arrows
         # Front Array Lateral Error Arrow (id=200)
         arrow_f = Marker()
         arrow_f.header.frame_id = self.base_frame
@@ -477,7 +695,6 @@ class VectorLineSensorNode(Node):
             arrow_f.scale.y = 0.016  # head diameter
             arrow_f.scale.z = 0.022  # head length
             arrow_f.color.r, arrow_f.color.g, arrow_f.color.b, arrow_f.color.a = 1.0, 0.25, 0.0, 1.0  # Orange-Red
-            # Avoid RViz degenerate zero-length arrow warning
             eff_f_y = float(f_err) if abs(f_err) >= 0.003 else (0.003 if f_err >= 0 else -0.003)
             p_start_f = Point(x=float(self.offset_x_front), y=0.0, z=0.038)
             p_end_f = Point(x=float(self.offset_x_front), y=eff_f_y, z=0.038)
@@ -508,13 +725,57 @@ class VectorLineSensorNode(Node):
                 arrow_r.action = Marker.DELETE
             marker_array.markers.append(arrow_r)
 
+        # Left Array Longitudinal Error Arrow (id=204)
+        if self.enable_left:
+            arrow_l = Marker()
+            arrow_l.header.frame_id = self.base_frame
+            arrow_l.header.stamp = stamp_now
+            arrow_l.ns = 'line_error_arrows'
+            arrow_l.id = 204
+            if l_det:
+                arrow_l.type = Marker.ARROW
+                arrow_l.action = Marker.ADD
+                arrow_l.scale.x = 0.007
+                arrow_l.scale.y = 0.016
+                arrow_l.scale.z = 0.022
+                arrow_l.color.r, arrow_l.color.g, arrow_l.color.b, arrow_l.color.a = 1.0, 0.8, 0.0, 1.0  # Amber
+                eff_l_x = float(l_err) if abs(l_err) >= 0.003 else (0.003 if l_err >= 0 else -0.003)
+                p_start_l = Point(x=0.0, y=float(self.offset_y_left), z=0.038)
+                p_end_l = Point(x=eff_l_x, y=float(self.offset_y_left), z=0.038)
+                arrow_l.points = [p_start_l, p_end_l]
+            else:
+                arrow_l.action = Marker.DELETE
+            marker_array.markers.append(arrow_l)
+
+        # Right Array Longitudinal Error Arrow (id=205)
+        if self.enable_right:
+            arrow_rt = Marker()
+            arrow_rt.header.frame_id = self.base_frame
+            arrow_rt.header.stamp = stamp_now
+            arrow_rt.ns = 'line_error_arrows'
+            arrow_rt.id = 205
+            if rt_det:
+                arrow_rt.type = Marker.ARROW
+                arrow_rt.action = Marker.ADD
+                arrow_rt.scale.x = 0.007
+                arrow_rt.scale.y = 0.016
+                arrow_rt.scale.z = 0.022
+                arrow_rt.color.r, arrow_rt.color.g, arrow_rt.color.b, arrow_rt.color.a = 1.0, 0.0, 0.8, 1.0  # Magenta
+                eff_rt_x = float(rt_err) if abs(rt_err) >= 0.003 else (0.003 if rt_err >= 0 else -0.003)
+                p_start_rt = Point(x=0.0, y=float(self.offset_y_right), z=0.038)
+                p_end_rt = Point(x=eff_rt_x, y=float(self.offset_y_right), z=0.038)
+                arrow_rt.points = [p_start_rt, p_end_rt]
+            else:
+                arrow_rt.action = Marker.DELETE
+            marker_array.markers.append(arrow_rt)
+
         # Center Lateral Error Arrow (id=202)
         arrow_c = Marker()
         arrow_c.header.frame_id = self.base_frame
         arrow_c.header.stamp = stamp_now
         arrow_c.ns = 'line_error_arrows'
         arrow_c.id = 202
-        if line_detected_any:
+        if f_det or r_det:
             arrow_c.type = Marker.ARROW
             arrow_c.action = Marker.ADD
             arrow_c.scale.x = 0.009
@@ -529,7 +790,7 @@ class VectorLineSensorNode(Node):
             arrow_c.action = Marker.DELETE
         marker_array.markers.append(arrow_c)
 
-        # Track Heading Alignment Arrow (id=203) - Biểu diễn vector hướng vạch line
+        # Track Heading Alignment Arrow (id=203)
         arrow_h = Marker()
         arrow_h.header.frame_id = self.base_frame
         arrow_h.header.stamp = stamp_now
@@ -542,61 +803,54 @@ class VectorLineSensorNode(Node):
             arrow_h.scale.y = 0.014
             arrow_h.scale.z = 0.022
             arrow_h.color.r, arrow_h.color.g, arrow_h.color.b, arrow_h.color.a = 0.2, 1.0, 0.2, 0.9  # Lime Green
-            # Vector from rear detected line point to front detected line point extended
             p_r_line = Point(x=float(self.offset_x_rear), y=float(r_err), z=0.035)
-            # Extend forward slightly
             ext_x = float(self.offset_x_front) + 0.08
-            ext_y = float(f_err) + (float(f_err) - float(r_err)) / self.baseline_L * 0.08
+            ext_y = float(f_err) + (float(f_err) - float(r_err)) / self.baseline_x * 0.08
             p_f_line = Point(x=ext_x, y=ext_y, z=0.035)
             arrow_h.points = [p_r_line, p_f_line]
         else:
             arrow_h.action = Marker.DELETE
         marker_array.markers.append(arrow_h)
 
-        # 3D Floating HUD Text Status (id=300)
-        hud_text = Marker()
-        hud_text.header.frame_id = self.base_frame
-        hud_text.header.stamp = stamp_now
-        hud_text.ns = 'line_sensor_hud'
-        hud_text.id = 300
-        hud_text.type = Marker.TEXT_VIEW_FACING
-        hud_text.action = Marker.ADD
-        hud_text.pose.position.x = 0.0
-        hud_text.pose.position.y = 0.0
-        hud_text.pose.position.z = 0.22
-        hud_text.scale.z = 0.035  # Text height: 35mm
-        if line_detected_any:
-            hud_text.color.r, hud_text.color.g, hud_text.color.b, hud_text.color.a = 1.0, 1.0, 1.0, 1.0
-            hud_text.text = (
-                f"e_lat: {lateral_error*1000:+.1f}mm | "
-                f"e_yaw: {math.degrees(heading_error):+.1f}° | "
-                f"[{combined_junction}]"
-            )
-        else:
-            hud_text.color.r, hud_text.color.g, hud_text.color.b, hud_text.color.a = 1.0, 0.3, 0.3, 1.0
-            hud_text.text = "LINE: LOST"
-        marker_array.markers.append(hud_text)
-
-        # 6. Publish Topics
+        # 8. Publish Topics
+        # Primary / Legacy Topics
         self.pub_raw.publish(Int32MultiArray(data=f_dig))
         self.pub_analog.publish(Float32MultiArray(data=f_ana))
         self.pub_error.publish(Float32(data=float(lateral_error)))
         self.pub_detected.publish(Bool(data=line_detected_any))
         self.pub_junction.publish(String(data=combined_junction))
 
+        # Front Array Topics
         self.pub_front_raw.publish(Int32MultiArray(data=f_dig))
         self.pub_front_analog.publish(Float32MultiArray(data=f_ana))
         self.pub_front_error.publish(Float32(data=float(f_err)))
         self.pub_front_detected.publish(Bool(data=f_det))
         self.pub_front_junction.publish(String(data=f_junction))
 
+        # Rear Array Topics
         self.pub_rear_raw.publish(Int32MultiArray(data=r_dig))
         self.pub_rear_analog.publish(Float32MultiArray(data=r_ana))
         self.pub_rear_error.publish(Float32(data=float(r_err)))
         self.pub_rear_detected.publish(Bool(data=r_det))
         self.pub_rear_junction.publish(String(data=r_junction))
 
+        # Left Side Array Topics
+        self.pub_left_raw.publish(Int32MultiArray(data=l_dig))
+        self.pub_left_analog.publish(Float32MultiArray(data=l_ana))
+        self.pub_left_error.publish(Float32(data=float(l_err)))
+        self.pub_left_detected.publish(Bool(data=l_det))
+        self.pub_left_junction.publish(String(data=l_junction))
+
+        # Right Side Array Topics
+        self.pub_right_raw.publish(Int32MultiArray(data=rt_dig))
+        self.pub_right_analog.publish(Float32MultiArray(data=rt_ana))
+        self.pub_right_error.publish(Float32(data=float(rt_err)))
+        self.pub_right_detected.publish(Bool(data=rt_det))
+        self.pub_right_junction.publish(String(data=rt_junction))
+
+        # Combined Coordinates Errors & Markers
         self.pub_lateral_error.publish(Float32(data=float(lateral_error)))
+        self.pub_longitudinal_error.publish(Float32(data=float(longitudinal_error)))
         self.pub_heading_error.publish(Float32(data=float(heading_error)))
         self.pub_markers.publish(marker_array)
 
