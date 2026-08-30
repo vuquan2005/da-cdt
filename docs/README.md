@@ -16,7 +16,10 @@ flowchart TD
     Ch2 --> Ch3["3. Cấu Trúc Một Node Chuẩn<br/>Boilerplate, Publishers, Subscribers, Timers, Callbacks, Logging, Cleanup"]
     Ch3 --> Ch4["4. Quy Trình 10 Bước Xây Dựng Robot<br/>Từ Ý tưởng CAD -> URDF -> Gazebo -> Kinematics -> Cảm biến -> Vision -> Behavior Trees -> Bringup"]
     Ch4 --> Ch5["5. Sổ Tay CLI & Debugging<br/>ros2 topic/node/param/tf2, rqt_graph, RViz2, Chuẩn REP-103/105"]
-    Ch5 --> Hardware["TRIỂN KHAI PHẦN CỨNG THỰC TẾ<br/>(Micro-ROS, Serial, CAN bus, ROS 2 Control)"]
+    Ch5 --> Ch7["7. Kế Thừa & Tái Cấu Trúc Dự Án Mới<br/>Giải phẫu từng file, Quy trình 7 bước, Chuyển đổi mô hình"]
+    Ch7 --> Ch8["8. Chuyên Sâu Description, Gazebo & Common Node<br/>Xacro vs URDF, Gazebo vs Classic, Physics, QoS, Node Template"]
+    Ch8 --> Ch9["9. Từng Bước Xây Dựng Dự Án Từ Đầu (From Scratch)<br/>Phân tích thành phần, *_description, *_gazebo, Hello World C++/Python"]
+    Ch9 --> Hardware["TRIỂN KHAI PHẦN CỨNG THỰC TẾ<br/>(Micro-ROS, Serial, CAN bus, ROS 2 Control)"]
 ```
 
 ---
@@ -24,13 +27,16 @@ flowchart TD
 ## 📚 Mục Lục Tài Liệu Chi Tiết
 
 | Tài Liệu | Nội Dung Trọng Tâm | Dành Cho Ai? |
-| :--- | :--- | :---: |
+| :--- | :--- | :--- :--- |
 | **[1. Nền Tảng & Khái Niệm Cốt Lõi ROS 2](01_ros2_fundamentals.md)** | Hiểu rõ kiến trúc phân tán DDS, Workspace (`src`, `build`, `install`, `log`), sự khác biệt và khi nào nên dùng Topic, Service, Action, Parameter, cơ chế QoS và cây tọa độ TF2. | Người mới bắt đầu |
 | **[2. Cấu Trúc Package & Tác Dụng Từng File Thư Mục](02_package_structure_guide.md)** | Phân tích chi tiết cấu trúc thư mục của gói Python (`ament_python`) và C++/Resource (`ament_cmake`). Tác dụng và cú pháp của `package.xml`, `setup.py`, `CMakeLists.txt`, `launch/`, `config/`, `urdf/`, `resource/`. | Lập trình viên thiết kế kiến trúc gói |
 | **[3. Giải Phẫu & Vòng Đời Của Một Node Chuẩn](03_node_anatomy_and_lifecycle.md)** | Mẫu code chuẩn hóa cho một ROS 2 Node (Python & C++). Chi tiết cách khởi tạo, tạo Publisher/Subscriber, Timer loop, xử lý đa luồng, Logging và ngắt an toàn. | Lập trình viên viết mã nguồn Node |
 | **[4. Quy Trình 10 Bước Xây Dựng Dự Án Robot Từ Số 0](04_robot_project_roadmap.md)** | Cẩm nang phương hướng từng bước: Thiết kế CAD $\to$ URDF Xacro $\to$ Mô phỏng Gazebo $\to$ Base Kinematics $\to$ Tích hợp Cảm biến $\to$ Teleop $\to$ AI Vision $\to$ Tự hành (Nav2 / Behavior Trees) $\to$ Master Bringup $\to$ Triển khai phần cứng. | Kỹ sư trưởng / Người phát triển dự án |
 | **[5. Sổ Tay Lệnh ROS 2 CLI & Debugging](05_cli_and_debugging_handbook.md)** | Bảng tra cứu đầy đủ các lệnh dòng lệnh `ros2`, công cụ đồ thị `rqt_graph`, trực quan hóa TF, `rviz2`, và các tiêu chuẩn quốc tế REP-103, REP-105. | Tra cứu & Xử lý sự cố hàng ngày |
 | **[6. Cẩm Nang Sử Dụng Docker & Dev Containers](06_docker_and_devcontainers.md)** | Giải thích vì sao cần dùng Container, cơ chế VS Code Dev Containers, giải phẫu `Dockerfile` và `devcontainer.json`, cấu hình đồ họa X11, GPU NVIDIA, USB Gamepad và triển khai lên robot thật. | Thiết lập môi trường & Triển khai |
+| **[7. Cẩm Nang Kế Thừa & Tái Cấu Trúc Dự Án Cho Người Mới](07_project_inheritance_and_rebuilding_guide.md)** | Giải phẫu cặn kẽ từng file trong dự án hiện tại (nội dung, mục đích, cách viết lại) và quy trình 7 bước xây dựng lại dự án cho robot / nhiệm vụ hoàn toàn mới. | Thành viên mới kế thừa & Tái cấu trúc |
+| **[8. Chuyên Sâu Description, Gazebo & Thiết Kế Common Node](08_deep_dive_description_gazebo_common_node.md)** | So sánh sâu các quyết định kiến trúc (Xacro vs URDF, Gazebo Fortress vs Classic, ros_gz_bridge, Behavior Tree vs FSM), chi tiết các loại Joint, ma trận quán tính, tối ưu mesh, và mẫu Common Node chuẩn công nghiệp. | Kỹ sư thiết kế kiến trúc lõi & Lập trình viên Node |
+| **[9. Từng Bước Xây Dựng Dự Án ROS 2 & Cấu Trúc Gói Chuẩn](09_step_by_step_project_construction_guide.md)** | Phân tích thành phần cơ bản của ROS 2, hướng dẫn từng bước tạo package `*_description`, `*_gazebo` (Bắt buộc / Tùy chọn / Nên thêm), kèm mẫu Hello World C++ (`ament_cmake`) và Python (`ament_python`) từ đầu. | Bất kỳ ai muốn tự tạo dự án ROS 2 từ số 0 |
 
 ---
 
