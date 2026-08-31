@@ -1,8 +1,8 @@
 colcon build --symlink-install
 colcon build --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 colcon build --symlink-install --packages-select 
-source /opt/ros/humble/setup.zsh
-source install/setup.zsh
+source /opt/ros/humble/setup.bash
+source install/setup.bash
 rosdep update && rosdep install --from-paths src --ignore-src -r -y
 ros2 topic list
 ros2 topic echo 
@@ -17,3 +17,4 @@ ros2 run
 ros2 bag record -a
 ros2 doctor
 rm -rf build install log
+agy --dangerously-skip-permissions --mode accept-edits
