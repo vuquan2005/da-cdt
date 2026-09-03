@@ -1,9 +1,24 @@
-# ROS 2 Mecanum Robot Simulation (`ros-cdt`)
+# ROS 2 Mecanum Robot Simulation
+---
 
-Dự án phát triển, mô phỏng vật lý và tự động hóa điều khiển robot di động 4 bánh Mecanum tích hợp cơ cấu tay nâng hàng dạng trượt (**Robot0**) sử dụng **ROS 2 Humble** và **Gazebo Fortress (GZ Sim)** trong môi trường **Docker Dev Container**.
+## 🎥 Video Demo Hoạt Động (Simulation Demo)
 
-> 📖 **Bạn mới bắt đầu với ROS 2 hoặc muốn tự xây dựng dự án tương tự?**
-> Hãy tham khảo ngay bộ **[Cẩm Nang Toàn Diện Về ROS 2 & Lộ Trình Xây Dựng Dự Án Robot Từ Số 0 (docs/)](docs/README.md)** với các hướng dẫn nền tảng, giải phẫu cấu trúc package/node, và quy trình 10 bước phát triển robot!
+<div align="center">
+  <a href="public/Demo.mp4" title="Nhấn để xem video gốc Full HD">
+    <img src="public/demo_preview.gif" alt="ROS 2 Mecanum Robot Simulation Demo" width="100%" />
+  </a>
+  <p><em>Robot Mecanum tự hành dò line, nhận diện Pallet bằng YOLOv8 và gắp hàng lên kệ trong Gazebo & RViz2.</em></p>
+</div>
+
+> 🎬 **Xem video demo chất lượng cao:**
+> * **File Video gốc (Full HD 1080p, ~3 phút):** [**`public/Demo.mp4`**](public/Demo.mp4) *(Nhấn vào link hoặc ảnh trên để mở/tải video)*
+> * **Ảnh chụp sa bàn & phát hiện YOLO:** [**`public/thumbnail.png`**](public/thumbnail.png)
+>
+> 📌 **Các giai đoạn chính trong Video Demo:**
+> 1. **Khởi chạy Master Bringup:** Đồng bộ khởi động Gazebo Fortress, mô hình URDF/Xacro, bộ điều khiển động học Mecanum, node camera YOLOv8 và RViz2.
+> 2. **Điều hướng tự động & Dò line:** Hệ thống điều khiển robot bám theo sa bàn dựa trên mảng 4 cụm cảm biến quang học ảo (Quad Array).
+> 3. **Nhận diện Pallet bằng AI (YOLOv8):** Luồng camera RGB xử lý thời gian thực, phát hiện nhãn Pallet (ví dụ: `cpu 0.88`) và trích xuất độ lệch tâm $(dx, dy)$ với độ trễ cực thấp.
+> 4. **Visual Servoing & Nâng hạ càng:** Robot tự động căn chỉnh vị trí, tiến vào kệ hàng và điều khiển khớp trượt nâng (`lift_joint_cmd`) để lấy Pallet an toàn.
 
 ---
 
